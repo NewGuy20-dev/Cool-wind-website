@@ -36,7 +36,7 @@ export default function LocaleLayout({
 			addressCountry: "IN",
 		},
 		areaServed: ["Thiruvalla", "Pathanamthitta"],
-		openingHours: "Mo-Sa 08:00-20:00",
+		openingHours: "Mo-Sa 10:00-18:00",
 		priceRange: "₹₹",
 		hasOfferCatalog: {
 			"@type": "OfferCatalog",

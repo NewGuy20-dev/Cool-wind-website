@@ -26,7 +26,7 @@ export default function ContactPage() {
 			value: PHONE,
 			description: 'Call us directly for immediate assistance',
 			action: `tel:${PHONE}`,
-			available: 'Mon-Sat 8AM-8PM'
+			available: 'Mon-Sat 10AM-6PM'
 		},
 		{
 			icon: <MessageCircle className="h-6 w-6" />,
@@ -47,8 +47,8 @@ export default function ContactPage() {
 	]
 
 	const serviceHours = [
-		{ day: 'Monday - Friday', hours: '8:00 AM - 8:00 PM', type: 'regular' },
-		{ day: 'Saturday', hours: '8:00 AM - 6:00 PM', type: 'regular' },
+		{ day: 'Monday - Friday', hours: '10:00 AM - 6:00 PM', type: 'regular' },
+		{ day: 'Saturday', hours: '10:00 AM - 6:00 PM', type: 'regular' },
 		{ day: 'Sunday', hours: 'Emergency Only', type: 'emergency' },
 		{ day: 'Public Holidays', hours: 'Emergency Only', type: 'emergency' }
 	]
@@ -437,7 +437,7 @@ export default function ContactPage() {
 					</div>
 					
 					<div className="mt-8 text-primary-200 text-sm">
-						<p>Available Mon-Sat 8:00 AM - 8:00 PM</p>
+						<p>Available Mon-Sat 10:00 AM - 6:00 PM</p>
 					</div>
 				</div>
 			</section>

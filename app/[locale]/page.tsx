@@ -137,7 +137,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary-600" />
-                  Mon-Sat 8AM-8PM
+                  Mon-Sat 10AM-6PM
                 </div>
               </div>
             </div>
@@ -280,7 +280,7 @@ export default function HomePage() {
             </p>
             <p className="text-neutral-600">
               <Clock className="inline h-4 w-4 mr-1" />
-              Mon-Sat 8:00 AM - 8:00 PM
+              Mon-Sat 10:00 AM - 6:00 PM
             </p>
             <div className="flex justify-center gap-4 mt-4">
               <a 

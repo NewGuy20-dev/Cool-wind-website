@@ -420,7 +420,7 @@ export default function ServicesPage() {
 					</div>
 					
 					<div className="mt-8 text-primary-200 text-sm">
-						<p>Available Mon-Sat 8:00 AM - 8:00 PM</p>
+						<p>Available Mon-Sat 10:00 AM - 6:00 PM</p>
 					</div>
 				</div>
 			</section>
