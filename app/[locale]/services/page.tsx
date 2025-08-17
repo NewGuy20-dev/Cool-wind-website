@@ -1,1 +1,0 @@
-export { default, metadata } from '../../(marketing)/services/page'

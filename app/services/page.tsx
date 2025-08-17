@@ -14,7 +14,6 @@ import {
 	CheckCircle,
 	Clock,
 	MapPin,
-	Tool,
 	Zap,
 	Shield,
 	Truck
@@ -153,7 +152,7 @@ export default function ServicesPage() {
 			description: 'Emergency repairs within 24 hours'
 		},
 		{
-			icon: <Tool className="h-6 w-6" />,
+			icon: <Wrench className="h-6 w-6" />,
 			title: 'Expert Technicians',
 			description: '15+ years experience, certified professionals'
 		},
@@ -280,7 +279,7 @@ export default function ServicesPage() {
 											{/* Services Offered */}
 											<div>
 												<h4 className="font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-													<Tool className="h-5 w-5 text-primary-600" />
+													<Wrench className="h-5 w-5 text-primary-600" />
 													Services We Provide
 												</h4>
 												<ul className="space-y-2">
