@@ -1,0 +1,13 @@
+{
+	"testimonials": [
+		{
+			"id": "t1",
+			"name": "Anu",
+			"location": "Thiruvalla",
+			"rating": 5,
+			"service": "spare_parts",
+			"date": "2024-05-01",
+			"text": "Genuine parts and quick delivery."
+		}
+	]
+}

@@ -1,0 +1,5 @@
+{
+	"nav": {"services": "Services", "portfolio": "Portfolio", "testimonials": "Testimonials", "about": "About", "contact": "Contact"},
+	"hero": {"headline": "Kerala's Leading AC & Refrigerator Spare Parts Supplier", "sub": "Genuine parts, expert servicing, 15+ years serving Thiruvalla & Pathanamthitta"},
+	"cta": {"order_parts": "Order Parts Now", "emergency": "Emergency Service", "request_quote": "Request Parts Quote", "book_service": "Book Service Call"}
+}

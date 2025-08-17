@@ -1,0 +1,14 @@
+{
+	"projects": [
+		{
+			"id": "ac-repair-thiruvalla-001",
+			"title": "Samsung AC Installation - Residential",
+			"category": "ac_repair",
+			"location": "Thiruvalla",
+			"date": "2024-01-15",
+			"description": "Complete AC installation with ductwork",
+			"images": ["/images/portfolio/project-001-before.jpg"],
+			"featured": true
+		}
+	]
+}

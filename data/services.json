@@ -1,0 +1,14 @@
+{
+	"services": {
+		"spare_parts": {
+			"title": "Spare Parts Supply",
+			"description": "We stock a comprehensive range of genuine refrigeration and AC spare parts, including compressors, thermostats, filters, coils, control panels, and door seals. Our inventory covers leading brands like Samsung, LG, Whirlpool, Voltas, Blue Star, and Godrej. Every part is backed by a genuine parts guarantee with warranty support. We offer bulk order discounts for shops and service centers, same-day delivery within Thiruvalla, and next-day delivery for Pathanamthitta. Our technical support team helps identify the right part for your model and provides installation guidance for a smooth fix.",
+			"cta": "Request Parts Quote"
+		},
+		"servicing": {
+			"title": "AC & Refrigerator Servicing",
+			"description": "Our expert technicians provide reliable repair and maintenance services for all major brands. We handle common issues like not cooling, gas leaks, compressor faults, and electrical problems, using genuine parts only. Services include emergency repairs, annual maintenance, gas charging, and deep cleaning. We provide free diagnosis with confirmed repair bookings and back our work with a 6-month service warranty.",
+			"cta": "Book Service Call"
+		}
+	}
+}
