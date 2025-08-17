@@ -80,7 +80,7 @@ export default function FloatingCtas() {
 				{/* Emergency indicator */}
 				<div className="bg-accent-50 px-4 py-2 text-center">
 					<p className="text-xs text-accent-800">
-						🚨 Emergency service available 24/7
+						🚨 Emergency service available
 					</p>
 				</div>
 			</div>

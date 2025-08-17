@@ -46,7 +46,7 @@ export default function AboutPage() {
 		{
 			year: '2020',
 			title: 'Emergency Services',
-			description: 'Introduced 24/7 emergency repair services during pandemic'
+			description: 'Introduced emergency repair services during pandemic'
 		},
 		{
 			year: '2024',

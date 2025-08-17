@@ -176,7 +176,7 @@ export default function ContactPage() {
 								<div className="mt-4 p-3 bg-accent-50 rounded-lg">
 									<p className="text-accent-800 text-sm flex items-start gap-2">
 										<AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-										Emergency services available 24/7 for critical appliance failures
+										Emergency services available for critical appliance failures
 									</p>
 								</div>
 							</div>
@@ -437,7 +437,7 @@ export default function ContactPage() {
 					</div>
 					
 					<div className="mt-8 text-primary-200 text-sm">
-						<p>Available Mon-Sat 8:00 AM - 8:00 PM | Emergency service available 24/7</p>
+						<p>Available Mon-Sat 8:00 AM - 8:00 PM</p>
 					</div>
 				</div>
 			</section>
