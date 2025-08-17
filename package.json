@@ -8,7 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "next dev",
-    "build": "NEXT_DISABLE_ESLINT=1 next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -35,16 +35,15 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.12",
     "@types/node": "^24.3.0",
     "@types/nodemailer": "^7.0.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "autoprefixer": "^10.4.21",
-    "eslint": "^9.33.0",
-    "eslint-config-next": "^15.4.6",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.31",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.12",
+    "tailwindcss": "^3.4.16",
     "typescript": "^5.9.2"
   }
 }
