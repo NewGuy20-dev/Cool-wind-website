@@ -19,8 +19,8 @@ export default function LanguageSwitcher(){
 	}
 	return (
 		<div className="inline-flex rounded border overflow-hidden text-sm">
-			<Link prefetch href={nextHref('en')} onClick={() => localStorage.setItem('locale', 'en')} className={`px-3 py-2 ${!pathname.startsWith('/ml') ? 'bg-brand-blue text-white' : ''}`}>EN</Link>
-			<Link prefetch href={nextHref('ml')} onClick={() => localStorage.setItem('locale', 'ml')} className={`px-3 py-2 ${pathname.startsWith('/ml') ? 'bg-brand-blue text-white' : ''}`}>ML</Link>
+			<Link prefetch href={nextHref('en')} onClick={() => localStorage.setItem('locale', 'en')} className={`px-3 py-2 ${!pathname.startsWith('/ml') ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600'}`}>EN</Link>
+			<Link prefetch href={nextHref('ml')} onClick={() => localStorage.setItem('locale', 'ml')} className={`px-3 py-2 ${pathname.startsWith('/ml') ? 'bg-primary-600 text-white' : 'bg-white text-neutral-600'}`}>ML</Link>
 		</div>
 	)
 }
