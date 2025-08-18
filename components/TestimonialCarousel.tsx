@@ -47,24 +47,54 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
 
   // Navigation functions
   const goToNext = useCallback(() => {
-    if (isTransitioning) return;
+    console.log('goToNext called', { currentIndex, isTransitioning, testimonialLength: testimonials.length });
+    if (isTransitioning) {
+      console.log('Blocked: currently transitioning');
+      return;
+    }
     setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-    setTimeout(() => setIsTransitioning(false), 300);
-  }, [testimonials.length, isTransitioning]);
+    setCurrentIndex((prev) => {
+      const nextIndex = (prev + 1) % testimonials.length;
+      console.log('Moving from', prev, 'to', nextIndex);
+      return nextIndex;
+    });
+    setTimeout(() => {
+      console.log('Transition complete');
+      setIsTransitioning(false);
+    }, 300);
+  }, [testimonials.length, isTransitioning, currentIndex]);
 
   const goToPrevious = useCallback(() => {
-    if (isTransitioning) return;
+    console.log('goToPrevious called', { currentIndex, isTransitioning, testimonialLength: testimonials.length });
+    if (isTransitioning) {
+      console.log('Blocked: currently transitioning');
+      return;
+    }
     setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-    setTimeout(() => setIsTransitioning(false), 300);
-  }, [testimonials.length, isTransitioning]);
+    setCurrentIndex((prev) => {
+      const nextIndex = (prev - 1 + testimonials.length) % testimonials.length;
+      console.log('Moving from', prev, 'to', nextIndex);
+      return nextIndex;
+    });
+    setTimeout(() => {
+      console.log('Transition complete');
+      setIsTransitioning(false);
+    }, 300);
+  }, [testimonials.length, isTransitioning, currentIndex]);
 
   const goToSlide = useCallback((index: number) => {
-    if (isTransitioning || index === currentIndex) return;
+    console.log('goToSlide called', { index, currentIndex, isTransitioning });
+    if (isTransitioning || index === currentIndex) {
+      console.log('Blocked: transitioning or same index');
+      return;
+    }
     setIsTransitioning(true);
+    console.log('Moving to slide', index);
     setCurrentIndex(index);
-    setTimeout(() => setIsTransitioning(false), 300);
+    setTimeout(() => {
+      console.log('Slide transition complete');
+      setIsTransitioning(false);
+    }, 300);
   }, [currentIndex, isTransitioning]);
 
   // Auto-scroll functionality
@@ -204,7 +234,13 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       role="region"
       aria-label="Customer testimonials carousel"
       aria-live="polite"
+      style={{ isolation: 'isolate' }}
     >
+      {/* Debug info - remove in production */}
+      <div className="absolute top-2 left-2 bg-black text-white text-xs px-2 py-1 rounded z-30">
+        Index: {currentIndex + 1}/{testimonials.length} | Transitioning: {isTransitioning ? 'Yes' : 'No'}
+      </div>
+
       {/* Progress bar */}
       {showProgressBar && (
         <div className="absolute top-0 left-0 w-full h-1 bg-gray-200 overflow-hidden">
@@ -275,43 +311,67 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
 
       {/* Navigation arrows */}
       <button
-        onClick={goToPrevious}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Previous button clicked');
+          goToPrevious();
+        }}
         disabled={isTransitioning}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
         aria-label="Previous testimonial"
+        type="button"
       >
-        <ChevronLeft className="w-6 h-6" />
+        <ChevronLeft className="w-6 h-6 pointer-events-none" />
       </button>
 
       <button
-        onClick={goToNext}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Next button clicked');
+          goToNext();
+        }}
         disabled={isTransitioning}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
         aria-label="Next testimonial"
+        type="button"
       >
-        <ChevronRight className="w-6 h-6" />
+        <ChevronRight className="w-6 h-6 pointer-events-none" />
       </button>
 
       {/* Play/Pause button */}
       {showPlayPause && (
         <button
-          onClick={togglePlayPause}
-          className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Play/Pause button clicked');
+            togglePlayPause();
+          }}
+          type="button"
+          className="absolute top-4 right-4 z-20 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
           aria-label={isPlaying ? "Pause auto-scroll" : "Resume auto-scroll"}
         >
-          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          {isPlaying ? <Pause className="w-4 h-4 pointer-events-none" /> : <Play className="w-4 h-4 pointer-events-none" />}
         </button>
       )}
 
       {/* Indicators */}
       {showIndicators && testimonials.length > 1 && (
-        <div className="flex justify-center mt-8 gap-2">
+        <div className="flex justify-center mt-8 gap-2 z-10 relative">
           {testimonials.map((_, index) => (
             <button
               key={index}
-              onClick={() => goToSlide(index)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log(`Indicator ${index} clicked`);
+                goToSlide(index);
+              }}
               disabled={isTransitioning}
-              className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              type="button"
+              className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer ${
                 index === currentIndex
                   ? 'bg-blue-500 scale-125'
                   : 'bg-gray-300 hover:bg-gray-400'
