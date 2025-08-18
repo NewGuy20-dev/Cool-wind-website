@@ -37,41 +37,58 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
     currentTestimonial: testimonials?.[currentIndex]?.name 
   });
 
+  // Track currentIndex changes
+  useEffect(() => {
+    console.log('🔄 currentIndex CHANGED to:', currentIndex);
+  }, [currentIndex]);
+
   // Simple navigation functions
   const goToNext = () => {
-    console.log('➡️ Going to NEXT testimonial');
+    console.log('🔴 NEXT BUTTON FUNCTION CALLED!');
+    console.log('➡️ Current state:', { currentIndex, testimonialsLength: testimonials.length });
     const newIndex = (currentIndex + 1) % testimonials.length;
-    console.log(`Moving from ${currentIndex} to ${newIndex}`);
+    console.log(`🔴 CHANGING INDEX FROM ${currentIndex} TO ${newIndex}`);
     setCurrentIndex(newIndex);
+    console.log('🔴 setCurrentIndex called with:', newIndex);
   };
 
   const goToPrevious = () => {
-    console.log('⬅️ Going to PREVIOUS testimonial');
+    console.log('🔴 PREVIOUS BUTTON FUNCTION CALLED!');
+    console.log('⬅️ Current state:', { currentIndex, testimonialsLength: testimonials.length });
     const newIndex = (currentIndex - 1 + testimonials.length) % testimonials.length;
-    console.log(`Moving from ${currentIndex} to ${newIndex}`);
+    console.log(`🔴 CHANGING INDEX FROM ${currentIndex} TO ${newIndex}`);
     setCurrentIndex(newIndex);
+    console.log('🔴 setCurrentIndex called with:', newIndex);
   };
 
   const goToSlide = (index: number) => {
-    console.log(`🎯 Going to slide ${index}`);
+    console.log(`🔴 DOT INDICATOR FUNCTION CALLED for slide ${index}!`);
+    console.log('🎯 Current state:', { currentIndex, targetIndex: index });
     setCurrentIndex(index);
+    console.log('🔴 setCurrentIndex called with:', index);
   };
 
   // Auto-scroll effect
   useEffect(() => {
     if (!isHovered && testimonials && testimonials.length > 1) {
-      console.log('⏰ Setting up auto-scroll interval');
+      console.log('⏰ Setting up auto-scroll interval for', testimonials.length, 'testimonials');
       const interval = setInterval(() => {
-        console.log('⏰ Auto-scroll triggered');
-        setCurrentIndex(prev => (prev + 1) % testimonials.length);
+        console.log('⏰ Auto-scroll triggered - moving from index', currentIndex);
+        setCurrentIndex(prev => {
+          const nextIndex = (prev + 1) % testimonials.length;
+          console.log('⏰ Moving to index', nextIndex);
+          return nextIndex;
+        });
       }, autoScrollInterval);
       
       return () => {
         console.log('🛑 Clearing auto-scroll interval');
         clearInterval(interval);
       };
+    } else {
+      console.log('⏸️ Auto-scroll disabled:', { isHovered, testimonialsLength: testimonials?.length });
     }
-  }, [isHovered, autoScrollInterval, testimonials]);
+  }, [isHovered, autoScrollInterval, testimonials.length]); // Fixed: only depend on length, not the whole array
 
   // Handle empty testimonials
   if (!testimonials || testimonials.length === 0) {
