@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Phone, MessageCircle, Wrench, Snowflake, ShoppingCart, Recycle, Star, MapPin, Clock, CheckCircle } from 'lucide-react'
 import { analytics } from '@/lib/analytics'
 import ContactForm from '@/components/ContactForm'
+import TestimonialCarouselFixed from '@/components/TestimonialCarouselFixed'
+import { enhancedTestimonials, getTopTestimonialsForHome } from '@/lib/testimonials'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
@@ -223,7 +225,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials Preview */}
+      {/* Testimonials Carousel */}
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
@@ -231,25 +233,13 @@ export default function HomePage() {
             <p className="mt-4 text-lg text-neutral-600">Trusted by families and businesses across Kerala</p>
           </div>
           
-          <div className="grid gap-6 md:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="card p-6">
-                <div className="flex items-center mb-3">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-neutral-700 mb-4 leading-relaxed">"{testimonial.text}"</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-neutral-800">{testimonial.name}</p>
-                    <p className="text-sm text-neutral-600">{testimonial.service}</p>
-                  </div>
-                  <p className="text-sm text-neutral-500">{testimonial.location}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Testimonial Carousel */}
+          <TestimonialCarouselFixed 
+            testimonials={getTopTestimonialsForHome(enhancedTestimonials, 6)}
+            autoScrollInterval={8000}
+            showRating={true}
+            showIndicators={true}
+          />
           
           <div className="text-center mt-8">
             <Link href="/testimonials" className="btn-secondary">

@@ -37,13 +37,16 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "@types/nodemailer": "^7.0.0",
+    "@types/puppeteer": "^5.4.7",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "autoprefixer": "^10.4.21",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.31",
     "postcss": "^8.5.6",
+    "puppeteer": "^24.16.2",
     "tailwindcss": "^3.4.16",
+    "tesseract.js": "^6.0.1",
     "typescript": "^5.9.2"
   }
 }
