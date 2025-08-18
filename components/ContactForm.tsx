@@ -210,9 +210,9 @@ export default function ContactForm({ compact = false, title, description }: Con
 								className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20"
 							>
 								<option value="">Any time</option>
-								<option value="morning">Morning (8AM - 12PM)</option>
-								<option value="afternoon">Afternoon (12PM - 5PM)</option>
-								<option value="evening">Evening (5PM - 8PM)</option>
+								<option value="morning">Morning (10AM - 12PM)</option>
+								<option value="afternoon">Afternoon (12PM - 4PM)</option>
+								<option value="evening">Evening (4PM - 6PM)</option>
 							</select>
 						</div>
 					</div>

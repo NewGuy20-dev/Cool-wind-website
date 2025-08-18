@@ -252,7 +252,7 @@ vercel --prod
 - **Phone**: Direct calling with tel: links
 - **WhatsApp**: Deep links with pre-filled messages
 - **Email**: Contact form submissions
-- **Emergency**: 24/7 availability indicators
+- **Emergency**: Availability indicators
 
 ### Service Areas
 - **Same-day service**: Thiruvalla, Pathanamthitta, Kozhencherry, Mallappally

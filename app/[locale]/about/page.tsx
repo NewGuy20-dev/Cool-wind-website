@@ -46,7 +46,7 @@ export default function AboutPage() {
 		{
 			year: '2020',
 			title: 'Emergency Services',
-			description: 'Introduced 24/7 emergency repair services during pandemic'
+			description: 'Introduced emergency repair services during pandemic'
 		},
 		{
 			year: '2024',
@@ -484,7 +484,7 @@ export default function AboutPage() {
 					</div>
 					
 					<div className="mt-8 text-primary-200 text-sm">
-						<p>Available Mon-Sat 8:00 AM - 8:00 PM | Emergency service available</p>
+						<p>Available Mon-Sat 10:00 AM - 6:00 PM | Emergency service available</p>
 					</div>
 				</div>
 			</section>
