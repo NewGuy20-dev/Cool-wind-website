@@ -16,6 +16,8 @@ import {
 	Award,
 	Users
 } from 'lucide-react'
+import TestimonialCarousel from '@/components/TestimonialCarousel'
+import { transformTestimonialsForCarousel } from '@/lib/testimonials'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
@@ -242,15 +244,38 @@ export default function TestimonialsPage() {
 				</div>
 			</section>
 
+			{/* Featured Testimonials Carousel */}
+			<section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
+				<div className="mx-auto max-w-6xl px-4">
+					<div className="text-center mb-12">
+						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
+							Featured Customer Stories
+						</h2>
+						<p className="text-lg text-neutral-600">
+							Discover why our customers choose Cool Wind Services time and again
+						</p>
+					</div>
+					
+					<TestimonialCarousel 
+						testimonials={transformTestimonialsForCarousel(testimonials.slice(0, 8))}
+						autoScrollInterval={10000}
+						showRating={true}
+						showIndicators={true}
+						showProgressBar={true}
+						showPlayPause={true}
+					/>
+				</div>
+			</section>
+
 			{/* Testimonials Grid */}
 			<section className="py-16 bg-white">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
-							What Our Customers Say
+							All Customer Reviews
 						</h2>
 						<p className="text-lg text-neutral-600">
-							Authentic reviews from real customers who experienced our service
+							Browse detailed reviews from real customers who experienced our service
 						</p>
 					</div>
 
