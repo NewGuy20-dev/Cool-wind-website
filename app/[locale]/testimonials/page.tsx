@@ -16,7 +16,7 @@ import {
 	Award,
 	Users
 } from 'lucide-react'
-import TestimonialCarousel from '@/components/TestimonialCarousel'
+import TestimonialCarouselFixed from '@/components/TestimonialCarouselFixed'
 import { transformTestimonialsForCarousel } from '@/lib/testimonials'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
@@ -256,13 +256,11 @@ export default function TestimonialsPage() {
 						</p>
 					</div>
 					
-					<TestimonialCarousel 
+					<TestimonialCarouselFixed 
 						testimonials={transformTestimonialsForCarousel(testimonials.slice(0, 8))}
 						autoScrollInterval={10000}
 						showRating={true}
 						showIndicators={true}
-						showProgressBar={true}
-						showPlayPause={true}
 					/>
 				</div>
 			</section>

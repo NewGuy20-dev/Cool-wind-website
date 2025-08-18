@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Phone, MessageCircle, Wrench, Snowflake, ShoppingCart, Recycle, Star, MapPin, Clock, CheckCircle } from 'lucide-react'
 import { analytics } from '@/lib/analytics'
 import ContactForm from '@/components/ContactForm'
-import TestimonialCarousel from '@/components/TestimonialCarousel'
+import TestimonialCarouselFixed from '@/components/TestimonialCarouselFixed'
 import { enhancedTestimonials, getTopTestimonialsForHome } from '@/lib/testimonials'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
@@ -234,13 +234,11 @@ export default function HomePage() {
           </div>
           
           {/* Testimonial Carousel */}
-          <TestimonialCarousel 
+          <TestimonialCarouselFixed 
             testimonials={getTopTestimonialsForHome(enhancedTestimonials, 6)}
             autoScrollInterval={8000}
             showRating={true}
             showIndicators={true}
-            showProgressBar={false}
-            showPlayPause={false}
           />
           
           <div className="text-center mt-8">

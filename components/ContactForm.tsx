@@ -4,13 +4,13 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { CheckCircle, AlertCircle, Send, Loader2 } from 'lucide-react'
+import { CheckCircle, AlertCircle, Send, Loader2, Phone, MessageCircle } from 'lucide-react'
 import { analytics } from '@/lib/analytics'
 
 const FormSchema = z.object({
 	name: z.string().min(2, 'Enter your full name'),
 	phone: z.string().min(7, 'Enter a valid phone number'),
-	email: z.string().email('Invalid email').optional().or(z.literal('')),
+
 	service: z.enum(['spare_parts', 'ac_servicing', 'refrigerator_servicing', 'sales', 'other']),
 	serviceDetails: z.string().max(2000).optional().or(z.literal('')),
 	isUrgent: z.boolean().optional(),
@@ -150,21 +150,7 @@ export default function ContactForm({ compact = false, title, description }: Con
 					</div>
 				</div>
 
-				{/* Email - full width if not compact */}
-				{!compact && (
-					<div>
-						<label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
-							Email Address
-						</label>
-						<input
-							id="email"
-							type="email"
-							{...register('email')}
-							placeholder="your@email.com (optional)"
-							className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-800 placeholder-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20"
-						/>
-					</div>
-				)}
+				{/* Email field removed - contact via WhatsApp or phone only */}
 
 				{/* Service Type */}
 				<div>
@@ -277,16 +263,31 @@ export default function ContactForm({ compact = false, title, description }: Con
 					)}
 				</button>
 
-				{/* Help text */}
-				<div className="text-center">
-					<p className="text-xs text-neutral-500">
-						We'll respond within 2 hours. For emergencies, call{' '}
+				{/* Direct Contact Options */}
+				<div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+					<p className="text-center text-sm font-medium text-gray-700 mb-3">
+						Need immediate help? Contact us directly:
+					</p>
+					<div className="flex flex-col sm:flex-row gap-3">
+						<a 
+							href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'}?text=Hi, I need help with ${compact ? 'a service request' : 'appliance service'}`}
+							className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium text-center transition-colors duration-200 flex items-center justify-center gap-2"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<MessageCircle className="w-5 h-5" />
+							WhatsApp Us
+						</a>
 						<a 
 							href={`tel:${process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'}`}
-							className="text-primary-600 hover:underline font-medium"
+							className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium text-center transition-colors duration-200 flex items-center justify-center gap-2"
 						>
-							{process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+91 85472 29991'}
+							<Phone className="w-5 h-5" />
+							Call Now
 						</a>
+					</div>
+					<p className="text-center text-xs text-gray-600 mt-2">
+						Available 9 AM - 8 PM | Emergency calls accepted 24/7
 					</p>
 				</div>
 			</form>

@@ -4,7 +4,7 @@ import { z } from 'zod'
 const ContactFormSchema = z.object({
 	name: z.string().min(2, 'Name must be at least 2 characters'),
 	phone: z.string().min(7, 'Phone number must be valid'),
-	email: z.string().email('Invalid email').optional().or(z.literal('')),
+
 	service: z.enum(['spare_parts', 'ac_servicing', 'refrigerator_servicing', 'sales', 'other']),
 	serviceDetails: z.string().optional(),
 	isUrgent: z.boolean().optional(),
@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Here you would typically:
-		// 1. Send an email notification
+		// 1. Send WhatsApp notification to business owner
 		// 2. Save to database
-		// 3. Send SMS/WhatsApp notification
+		// 3. Send SMS confirmation to customer
 		// 4. Integrate with CRM
 		
 		// For now, we'll just log the submission
@@ -41,10 +41,10 @@ export async function POST(request: NextRequest) {
 		})
 
 		// In a real implementation, you might want to:
-		// - Send email using nodemailer or similar
+		// - Send WhatsApp message using WhatsApp Business API
 		// - Save to database (PostgreSQL, MongoDB, etc.)
-		// - Send notifications to business owner
-		// - Integrate with WhatsApp Business API
+		// - Send SMS notifications to business owner
+		// - Integrate with CRM system
 		
 		return NextResponse.json({ 
 			success: true, 
