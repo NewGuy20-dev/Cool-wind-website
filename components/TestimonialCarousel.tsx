@@ -210,11 +210,20 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
     setIsPlaying(!isPlaying);
   };
 
+  // Debug logging
+  console.log('TestimonialCarousel rendered with:', {
+    testimonials: testimonials,
+    testimonialsLength: testimonials?.length,
+    currentIndex,
+    isTransitioning
+  });
+
   // Handle empty testimonials array
   if (!testimonials || testimonials.length === 0) {
+    console.log('No testimonials provided to carousel');
     return (
       <div className="w-full max-w-4xl mx-auto p-6 text-center">
-        <p className="text-gray-500">No testimonials available.</p>
+        <p className="text-gray-500">No testimonials available. (Debug: {testimonials?.length || 0} testimonials)</p>
       </div>
     );
   }
@@ -252,7 +261,10 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       )}
 
       {/* Main testimonial card */}
-      <div className="relative bg-white rounded-xl shadow-lg overflow-hidden min-h-[300px] sm:min-h-[250px]">
+      <div 
+        key={`testimonial-${currentIndex}`}
+        className="relative bg-white rounded-xl shadow-lg overflow-hidden min-h-[300px] sm:min-h-[250px]"
+      >
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50" />
         
@@ -281,7 +293,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
             {/* Testimonial text */}
             <blockquote className="text-center mb-8">
               <p className="text-lg sm:text-xl lg:text-2xl text-gray-800 leading-relaxed font-medium">
-                "{currentTestimonial.text}"
+                "[{currentIndex + 1}] {currentTestimonial.text}"
               </p>
             </blockquote>
 
