@@ -14,6 +14,12 @@
 	--dark: #1f2937;
 }
 
+/* Hide Google Translate UI elements */
+.skiptranslate, #goog-gt-tt, .goog-te-banner-frame, .goog-te-gadget-icon { display: none !important; }
+body { top: 0 !important; }
+.goog-te-menu-value, .goog-te-gadget-simple { color: inherit !important; }
+.notranslate { unicode-bidi: plaintext !important; }
+
 html { 
 	scroll-behavior: smooth;
 	font-feature-settings: 'cv11', 'ss01';
