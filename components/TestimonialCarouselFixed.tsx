@@ -133,10 +133,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
         setIsHovered(false);
       }}
     >
-      {/* VERY OBVIOUS Debug info */}
-      <div className="absolute top-2 left-2 bg-red-600 text-white text-lg font-bold px-4 py-2 rounded-lg z-50 shadow-lg border-2 border-white">
-        TESTIMONIAL {currentIndex + 1} of {testimonials.length}
-      </div>
+      {/* Debug overlay removed */}
 
       {/* Main testimonial card with animation */}
       <AnimatePresence mode="popLayout" initial={false}>
