@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Quote, Star, Play, Pause } from 'lucide-react';
 
 // TypeScript interfaces
@@ -39,6 +40,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
   const [progress, setProgress] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Refs
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -47,52 +49,40 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
 
   // Navigation functions
   const goToNext = useCallback(() => {
-    console.log('goToNext called', { currentIndex, isTransitioning, testimonialLength: testimonials.length });
     if (isTransitioning) {
-      console.log('Blocked: currently transitioning');
       return;
     }
     setIsTransitioning(true);
     setCurrentIndex((prev) => {
       const nextIndex = (prev + 1) % testimonials.length;
-      console.log('Moving from', prev, 'to', nextIndex);
       return nextIndex;
     });
     setTimeout(() => {
-      console.log('Transition complete');
       setIsTransitioning(false);
     }, 300);
   }, [testimonials.length, isTransitioning, currentIndex]);
 
   const goToPrevious = useCallback(() => {
-    console.log('goToPrevious called', { currentIndex, isTransitioning, testimonialLength: testimonials.length });
     if (isTransitioning) {
-      console.log('Blocked: currently transitioning');
       return;
     }
     setIsTransitioning(true);
     setCurrentIndex((prev) => {
       const nextIndex = (prev - 1 + testimonials.length) % testimonials.length;
-      console.log('Moving from', prev, 'to', nextIndex);
       return nextIndex;
     });
     setTimeout(() => {
-      console.log('Transition complete');
       setIsTransitioning(false);
     }, 300);
   }, [testimonials.length, isTransitioning, currentIndex]);
 
   const goToSlide = useCallback((index: number) => {
-    console.log('goToSlide called', { index, currentIndex, isTransitioning });
     if (isTransitioning || index === currentIndex) {
-      console.log('Blocked: transitioning or same index');
       return;
     }
     setIsTransitioning(true);
-    console.log('Moving to slide', index);
     setCurrentIndex(index);
     setTimeout(() => {
-      console.log('Slide transition complete');
       setIsTransitioning(false);
     }, 300);
   }, [currentIndex, isTransitioning]);
@@ -102,6 +92,10 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     
+    if (prefersReducedMotion) {
+      return;
+    }
+
     setProgress(0);
     
     if (isPlaying && !isHovered) {
@@ -119,7 +113,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
         }, 100);
       }
     }
-  }, [goToNext, autoScrollInterval, isPlaying, isHovered, showProgressBar]);
+  }, [goToNext, autoScrollInterval, isPlaying, isHovered, showProgressBar, prefersReducedMotion]);
 
   const stopAutoScroll = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -139,6 +133,34 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       startAutoScroll();
     }
   }, [isHovered, isPlaying, startAutoScroll, stopAutoScroll]);
+
+  // Respect reduced motion preference by disabling auto-play
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
+    handleChange();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      // @ts-ignore - Safari
+      mediaQuery.addListener(handleChange);
+    }
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        // @ts-ignore - Safari
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsPlaying(false);
+    }
+  }, [prefersReducedMotion]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -211,12 +233,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
   };
 
   // Debug logging
-  console.log('TestimonialCarousel rendered with:', {
-    testimonials: testimonials,
-    testimonialsLength: testimonials?.length,
-    currentIndex,
-    isTransitioning
-  });
+  // Debug logging removed
 
   // Handle empty testimonials array
   if (!testimonials || testimonials.length === 0) {
@@ -245,10 +262,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       aria-live="polite"
       style={{ isolation: 'isolate' }}
     >
-      {/* Debug info - remove in production */}
-      <div className="absolute top-2 left-2 bg-black text-white text-xs px-2 py-1 rounded z-30">
-        Index: {currentIndex + 1}/{testimonials.length} | Transitioning: {isTransitioning ? 'Yes' : 'No'}
-      </div>
+      {/* Debug info removed */}
 
       {/* Progress bar */}
       {showProgressBar && (
@@ -293,16 +307,18 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
             {/* Testimonial text */}
             <blockquote className="text-center mb-8">
               <p className="text-lg sm:text-xl lg:text-2xl text-gray-800 leading-relaxed font-medium">
-                "[{currentIndex + 1}] {currentTestimonial.text}"
+                "{currentTestimonial.text}"
               </p>
             </blockquote>
 
             {/* Author information */}
             <div className="flex flex-col items-center text-center">
               {currentTestimonial.photo && (
-                <img
+                <Image
                   src={currentTestimonial.photo}
                   alt={`${currentTestimonial.name}'s photo`}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full object-cover mb-4 border-4 border-white shadow-md"
                 />
               )}
@@ -326,7 +342,6 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('Previous button clicked');
           goToPrevious();
         }}
         disabled={isTransitioning}
@@ -341,7 +356,6 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('Next button clicked');
           goToNext();
         }}
         disabled={isTransitioning}
@@ -358,7 +372,6 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Play/Pause button clicked');
             togglePlayPause();
           }}
           type="button"
@@ -378,7 +391,6 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log(`Indicator ${index} clicked`);
                 goToSlide(index);
               }}
               disabled={isTransitioning}

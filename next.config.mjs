@@ -1,15 +1,48 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-	headers: async () => [
-		{
-			source: '/(.*)',
-			headers: [
-				{ key: 'X-Frame-Options', value: 'DENY' },
-				{ key: 'X-Content-Type-Options', value: 'nosniff' },
-				{ key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://www.google-analytics.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com; frame-src 'self';" },
-			],
-		},
-	],
+	headers: async () => {
+		const isDev = process.env.NODE_ENV !== 'production'
+
+		const scriptSrc = [
+			"'self'",
+			"'unsafe-inline'",
+			'https://www.googletagmanager.com',
+			'https://www.google-analytics.com',
+			isDev ? "'unsafe-eval'" : null, // needed for Next.js React Refresh in dev
+		]
+			.filter(Boolean)
+			.join(' ')
+
+		const connectSrc = [
+			"'self'",
+			'https://www.google-analytics.com',
+			isDev ? 'ws:' : null, // allow HMR websocket in dev
+			isDev ? 'http://localhost:*' : null,
+		]
+			.filter(Boolean)
+			.join(' ')
+
+		const csp = [
+			`default-src 'self'`,
+			`script-src ${scriptSrc}`,
+			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+			"img-src 'self' data: https://www.google-analytics.com",
+			"font-src 'self' https://fonts.gstatic.com",
+			`connect-src ${connectSrc}`,
+			"frame-src 'self'",
+		].join('; ') + ';'
+
+		return [
+			{
+				source: '/(.*)',
+				headers: [
+					{ key: 'X-Frame-Options', value: 'DENY' },
+					{ key: 'X-Content-Type-Options', value: 'nosniff' },
+					{ key: 'Content-Security-Policy', value: csp },
+				],
+			},
+		]
+	},
 }
 
 export default nextConfig

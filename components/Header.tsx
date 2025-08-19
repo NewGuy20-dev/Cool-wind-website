@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { PhoneCall, Menu, X } from 'lucide-react'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
@@ -9,6 +10,7 @@ const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
 
 export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+	const pathname = usePathname()
 
 	const navigation = [
 		{ name: 'Home', href: '/' },
@@ -36,7 +38,8 @@ export default function Header() {
 						<Link
 							key={item.name}
 							href={item.href}
-							className="text-neutral-600 hover:text-primary-600 font-medium transition-colors duration-200 relative group"
+							aria-current={pathname === item.href ? 'page' : undefined}
+							className={`text-neutral-600 hover:text-primary-600 font-medium transition-colors duration-200 relative group ${pathname === item.href ? 'text-primary-700' : ''}`}
 						>
 							{item.name}
 							<span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary-600 transition-all duration-200 group-hover:w-full"></span>

@@ -125,11 +125,15 @@ export default function ContactForm({ compact = false, title, description }: Con
 						<input
 							id="name"
 							{...register('name')}
+							autoComplete="name"
+							required
+							aria-invalid={!!errors.name || undefined}
+							aria-describedby={errors.name ? 'name-error' : undefined}
 							placeholder="Enter your full name"
 							className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-800 placeholder-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20"
 						/>
 						{errors.name && (
-							<p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+							<p id="name-error" className="mt-1 text-sm text-red-600">{errors.name.message}</p>
 						)}
 					</div>
 
@@ -141,11 +145,15 @@ export default function ContactForm({ compact = false, title, description }: Con
 							id="phone"
 							type="tel"
 							{...register('phone')}
+							autoComplete="tel"
+							required
+							aria-invalid={!!errors.phone || undefined}
+							aria-describedby={errors.phone ? 'phone-error' : undefined}
 							placeholder="+91 98765 43210"
 							className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-800 placeholder-neutral-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20"
 						/>
 						{errors.phone && (
-							<p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+							<p id="phone-error" className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
 						)}
 					</div>
 				</div>
@@ -160,6 +168,9 @@ export default function ContactForm({ compact = false, title, description }: Con
 					<select
 						id="service"
 						{...register('service')}
+						required
+						aria-invalid={!!errors.service || undefined}
+						aria-describedby={errors.service ? 'service-error' : undefined}
 						className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-neutral-800 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20"
 					>
 						<option value="spare_parts">Spare Parts Order</option>
@@ -168,6 +179,9 @@ export default function ContactForm({ compact = false, title, description }: Con
 						<option value="sales">New Appliance Sales</option>
 						<option value="other">Other Service</option>
 					</select>
+					{errors.service && (
+						<p id="service-error" className="mt-1 text-sm text-red-600">{(errors as any).service?.message}</p>
+					)}
 				</div>
 
 				{/* Service Details - full form only */}
@@ -224,6 +238,9 @@ export default function ContactForm({ compact = false, title, description }: Con
 						<input
 							type="checkbox"
 							{...register('consent')}
+							required
+							aria-invalid={!!errors.consent || undefined}
+							aria-describedby={errors.consent ? 'consent-error' : undefined}
 							className="h-4 w-4 text-primary-600 border-neutral-300 rounded focus:ring-primary-500 mt-0.5 flex-shrink-0"
 						/>
 						<span className="text-neutral-700">
@@ -231,7 +248,7 @@ export default function ContactForm({ compact = false, title, description }: Con
 						</span>
 					</label>
 					{errors.consent && (
-						<p className="mt-1 text-sm text-red-600">{errors.consent.message}</p>
+						<p id="consent-error" className="mt-1 text-sm text-red-600">{errors.consent.message}</p>
 					)}
 				</div>
 

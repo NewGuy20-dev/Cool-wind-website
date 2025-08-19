@@ -30,63 +30,32 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Debug logging
-  console.log('🎠 Carousel rendered:', { 
-    totalTestimonials: testimonials?.length, 
-    currentIndex, 
-    currentTestimonial: testimonials?.[currentIndex]?.name 
-  });
-
-  // Track currentIndex changes
-  useEffect(() => {
-    console.log('🔄 currentIndex CHANGED to:', currentIndex);
-  }, [currentIndex]);
+  // Debug logging removed
 
   // Simple navigation functions
   const goToNext = () => {
-    console.log('🔴 NEXT BUTTON FUNCTION CALLED!');
-    console.log('➡️ Current state:', { currentIndex, testimonialsLength: testimonials.length });
     const newIndex = (currentIndex + 1) % testimonials.length;
-    console.log(`🔴 CHANGING INDEX FROM ${currentIndex} TO ${newIndex}`);
     setCurrentIndex(newIndex);
-    console.log('🔴 setCurrentIndex called with:', newIndex);
   };
 
   const goToPrevious = () => {
-    console.log('🔴 PREVIOUS BUTTON FUNCTION CALLED!');
-    console.log('⬅️ Current state:', { currentIndex, testimonialsLength: testimonials.length });
     const newIndex = (currentIndex - 1 + testimonials.length) % testimonials.length;
-    console.log(`🔴 CHANGING INDEX FROM ${currentIndex} TO ${newIndex}`);
     setCurrentIndex(newIndex);
-    console.log('🔴 setCurrentIndex called with:', newIndex);
   };
 
   const goToSlide = (index: number) => {
-    console.log(`🔴 DOT INDICATOR FUNCTION CALLED for slide ${index}!`);
-    console.log('🎯 Current state:', { currentIndex, targetIndex: index });
     setCurrentIndex(index);
-    console.log('🔴 setCurrentIndex called with:', index);
   };
 
   // Auto-scroll effect
   useEffect(() => {
     if (!isHovered && testimonials && testimonials.length > 1) {
-      console.log('⏰ Setting up auto-scroll interval for', testimonials.length, 'testimonials');
       const interval = setInterval(() => {
-        console.log('⏰ Auto-scroll triggered - moving from index', currentIndex);
-        setCurrentIndex(prev => {
-          const nextIndex = (prev + 1) % testimonials.length;
-          console.log('⏰ Moving to index', nextIndex);
-          return nextIndex;
-        });
+        setCurrentIndex(prev => (prev + 1) % testimonials.length);
       }, autoScrollInterval);
-      
       return () => {
-        console.log('🛑 Clearing auto-scroll interval');
         clearInterval(interval);
       };
-    } else {
-      console.log('⏸️ Auto-scroll disabled:', { isHovered, testimonialsLength: testimonials?.length });
     }
   }, [isHovered, autoScrollInterval, testimonials.length]); // Fixed: only depend on length, not the whole array
 
@@ -124,11 +93,9 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
     <div 
       className={`relative w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${className}`}
       onMouseEnter={() => {
-        console.log('🐭 Mouse entered - pausing auto-scroll');
         setIsHovered(true);
       }}
       onMouseLeave={() => {
-        console.log('🐭 Mouse left - resuming auto-scroll');
         setIsHovered(false);
       }}
     >
@@ -197,7 +164,6 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('🔴 PREVIOUS BUTTON CLICKED!');
           goToPrevious();
         }}
         className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-red-600 hover:bg-red-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform hover:scale-110"
@@ -211,7 +177,6 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          console.log('🔴 NEXT BUTTON CLICKED!');
           goToNext();
         }}
         className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-green-600 hover:bg-green-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform hover:scale-110"
@@ -230,7 +195,6 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log(`🔴 INDICATOR ${index + 1} CLICKED!`);
                 goToSlide(index);
               }}
               type="button"

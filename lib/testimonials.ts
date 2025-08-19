@@ -31,18 +31,16 @@ export function getTopTestimonialsForHome(
   testimonials: ExistingTestimonial[],
   limit: number = 5
 ): CarouselTestimonial[] {
-  console.log('getTopTestimonialsForHome called with:', testimonials.length, 'testimonials');
+  // Debug logging removed
   
   // First try rating >= 5, then fall back to rating >= 4, then all
   let topRated = testimonials.filter(t => t.rating >= 5);
   
   if (topRated.length === 0) {
-    console.log('No 5-star testimonials, trying 4+ stars');
     topRated = testimonials.filter(t => t.rating >= 4);
   }
   
   if (topRated.length === 0) {
-    console.log('No 4+ star testimonials, using all testimonials');
     topRated = testimonials;
   }
   
@@ -50,7 +48,6 @@ export function getTopTestimonialsForHome(
     .sort((a, b) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime())
     .slice(0, limit);
   
-  console.log('Returning', sorted.length, 'testimonials for carousel');
   return transformTestimonialsForCarousel(sorted);
 }
 
