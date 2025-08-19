@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export interface Testimonial {
   text: string;
@@ -132,101 +133,110 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
         setIsHovered(false);
       }}
     >
-      {/* VERY OBVIOUS Debug info */}
-      <div className="absolute top-2 left-2 bg-red-600 text-white text-lg font-bold px-4 py-2 rounded-lg z-50 shadow-lg border-2 border-white">
-        TESTIMONIAL {currentIndex + 1} of {testimonials.length}
-      </div>
+      {/* Debug overlay removed */}
 
-      {/* Main testimonial card with bright border to show changes */}
-      <div 
-        key={`testimonial-${currentIndex}`}
-        className="relative bg-white rounded-xl shadow-xl overflow-hidden min-h-[350px] border-4 border-blue-500"
-        style={{ 
-          backgroundColor: currentIndex % 2 === 0 ? '#f8fafc' : '#f1f5f9' // Alternate background colors
-        }}
-      >
-        {/* Background gradient that changes per slide */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: currentIndex % 3 === 0 
-              ? 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)'
-              : currentIndex % 3 === 1
-              ? 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)'
-              : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'
+      {/* Main testimonial card with animation */}
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={`testimonial-${currentIndex}`}
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -12, scale: 0.98 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="relative bg-white rounded-xl shadow-xl overflow-hidden min-h-[350px] border-4 border-blue-500"
+          style={{ 
+            backgroundColor: currentIndex % 2 === 0 ? '#f8fafc' : '#f1f5f9'
           }}
-        />
-        
-        {/* Content */}
-        <div className="relative z-10 p-6 sm:p-8 lg:p-12">
-          {/* Quote icon */}
-          <div className="flex justify-center mb-6">
-            <Quote className="w-16 h-16 text-blue-600 opacity-30" />
-          </div>
-
-          {/* Rating */}
-          {showRating && currentTestimonial.rating && (
-            <div className="flex justify-center">
-              {renderStars(currentTestimonial.rating)}
+        >
+          {/* Background gradient that changes per slide */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: currentIndex % 3 === 0 
+                ? 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)'
+                : currentIndex % 3 === 1
+                ? 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)'
+                : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'
+            }}
+          />
+          
+          {/* Content */}
+          <div className="relative z-10 p-6 sm:p-8 lg:p-12">
+            {/* Quote icon */}
+            <div className="flex justify-center mb-6">
+              <Quote className="w-16 h-16 text-blue-600 opacity-30" />
             </div>
-          )}
 
-          {/* Testimonial text with VERY OBVIOUS numbering */}
-          <blockquote className="text-center mb-8">
-            <p className="text-xl sm:text-2xl lg:text-3xl text-gray-900 leading-relaxed font-bold">
-              "TESTIMONIAL #{currentIndex + 1}: {currentTestimonial.text}"
-            </p>
-          </blockquote>
-
-          {/* Author information */}
-          <div className="text-center">
-            <p className="font-bold text-xl text-gray-900 mb-2">
-              — {currentTestimonial.name}
-            </p>
-            {currentTestimonial.role && (
-              <p className="text-lg text-gray-700 font-medium">
-                {currentTestimonial.role}
-              </p>
+            {/* Rating */}
+            {showRating && currentTestimonial.rating && (
+              <div className="flex justify-center">
+                {renderStars(currentTestimonial.rating)}
+              </div>
             )}
+
+            {/* Testimonial text with VERY OBVIOUS numbering */}
+            <blockquote className="text-center mb-8">
+              <p className="text-xl sm:text-2xl lg:text-3xl text-gray-900 leading-relaxed font-bold">
+                "TESTIMONIAL #{currentIndex + 1}: {currentTestimonial.text}"
+              </p>
+            </blockquote>
+
+            {/* Author information */}
+            <div className="text-center">
+              <p className="font-bold text-xl text-gray-900 mb-2">
+                — {currentTestimonial.name}
+              </p>
+              {currentTestimonial.role && (
+                <p className="text-lg text-gray-700 font-medium">
+                  {currentTestimonial.role}
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* VERY OBVIOUS Navigation arrows */}
-      <button
+      <motion.button
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           console.log('🔴 PREVIOUS BUTTON CLICKED!');
           goToPrevious();
         }}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-red-600 hover:bg-red-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform hover:scale-110"
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.95 }}
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-red-600 hover:bg-red-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform"
         type="button"
         aria-label="Previous testimonial"
       >
         <ChevronLeft className="w-8 h-8" />
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           console.log('🔴 NEXT BUTTON CLICKED!');
           goToNext();
         }}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-green-600 hover:bg-green-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform hover:scale-110"
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.95 }}
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-green-600 hover:bg-green-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform"
         type="button"
         aria-label="Next testimonial"
       >
         <ChevronRight className="w-8 h-8" />
-      </button>
+      </motion.button>
 
       {/* VERY OBVIOUS Indicators */}
       {showIndicators && testimonials.length > 1 && (
         <div className="flex justify-center mt-8 gap-3">
           {testimonials.map((_, index) => (
-            <button
+            <motion.button
               key={index}
+              whileHover={{ scale: 1.12 }}
+              whileTap={{ scale: 0.9 }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -242,7 +252,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
               aria-label={`Go to testimonial ${index + 1}`}
             >
               {index + 1}
-            </button>
+            </motion.button>
           ))}
         </div>
       )}

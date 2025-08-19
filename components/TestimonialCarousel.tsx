@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Quote, Star, Play, Pause } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 // TypeScript interfaces
 export interface Testimonial {
@@ -261,68 +262,68 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       )}
 
       {/* Main testimonial card */}
-      <div 
-        key={`testimonial-${currentIndex}`}
-        className="relative bg-white rounded-xl shadow-lg overflow-hidden min-h-[300px] sm:min-h-[250px]"
-      >
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50" />
-        
-        {/* Content */}
-        <div className="relative z-10 p-6 sm:p-8 lg:p-12">
-          {/* Quote icon */}
-          <div className="flex justify-center mb-6">
-            <Quote className="w-12 h-12 text-blue-500 opacity-20" />
-          </div>
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={`testimonial-${currentIndex}`}
+          initial={{ opacity: 0, y: 12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -12, scale: 0.98 }}
+          transition={{ duration: 0.3 }}
+          className="relative bg-white rounded-xl shadow-lg overflow-hidden min-h-[300px] sm:min-h-[250px]"
+        >
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50" />
+          
+          {/* Content */}
+          <div className="relative z-10 p-6 sm:p-8 lg:p-12">
+            {/* Quote icon */}
+            <div className="flex justify-center mb-6">
+              <Quote className="w-12 h-12 text-blue-500 opacity-20" />
+            </div>
 
-          {/* Testimonial content with smooth transition */}
-          <div 
-            className="transition-all duration-300 ease-in-out"
-            style={{
-              opacity: isTransitioning ? 0.7 : 1,
-              transform: isTransitioning ? 'translateY(10px)' : 'translateY(0)'
-            }}
-          >
-            {/* Rating */}
-            {showRating && currentTestimonial.rating && (
-              <div className="flex justify-center">
-                {renderStars(currentTestimonial.rating)}
-              </div>
-            )}
-
-            {/* Testimonial text */}
-            <blockquote className="text-center mb-8">
-              <p className="text-lg sm:text-xl lg:text-2xl text-gray-800 leading-relaxed font-medium">
-                "[{currentIndex + 1}] {currentTestimonial.text}"
-              </p>
-            </blockquote>
-
-            {/* Author information */}
-            <div className="flex flex-col items-center text-center">
-              {currentTestimonial.photo && (
-                <img
-                  src={currentTestimonial.photo}
-                  alt={`${currentTestimonial.name}'s photo`}
-                  className="w-16 h-16 rounded-full object-cover mb-4 border-4 border-white shadow-md"
-                />
+            {/* Testimonial content */}
+            <div>
+              {/* Rating */}
+              {showRating && currentTestimonial.rating && (
+                <div className="flex justify-center">
+                  {renderStars(currentTestimonial.rating)}
+                </div>
               )}
-              <cite className="not-italic">
-                <p className="font-semibold text-lg text-gray-900">
-                  {currentTestimonial.name}
+
+              {/* Testimonial text */}
+              <blockquote className="text-center mb-8">
+                <p className="text-lg sm:text-xl lg:text-2xl text-gray-800 leading-relaxed font-medium">
+                  "[{currentIndex + 1}] {currentTestimonial.text}"
                 </p>
-                {currentTestimonial.role && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {currentTestimonial.role}
-                  </p>
+              </blockquote>
+
+              {/* Author information */}
+              <div className="flex flex-col items-center text-center">
+                {currentTestimonial.photo && (
+                  <img
+                    src={currentTestimonial.photo}
+                    alt={`${currentTestimonial.name}'s photo`}
+                    className="w-16 h-16 rounded-full object-cover mb-4 border-4 border-white shadow-md"
+                  />
                 )}
-              </cite>
+                <cite className="not-italic">
+                  <p className="font-semibold text-lg text-gray-900">
+                    {currentTestimonial.name}
+                  </p>
+                  {currentTestimonial.role && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {currentTestimonial.role}
+                    </p>
+                  )}
+                </cite>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* Navigation arrows */}
-      <button
+      <motion.button
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -330,14 +331,16 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
           goToPrevious();
         }}
         disabled={isTransitioning}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.95 }}
         className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
         aria-label="Previous testimonial"
         type="button"
       >
         <ChevronLeft className="w-6 h-6 pointer-events-none" />
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -345,12 +348,14 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
           goToNext();
         }}
         disabled={isTransitioning}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.95 }}
         className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
         aria-label="Next testimonial"
         type="button"
       >
         <ChevronRight className="w-6 h-6 pointer-events-none" />
-      </button>
+      </motion.button>
 
       {/* Play/Pause button */}
       {showPlayPause && (
@@ -373,7 +378,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       {showIndicators && testimonials.length > 1 && (
         <div className="flex justify-center mt-8 gap-2 z-10 relative">
           {testimonials.map((_, index) => (
-            <button
+            <motion.button
               key={index}
               onClick={(e) => {
                 e.preventDefault();
@@ -382,6 +387,8 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
                 goToSlide(index);
               }}
               disabled={isTransitioning}
+              whileHover={{ scale: 1.12 }}
+              whileTap={{ scale: 0.9 }}
               type="button"
               className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer ${
                 index === currentIndex

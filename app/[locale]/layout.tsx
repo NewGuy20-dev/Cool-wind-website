@@ -6,6 +6,7 @@ import FloatingCtas from '@/components/FloatingCtas'
 import CookieConsent from '@/components/CookieConsent'
 import Providers from '@/components/Providers'
 import enMessages from '@/data/translations/en.json'
+import PageTransition from '@/components/PageTransition'
 
 export const metadata: Metadata = {
 	title: 'Cool Wind Services | AC & Refrigerator Spare Parts, Repairs in Thiruvalla',
@@ -73,7 +74,9 @@ export default function LocaleLayout({
 			<body className="min-h-screen antialiased">
 				<Providers locale={locale} messages={enMessages as any}>
 					<Header/>
-					{children}
+					<PageTransition>
+						{children}
+					</PageTransition>
 					<Footer/>
 					<FloatingCtas/>
 					<CookieConsent/>
