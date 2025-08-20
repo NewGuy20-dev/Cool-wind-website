@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { CheckCircle, AlertCircle, Send, Loader2, Phone, MessageCircle } from 'lucide-react'
 import { analytics } from '@/lib/analytics'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const FormSchema = z.object({
 	name: z.string().min(2, 'Enter your full name'),
@@ -74,7 +75,7 @@ export default function ContactForm({ compact = false, title, description }: Con
 
 	if (submitStatus === 'success') {
 		return (
-			<div className="text-center py-8">
+			<motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.25 }} className="text-center py-8">
 				<div className="mx-auto h-16 w-16 rounded-full bg-secondary-100 flex items-center justify-center mb-4">
 					<CheckCircle className="h-8 w-8 text-secondary-600" />
 				</div>
@@ -90,7 +91,7 @@ export default function ContactForm({ compact = false, title, description }: Con
 						{process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+91 85472 29991'}
 					</a>
 				</p>
-			</div>
+			</motion.div>
 		)
 	}
 
@@ -103,17 +104,19 @@ export default function ContactForm({ compact = false, title, description }: Con
 				</div>
 			)}
 
-			{submitStatus === 'error' && (
-				<div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-					<div className="flex items-center gap-2">
-						<AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-						<div>
-							<p className="text-red-800 font-medium">Submission Failed</p>
-							<p className="text-red-700 text-sm">{errorMessage}</p>
+			<AnimatePresence>
+				{submitStatus === 'error' && (
+					<motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+						<div className="flex items-center gap-2">
+							<AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+							<div>
+								<p className="text-red-800 font-medium">Submission Failed</p>
+								<p className="text-red-700 text-sm">{errorMessage}</p>
+							</div>
 						</div>
-					</div>
-				</div>
-			)}
+					</motion.div>
+				)}
+			</AnimatePresence>
 
 			<form onSubmit={handleSubmit(onSubmit)} className={`space-y-4`}>
 				{/* Name and Phone - always side by side on larger screens */}

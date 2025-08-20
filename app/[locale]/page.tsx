@@ -7,6 +7,7 @@ import { analytics } from '@/lib/analytics'
 import ContactForm from '@/components/ContactForm'
 import TestimonialCarousel from '@/components/TestimonialCarousel'
 import { enhancedTestimonials, getTopTestimonialsForHome } from '@/lib/testimonials'
+import { motion } from 'framer-motion'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
@@ -77,6 +78,15 @@ export default function HomePage() {
     { icon: <CheckCircle className="h-5 w-5" />, text: '6 Month Warranty' }
   ]
 
+  const containerVariants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } }
+  }
+  const itemVariants = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+  }
+
   return (
     <main>
       {/* Skip link for accessibility */}
@@ -86,37 +96,37 @@ export default function HomePage() {
       <section className="relative bg-gradient-to-br from-primary-50 to-secondary-50 overflow-hidden" id="main-content">
         <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24">
           <div className="grid gap-12 lg:grid-cols-2 items-center">
-            <div className="animate-slide-up">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-800 leading-tight">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.4 }}>
+              <motion.h1 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }} className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-800 leading-tight">
                 Reliable AC & Refrigerator Services in 
                 <span className="text-primary-600"> Thiruvalla</span>
-              </h1>
-              <p className="mt-6 text-lg md:text-xl text-neutral-600 leading-relaxed">
+              </motion.h1>
+              <motion.p initial={{ opacity: 0, y: 6 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.3 }} className="mt-6 text-lg md:text-xl text-neutral-600 leading-relaxed">
                 Expert repair, quality sales, trusted by locals since 2009. 
                 Serving Thiruvalla & Pathanamthitta with genuine parts and professional service.
-              </p>
+              </motion.p>
               
               {/* Features */}
-              <div className="mt-6 grid grid-cols-2 gap-3">
+              <motion.div variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} className="mt-6 grid grid-cols-2 gap-3">
                 {features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-neutral-600">
+                  <motion.div variants={itemVariants} key={index} className="flex items-center gap-2 text-sm text-neutral-600">
                     <span className="text-secondary-600">{feature.icon}</span>
                     {feature.text}
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
 
               {/* CTAs */}
-              <div className="mt-8 flex flex-wrap gap-4">
-                <a 
+              <motion.div variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true }} className="mt-8 flex flex-wrap gap-4">
+                <motion.a variants={itemVariants}
                   href={`tel:${PHONE}`} 
                   onClick={() => analytics.phoneCallClick()} 
                   className="btn-primary inline-flex items-center gap-2"
                 >
                   <Phone size={20} />
                   Call Now
-                </a>
-                <a 
+                </motion.a>
+                <motion.a variants={itemVariants}
                   href={`https://wa.me/${WHATSAPP}?text=Hi, I need help with my appliance`}
                   onClick={() => analytics.whatsappClick()} 
                   className="btn-accent inline-flex items-center gap-2"
@@ -125,11 +135,13 @@ export default function HomePage() {
                 >
                   <MessageCircle size={20} />
                   WhatsApp Us
-                </a>
-                <Link href="#contact" className="btn-secondary">
+                </motion.a>
+                <motion.div variants={itemVariants}>
+                  <Link href="#contact" className="btn-secondary">
                   Get Quote
-                </Link>
-              </div>
+                  </Link>
+                </motion.div>
+              </motion.div>
 
               {/* Contact info */}
               <div className="mt-8 flex flex-wrap gap-6 text-sm text-neutral-600">
@@ -142,7 +154,7 @@ export default function HomePage() {
                   Mon-Sat 10AM-6PM
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Hero Image Placeholder */}
             <div className="relative">
@@ -175,9 +187,9 @@ export default function HomePage() {
             <p className="mt-4 text-lg text-neutral-600">Professional AC & Refrigerator solutions</p>
           </div>
           
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {services.map((service, index) => (
-              <div key={index} className="card p-6 text-center hover:shadow-lg transition-shadow">
+              <motion.div variants={itemVariants} key={index} className="card p-6 text-center hover:shadow-lg transition-shadow">
                 <div className="mx-auto h-16 w-16 rounded-full bg-primary-100 flex items-center justify-center mb-4">
                   <span className="text-primary-600">{service.icon}</span>
                 </div>
@@ -186,9 +198,9 @@ export default function HomePage() {
                 <Link href={service.link} className="btn-primary text-sm">
                   {service.cta}
                 </Link>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -200,22 +212,22 @@ export default function HomePage() {
             <p className="mt-4 text-lg text-neutral-600">See our latest work and installations</p>
           </div>
           
-          <div className="grid gap-6 md:grid-cols-3">
+          <motion.div variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid gap-6 md:grid-cols-3">
             {[
               { title: 'AC Installation', category: 'Installation', date: '2024-01-20', description: 'Split AC installation for residential complex' },
               { title: 'Fridge Repair', category: 'Repair', date: '2024-01-18', description: 'Compressor replacement for commercial refrigerator' },
               { title: 'Parts Supply', category: 'Parts', date: '2024-01-15', description: 'Bulk order for service center parts inventory' }
             ].map((project, index) => (
-              <div key={index} className="card p-6">
+              <motion.div variants={itemVariants} key={index} className="card p-6">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-primary-600 font-medium">{project.category}</span>
                   <span className="text-sm text-neutral-500">{project.date}</span>
                 </div>
                 <h3 className="font-semibold text-neutral-800 mb-2">{project.title}</h3>
                 <p className="text-neutral-600 text-sm">{project.description}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
           
           <div className="text-center mt-8">
             <Link href="/portfolio" className="btn-secondary">
