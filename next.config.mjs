@@ -8,6 +8,8 @@ const nextConfig = {
 			"'unsafe-inline'",
 			'https://www.googletagmanager.com',
 			'https://www.google-analytics.com',
+			'https://translate.google.com',
+			'https://translate.googleapis.com',
 			isDev ? "'unsafe-eval'" : null, // needed for Next.js React Refresh in dev
 		]
 			.filter(Boolean)
@@ -16,20 +18,30 @@ const nextConfig = {
 		const connectSrc = [
 			"'self'",
 			'https://www.google-analytics.com',
+			'https://translate.googleapis.com',
+			'https://translate.google.com',
 			isDev ? 'ws:' : null, // allow HMR websocket in dev
 			isDev ? 'http://localhost:*' : null,
 		]
 			.filter(Boolean)
 			.join(' ')
 
+		const imgSrc = [
+			"'self'",
+			'data:',
+			'https://www.google-analytics.com',
+			'https://translate.googleapis.com',
+			'https://translate.google.com',
+		].join(' ')
+
 		const csp = [
 			`default-src 'self'`,
 			`script-src ${scriptSrc}`,
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-			"img-src 'self' data: https://www.google-analytics.com",
+			`img-src ${imgSrc}`,
 			"font-src 'self' https://fonts.gstatic.com",
 			`connect-src ${connectSrc}`,
-			"frame-src 'self'",
+			"frame-src 'self' https://translate.google.com",
 		].join('; ') + ';'
 
 		return [

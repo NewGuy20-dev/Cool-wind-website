@@ -6,7 +6,9 @@ import FloatingCtas from '@/components/FloatingCtas'
 import CookieConsent from '@/components/CookieConsent'
 import Providers from '@/components/Providers'
 import enMessages from '@/data/translations/en.json'
+import mlMessages from '@/data/translations/ml.json'
 import PageTransition from '@/components/PageTransition'
+import GoogleTranslate from '@/components/GoogleTranslate'
 
 export const metadata: Metadata = {
 	title: 'Cool Wind Services | AC & Refrigerator Spare Parts, Repairs in Thiruvalla',
@@ -24,6 +26,7 @@ export default function LocaleLayout({
 	params: { locale: string }
 }) {
 	const locale = params.locale
+	const messages = (locale === 'ml' ? (mlMessages as any) : (enMessages as any))
 	const ld = {
 		"@context": "https://schema.org",
 		"@type": "LocalBusiness",
@@ -72,7 +75,9 @@ export default function LocaleLayout({
 				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
 			</head>
 			<body className="min-h-screen antialiased">
-				<Providers locale={locale} messages={enMessages as any}>
+				{/* Google Translate mounts client-side; hidden UI */}
+				<GoogleTranslate targetLang={locale === 'ml' ? 'ml' : 'en'} />
+				<Providers locale={locale} messages={messages}>
 					<Header/>
 					<PageTransition>
 						{children}
