@@ -284,14 +284,14 @@ export default function ContactForm({ compact = false, title, description }: Con
 				</button>
 
 				{/* Direct Contact Options */}
-				<div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+				<div className="mt-6 p-4 bg-gradient-to-r from-secondary-100 to-primary-200 rounded-lg border border-secondary-200">
 					<p className="text-center text-sm font-medium text-gray-700 mb-3">
 						Need immediate help? Contact us directly:
 					</p>
 					<div className="flex flex-col sm:flex-row gap-3">
 						<a 
 							href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'}?text=Hi, I need help with ${compact ? 'a service request' : 'appliance service'}`}
-							className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium text-center transition-colors duration-200 flex items-center justify-center gap-2"
+							className="flex-1 bg-secondary-600 hover:bg-secondary-700 text-neutral-900 px-4 py-3 rounded-lg font-medium text-center transition-colors duration-200 flex items-center justify-center gap-2"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
@@ -300,13 +300,13 @@ export default function ContactForm({ compact = false, title, description }: Con
 						</a>
 						<a 
 							href={`tel:${process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'}`}
-							className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium text-center transition-colors duration-200 flex items-center justify-center gap-2"
+							className="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-3 rounded-lg font-medium text-center transition-colors duration-200 flex items-center justify-center gap-2"
 						>
 							<Phone className="w-5 h-5" />
 							Call Now
 						</a>
 					</div>
-					<p className="text-center text-xs text-gray-600 mt-2">
+					<p className="text-center text-xs text-neutral-600 mt-2">
 						Available 9 AM - 8 PM | Emergency calls accepted 24/7
 					</p>
 				</div>

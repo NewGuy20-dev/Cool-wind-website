@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 :root {
-	--color-bg: #ffffff;
-	--color-text: #1f2937;
-	--primary-blue: #2563eb;
-	--secondary-teal: #0891b2;
-	--accent-orange: #ea580c;
+	--color-bg: #F3F5F3; /* Off White main background */
+	--color-text: #1A1A1A; /* Dark Gray text */
+	--primary-blue: #71B5D1; /* Sky Blue */
+	--secondary-teal: #DFDF63; /* Yellow-Green accent */
+	--accent-orange: #DFDF63; /* Align accent to secondary */
 	--neutral-gray: #6b7280;
-	--light-gray: #f3f4f6;
+	--light-gray: #F3F5F3; /* Off White */
 	--white: #ffffff;
-	--dark: #1f2937;
+	--dark: #1A1A1A;
 }
 
 html { 
@@ -105,12 +105,12 @@ body {
 }
 
 .btn-accent {
-	@apply bg-accent-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-accent-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2;
+	@apply bg-secondary-600 text-neutral-900 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:bg-secondary-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
 }
 
 /* Card styles */
 .card {
-	@apply bg-white rounded-xl shadow-card border border-neutral-100 transition-shadow duration-200 hover:shadow-soft;
+	@apply bg-neutral-50 rounded-xl shadow-card border border-neutral-100 transition-shadow duration-200 hover:shadow-soft;
 }
 
 /* Mobile-first responsive typography */

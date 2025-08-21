@@ -30,7 +30,7 @@ export default function FloatingCtas() {
 				<a
 					href={`https://wa.me/${WHATSAPP}?text=Hi, I need help with my appliance`}
 					onClick={() => analytics.whatsappClick()}
-					className="group inline-flex items-center gap-3 rounded-full bg-secondary-600 px-4 py-3 text-white shadow-lg hover:bg-secondary-700 hover:shadow-xl transition-all duration-200"
+					className="group inline-flex items-center gap-3 rounded-full bg-secondary-600 px-4 py-3 text-neutral-900 shadow-lg hover:bg-secondary-700 hover:shadow-xl transition-all duration-200"
 					target="_blank"
 					rel="noopener noreferrer"
 					aria-label="Contact us on WhatsApp"
@@ -50,13 +50,13 @@ export default function FloatingCtas() {
 			</div>
 
 			{/* Mobile Sticky Bottom Bar */}
-			<div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-neutral-200 shadow-lg no-print">
+			<div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-neutral-50 border-t border-neutral-200 shadow-lg no-print">
 				<div className="flex items-center">
 					{/* WhatsApp Button */}
 					<a
 						href={`https://wa.me/${WHATSAPP}?text=Hi, I need help with my appliance`}
 						onClick={() => analytics.whatsappClick()}
-						className="flex-1 flex items-center justify-center gap-2 py-4 px-3 bg-secondary-600 text-white font-medium hover:bg-secondary-700 transition-colors duration-200"
+						className="flex-1 flex items-center justify-center gap-2 py-4 px-3 bg-secondary-600 text-neutral-900 font-medium hover:bg-secondary-700 transition-colors duration-200"
 						target="_blank"
 						rel="noopener noreferrer"
 						aria-label="Contact us on WhatsApp"
@@ -78,8 +78,8 @@ export default function FloatingCtas() {
 				</div>
 
 				{/* Emergency indicator */}
-				<div className="bg-accent-50 px-4 py-2 text-center">
-					<p className="text-xs text-accent-800">
+				<div className="bg-secondary-100 px-4 py-2 text-center">
+					<p className="text-xs text-secondary-800">
 						🚨 Emergency service available
 					</p>
 				</div>

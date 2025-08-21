@@ -219,8 +219,8 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
             key={i}
             className={`w-4 h-4 ${
               i < rating
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-gray-300'
+                ? 'fill-secondary-400 text-secondary-400'
+                : 'text-neutral-300'
             }`}
           />
         ))}
@@ -241,7 +241,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
     console.log('No testimonials provided to carousel');
     return (
       <div className="w-full max-w-4xl mx-auto p-6 text-center">
-        <p className="text-gray-500">No testimonials available. (Debug: {testimonials?.length || 0} testimonials)</p>
+        <p className="text-neutral-500">No testimonials available. (Debug: {testimonials?.length || 0} testimonials)</p>
       </div>
     );
   }
@@ -267,9 +267,9 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
 
       {/* Progress bar */}
       {showProgressBar && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-gray-200 overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-neutral-200 overflow-hidden">
           <div 
-            className="h-full bg-blue-500 transition-all duration-100 ease-linear"
+            className="h-full bg-primary-500 transition-all duration-100 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -283,16 +283,16 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -12, scale: 0.98 }}
           transition={{ duration: 0.3 }}
-          className="relative bg-white rounded-xl shadow-lg overflow-hidden min-h-[300px] sm:min-h-[250px]"
+          className="relative bg-neutral-50 rounded-xl shadow-lg overflow-hidden min-h-[300px] sm:min-h-[250px]"
         >
           {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-primary-200" />
           
           {/* Content */}
           <div className="relative z-10 p-6 sm:p-8 lg:p-12">
             {/* Quote icon */}
             <div className="flex justify-center mb-6">
-              <Quote className="w-12 h-12 text-blue-500 opacity-20" />
+              <Quote className="w-12 h-12 text-primary-500 opacity-20" />
             </div>
 
           {/* Testimonial content with smooth transition */}
@@ -312,7 +312,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
 
             {/* Testimonial text */}
             <blockquote className="text-center mb-8">
-              <p className="text-lg sm:text-xl lg:text-2xl text-gray-800 leading-relaxed font-medium">
+              <p className="text-lg sm:text-xl lg:text-2xl text-neutral-800 leading-relaxed font-medium">
                 "{currentTestimonial.text}"
               </p>
             </blockquote>
@@ -327,11 +327,11 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
                 />
               )}
               <cite className="not-italic">
-                <p className="font-semibold text-lg text-gray-900">
+                <p className="font-semibold text-lg text-neutral-900">
                   {currentTestimonial.name}
                 </p>
                 {currentTestimonial.role && (
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-neutral-600 mt-1">
                     {currentTestimonial.role}
                   </p>
                 )}
@@ -352,7 +352,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
         disabled={isTransitioning}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-neutral-50 rounded-full shadow-lg border border-neutral-200 flex items-center justify-center text-neutral-600 hover:text-primary-600 hover:border-primary-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
         aria-label="Previous testimonial"
         type="button"
       >
@@ -368,7 +368,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
         disabled={isTransitioning}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-neutral-50 rounded-full shadow-lg border border-neutral-200 flex items-center justify-center text-neutral-600 hover:text-primary-600 hover:border-primary-300 hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
         aria-label="Next testimonial"
         type="button"
       >
@@ -384,7 +384,7 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
             togglePlayPause();
           }}
           type="button"
-          className="absolute top-4 right-4 z-20 w-10 h-10 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
+          className="absolute top-4 right-4 z-20 w-10 h-10 bg-neutral-50 rounded-full shadow-md border border-neutral-200 flex items-center justify-center text-neutral-600 hover:text-primary-600 hover:border-primary-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer"
           aria-label={isPlaying ? "Pause auto-scroll" : "Resume auto-scroll"}
         >
           {isPlaying ? <Pause className="w-4 h-4 pointer-events-none" /> : <Play className="w-4 h-4 pointer-events-none" />}
@@ -406,10 +406,10 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
               whileHover={{ scale: 1.12 }}
               whileTap={{ scale: 0.9 }}
               type="button"
-              className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer ${
+              className={`w-3 h-3 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 cursor-pointer ${
                 index === currentIndex
-                  ? 'bg-blue-500 scale-125'
-                  : 'bg-gray-300 hover:bg-gray-400'
+                  ? 'bg-primary-500 scale-125'
+                  : 'bg-neutral-300 hover:bg-neutral-400'
               }`}
               aria-label={`Go to testimonial ${index + 1}`}
             />

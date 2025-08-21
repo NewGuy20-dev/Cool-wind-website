@@ -158,7 +158,7 @@ export default function HomePage() {
 
             {/* Hero Image Placeholder */}
             <div className="relative">
-              <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-white to-neutral-100 shadow-soft border border-neutral-200 flex items-center justify-center">
+              <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-neutral-50 to-primary-200 shadow-soft border border-neutral-200 flex items-center justify-center">
                 <div className="text-center">
                   <div className="mx-auto h-24 w-24 rounded-full bg-primary-100 flex items-center justify-center mb-4">
                     <Snowflake className="h-12 w-12 text-primary-600" />
@@ -171,8 +171,8 @@ export default function HomePage() {
               <div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-secondary-100 flex items-center justify-center shadow-lg">
                 <Wrench className="h-8 w-8 text-secondary-600" />
               </div>
-              <div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-accent-100 flex items-center justify-center shadow-lg">
-                <CheckCircle className="h-6 w-6 text-accent-600" />
+              <div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center shadow-lg">
+                <CheckCircle className="h-6 w-6 text-primary-600" />
               </div>
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function HomePage() {
       </section>
 
       {/* Quick Services Grid */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-neutral-50">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">Our Services</h2>
@@ -238,7 +238,7 @@ export default function HomePage() {
       </section>
 
       {/* Testimonials Carousel */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-neutral-50">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">What Our Customers Say</h2>
