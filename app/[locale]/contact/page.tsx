@@ -100,7 +100,7 @@ export default function ContactPage() {
 			</section>
 
 			{/* Quick Contact Methods */}
-			<section className="py-12 bg-white">
+			<section className="py-12 bg-neutral-50">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="grid gap-6 md:grid-cols-3">
 						{contactMethods.map((method, index) => (
@@ -165,16 +165,16 @@ export default function ContactPage() {
 											<span className="text-neutral-700">{schedule.day}</span>
 											<span className={`font-medium ${
 												schedule.type === 'emergency' 
-													? 'text-accent-600' 
+													? 'text-secondary-600' 
 													: 'text-neutral-800'
-											}`}>
+											}` }>
 												{schedule.hours}
 											</span>
 										</div>
 									))}
 								</div>
-								<div className="mt-4 p-3 bg-accent-50 rounded-lg">
-									<p className="text-accent-800 text-sm flex items-start gap-2">
+								<div className="mt-4 p-3 bg-secondary-100 rounded-lg">
+									<p className="text-secondary-800 text-sm flex items-start gap-2">
 										<AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
 										Emergency services available for critical appliance failures
 									</p>
@@ -209,9 +209,9 @@ export default function ContactPage() {
 							</div>
 
 							{/* Emergency Situations */}
-							<div className="card p-6 border-l-4 border-accent-500">
+							<div className="card p-6 border-l-4 border-secondary-500">
 								<h3 className="font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-									<AlertCircle className="h-5 w-5 text-accent-600" />
+									<AlertCircle className="h-5 w-5 text-secondary-600" />
 									Emergency Situations
 								</h3>
 								<p className="text-neutral-600 text-sm mb-3">
@@ -220,7 +220,7 @@ export default function ContactPage() {
 								<ul className="space-y-2">
 									{emergencyInfo.map((situation, index) => (
 										<li key={index} className="text-sm text-neutral-700 flex items-start gap-2">
-											<div className="h-1.5 w-1.5 rounded-full bg-accent-600 mt-2 flex-shrink-0"></div>
+											<div className="h-1.5 w-1.5 rounded-full bg-secondary-600 mt-2 flex-shrink-0"></div>
 											{situation}
 										</li>
 									))}
@@ -250,7 +250,7 @@ export default function ContactPage() {
 			</section>
 
 			{/* Location & Service Area */}
-			<section className="py-16 bg-white">
+			<section className="py-16 bg-neutral-50">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
@@ -325,7 +325,7 @@ export default function ContactPage() {
 
 								<div>
 									<h4 className="font-medium text-neutral-800 mb-3 flex items-center gap-2">
-										<Calendar className="h-4 w-4 text-accent-600" />
+										<Calendar className="h-4 w-4 text-secondary-600" />
 										Next-Day Service Areas
 									</h4>
 									<div className="grid grid-cols-2 gap-2 text-sm text-neutral-600">
@@ -336,7 +336,7 @@ export default function ContactPage() {
 										<span>• Aranmula</span>
 										<span>• Kaviyoor</span>
 									</div>
-									<p className="text-xs text-accent-600 mt-2">
+									<p className="text-xs text-secondary-600 mt-2">
 										Scheduled service visits
 									</p>
 								</div>
@@ -350,94 +350,6 @@ export default function ContactPage() {
 								</p>
 							</div>
 						</div>
-					</div>
-				</div>
-			</section>
-
-			{/* FAQ Section */}
-			<section className="py-16 bg-neutral-50">
-				<div className="mx-auto max-w-4xl px-4">
-					<div className="text-center mb-12">
-						<h2 className="text-3xl font-bold text-neutral-800 mb-4">
-							Frequently Asked Questions
-						</h2>
-						<p className="text-lg text-neutral-600">
-							Quick answers to common questions about our services
-						</p>
-					</div>
-
-					<div className="grid gap-6 md:grid-cols-2">
-						{[
-							{
-								question: 'Do you charge for diagnosis?',
-								answer: 'Free diagnosis when you proceed with our repair service. Otherwise, minimal diagnostic fee applies.'
-							},
-							{
-								question: 'What brands do you service?',
-								answer: 'We service all major brands including Samsung, LG, Whirlpool, Godrej, Voltas, Blue Star, and more.'
-							},
-							{
-								question: 'Do you provide warranty?',
-								answer: 'Yes, 6-month warranty on all repairs and genuine parts. Extended warranty available on request.'
-							},
-							{
-								question: 'How quickly can you respond?',
-								answer: 'Same-day service in Thiruvalla area (2-4 hours). Next-day service in extended coverage areas.'
-							},
-							{
-								question: 'Do you work on weekends?',
-								answer: 'Regular service Monday-Saturday. Sunday emergency service available for critical issues.'
-							},
-							{
-								question: 'What payment methods do you accept?',
-								answer: 'Cash, UPI, bank transfer, and all major digital payment methods accepted.'
-							}
-						].map((faq, index) => (
-							<div key={index} className="card p-6">
-								<h3 className="font-medium text-neutral-800 mb-2">
-									{faq.question}
-								</h3>
-								<p className="text-neutral-600 text-sm">
-									{faq.answer}
-								</p>
-							</div>
-						))}
-					</div>
-				</div>
-			</section>
-
-			{/* Final CTA */}
-			<section className="py-16 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
-				<div className="mx-auto max-w-4xl px-4 text-center">
-					<h2 className="text-3xl md:text-4xl font-bold mb-6">
-						Ready to Get Started?
-					</h2>
-					<p className="text-lg mb-8 text-primary-100">
-						Don't wait for your appliance problems to get worse. 
-						Contact us now for fast, reliable service.
-					</p>
-					
-					<div className="flex flex-wrap justify-center gap-4">
-						<a 
-							href={`tel:${PHONE}`} 
-							className="bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold hover:bg-primary-50 transition-colors duration-200 inline-flex items-center gap-2"
-						>
-							<Phone size={20} />
-							Call {PHONE}
-						</a>
-						<a 
-							href={`https://wa.me/${WHATSAPP}?text=Hi, I need appliance service help`}
-							className="bg-secondary-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200 inline-flex items-center gap-2"
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							<MessageCircle size={20} />
-							WhatsApp Now
-						</a>
-					</div>
-					
-					<div className="mt-8 text-primary-200 text-sm">
-						<p>Available Mon-Sat 10:00 AM - 6:00 PM</p>
 					</div>
 				</div>
 			</section>

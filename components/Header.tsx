@@ -23,7 +23,7 @@ export default function Header() {
 	]
 
 	return (
-		<header className="sticky top-0 z-50 border-b bg-white/95 backdrop-blur-sm shadow-sm">
+		<header className="sticky top-0 z-50 border-b bg-neutral-50/95 backdrop-blur-sm shadow-sm">
 			<div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
 				{/* Logo */}
 				<Link href="/" className="flex items-center space-x-2">
@@ -85,7 +85,7 @@ export default function Header() {
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -8 }}
 						transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-						className="md:hidden border-t bg-white"
+						className="md:hidden border-t bg-neutral-50"
 					>
 						<div className="px-4 py-3 space-y-1">
 							{navigation.map((item) => (

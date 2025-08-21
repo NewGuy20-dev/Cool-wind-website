@@ -79,8 +79,8 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
             key={i}
             className={`w-5 h-5 ${
               i < rating
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-gray-300'
+                ? 'fill-secondary-400 text-secondary-400'
+                : 'text-neutral-300'
             }`}
           />
         ))}
@@ -110,9 +110,9 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -12, scale: 0.98 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="relative bg-white rounded-xl shadow-xl overflow-hidden min-h-[350px] border-4 border-blue-500"
+          className="relative bg-neutral-50 rounded-xl shadow-xl overflow-hidden min-h-[350px] border-4 border-primary-500"
           style={{ 
-            backgroundColor: currentIndex % 2 === 0 ? '#f8fafc' : '#f1f5f9'
+            backgroundColor: currentIndex % 2 === 0 ? '#F3F5F3' : '#B1D6E4'
           }}
         >
           {/* Background gradient that changes per slide */}
@@ -120,10 +120,10 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
             className="absolute inset-0"
             style={{
               background: currentIndex % 3 === 0 
-                ? 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)'
+                ? 'linear-gradient(135deg, #e9f3f8 0%, #b1d6e4 100%)'
                 : currentIndex % 3 === 1
-                ? 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)'
-                : 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)'
+                ? 'linear-gradient(135deg, #fbfcea 0%, #eaebac 100%)'
+                : 'linear-gradient(135deg, #f3f5f3 0%, #b1d6e4 100%)'
             }}
           />
           
@@ -131,7 +131,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
           <div className="relative z-10 p-6 sm:p-8 lg:p-12">
             {/* Quote icon */}
             <div className="flex justify-center mb-6">
-              <Quote className="w-16 h-16 text-blue-600 opacity-30" />
+              <Quote className="w-16 h-16 text-primary-600 opacity-30" />
             </div>
 
             {/* Rating */}
@@ -143,18 +143,18 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
 
             {/* Testimonial text with VERY OBVIOUS numbering */}
             <blockquote className="text-center mb-8">
-              <p className="text-xl sm:text-2xl lg:text-3xl text-gray-900 leading-relaxed font-bold">
+              <p className="text-xl sm:text-2xl lg:text-3xl text-neutral-900 leading-relaxed font-bold">
                 "TESTIMONIAL #{currentIndex + 1}: {currentTestimonial.text}"
               </p>
             </blockquote>
 
             {/* Author information */}
             <div className="text-center">
-              <p className="font-bold text-xl text-gray-900 mb-2">
+              <p className="font-bold text-xl text-neutral-900 mb-2">
                 — {currentTestimonial.name}
               </p>
               {currentTestimonial.role && (
-                <p className="text-lg text-gray-700 font-medium">
+                <p className="text-lg text-neutral-700 font-medium">
                   {currentTestimonial.role}
                 </p>
               )}
@@ -172,7 +172,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
         }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-red-600 hover:bg-red-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-secondary-600 hover:bg-secondary-700 rounded-full shadow-xl border-4 border-neutral-50 flex items-center justify-center text-neutral-900 transition-all duration-200 cursor-pointer transform"
         type="button"
         aria-label="Previous testimonial"
       >
@@ -187,7 +187,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
         }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-green-600 hover:bg-green-700 rounded-full shadow-xl border-4 border-white flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 w-16 h-16 bg-primary-600 hover:bg-primary-700 rounded-full shadow-xl border-4 border-neutral-50 flex items-center justify-center text-white transition-all duration-200 cursor-pointer transform"
         type="button"
         aria-label="Next testimonial"
       >
@@ -210,8 +210,8 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
               type="button"
               className={`w-6 h-6 rounded-full border-2 transition-all duration-200 cursor-pointer font-bold text-xs flex items-center justify-center ${
                 index === currentIndex
-                  ? 'bg-blue-600 text-white border-blue-800 scale-125 shadow-lg'
-                  : 'bg-gray-300 text-gray-700 border-gray-400 hover:bg-gray-400 hover:scale-110'
+                  ? 'bg-primary-600 text-white border-primary-800 scale-125 shadow-lg'
+                  : 'bg-neutral-300 text-neutral-700 border-neutral-400 hover:bg-neutral-400 hover:scale-110'
               }`}
               aria-label={`Go to testimonial ${index + 1}`}
             >
@@ -223,7 +223,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
 
       {/* Status indicator */}
       <div className="text-center mt-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-neutral-600">
           {isHovered ? '⏸️ Paused (hover to pause)' : '▶️ Auto-scrolling'}
         </p>
       </div>

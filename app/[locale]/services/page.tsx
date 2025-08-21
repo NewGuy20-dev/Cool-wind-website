@@ -201,7 +201,7 @@ export default function ServicesPage() {
 			</section>
 
 			{/* Features */}
-			<section className="py-12 bg-white">
+			<section className="py-12 bg-neutral-50">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
 						{features.map((feature, index) => (
@@ -263,7 +263,7 @@ export default function ServicesPage() {
 											{/* Common Issues */}
 											<div>
 												<h4 className="font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-													<Zap className="h-5 w-5 text-accent-600" />
+													<Zap className="h-5 w-5 text-secondary-600" />
 													Common Issues We Fix
 												</h4>
 												<ul className="space-y-2">
@@ -336,7 +336,7 @@ export default function ServicesPage() {
 			</section>
 
 			{/* Service Area */}
-			<section className="py-16 bg-white">
+			<section className="py-16 bg-neutral-50">
 				<div className="mx-auto max-w-4xl px-4 text-center">
 					<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-6">
 						Service Area
@@ -404,7 +404,7 @@ export default function ServicesPage() {
 						</a>
 						<a 
 							href={`https://wa.me/${WHATSAPP}?text=Hi, I need appliance service. Here's my issue:`}
-							className="bg-secondary-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200 inline-flex items-center gap-2"
+							className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200 inline-flex items-center gap-2"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
@@ -413,7 +413,7 @@ export default function ServicesPage() {
 						</a>
 						<Link 
 							href="/contact"
-							className="bg-accent-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-accent-700 transition-colors duration-200"
+							className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200"
 						>
 							Get Detailed Quote
 						</Link>
