@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
@@ -27,9 +28,14 @@ export default function Header() {
 			<div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
 				{/* Logo */}
 				<Link href="/" className="flex items-center space-x-2">
-					<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 text-white font-bold text-lg">
-						CW
-					</div>
+					<Image
+						src="/logo.png"
+						alt="Cool Wind logo"
+						width={40}
+						height={40}
+						className="rounded-lg"
+						priority
+					/>
 					<span className="font-bold text-xl text-neutral-800">Cool Wind</span>
 				</Link>
 
