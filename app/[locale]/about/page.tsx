@@ -187,7 +187,7 @@ export default function AboutPage() {
 			</section>
 
 			{/* Our Story */}
-			<section className="py-16 bg-white">
+			<section className="py-16 bg-neutral-50">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="grid gap-12 lg:grid-cols-2 items-center">
 						<div>
@@ -230,8 +230,8 @@ export default function AboutPage() {
 							<div className="absolute -top-4 -right-4 h-16 w-16 rounded-full bg-secondary-100 flex items-center justify-center shadow-lg">
 								<Award className="h-8 w-8 text-secondary-600" />
 							</div>
-							<div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-accent-100 flex items-center justify-center shadow-lg">
-								<CheckCircle className="h-6 w-6 text-accent-600" />
+							<div className="absolute -bottom-4 -left-4 h-12 w-12 rounded-full bg-secondary-100 flex items-center justify-center shadow-lg">
+								<CheckCircle className="h-6 w-6 text-secondary-600" />
 							</div>
 						</div>
 					</div>
@@ -258,14 +258,14 @@ export default function AboutPage() {
 							{milestones.map((milestone, index) => (
 								<div key={index} className={`relative flex items-center ${
 									index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-								}`}>
+								}` }>
 									{/* Timeline dot */}
 									<div className="absolute left-4 md:left-1/2 w-3 h-3 bg-primary-600 rounded-full md:transform md:-translate-x-1.5 z-10"></div>
 									
 									{/* Content */}
 									<div className={`ml-12 md:ml-0 md:w-1/2 ${
 										index % 2 === 0 ? 'md:pr-8' : 'md:pl-8'
-									}`}>
+									}` }>
 										<div className="card p-6">
 											<div className="flex items-center gap-3 mb-3">
 												<span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
@@ -288,7 +288,7 @@ export default function AboutPage() {
 			</section>
 
 			{/* Our Values */}
-			<section className="py-16 bg-white">
+			<section className="py-16 bg-neutral-50">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
@@ -339,8 +339,8 @@ export default function AboutPage() {
 									<span className={`px-2 py-1 rounded-full text-xs font-medium ${
 										area.type === 'Same Day Service' 
 											? 'bg-secondary-100 text-secondary-700'
-											: 'bg-accent-100 text-accent-700'
-									}`}>
+											: 'bg-primary-100 text-primary-700'
+									}` }>
 										{area.type}
 									</span>
 								</div>
@@ -379,7 +379,7 @@ export default function AboutPage() {
 			</section>
 
 			{/* Certifications & Expertise */}
-			<section className="py-16 bg-white">
+			<section className="py-16 bg-neutral-50">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="grid gap-12 lg:grid-cols-2">
 						<div>
@@ -468,7 +468,7 @@ export default function AboutPage() {
 						</a>
 						<a 
 							href={`https://wa.me/${WHATSAPP}?text=Hi, I'd like to know more about Cool Wind Services`}
-							className="bg-secondary-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200 inline-flex items-center gap-2"
+							className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200 inline-flex items-center gap-2"
 							target="_blank"
 							rel="noopener noreferrer"
 						>
@@ -477,7 +477,7 @@ export default function AboutPage() {
 						</a>
 						<Link 
 							href="/contact"
-							className="bg-accent-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-accent-700 transition-colors duration-200"
+							className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200"
 						>
 							Get in Touch
 						</Link>

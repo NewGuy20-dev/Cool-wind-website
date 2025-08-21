@@ -246,7 +246,7 @@ export default function PortfolioPage() {
 			</section>
 
 			{/* Filter Buttons */}
-			<section className="py-8 bg-white sticky top-20 z-40 border-b">
+			<section className="py-8 bg-neutral-50 sticky top-20 z-40 border-b">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="flex flex-wrap justify-center gap-2 md:gap-4">
 						{categories.map((category) => (
@@ -349,7 +349,7 @@ export default function PortfolioPage() {
 			</section>
 
 			{/* Load More Button */}
-			<section className="py-8 bg-white text-center">
+			<section className="py-8 bg-neutral-50 text-center">
 				<div className="mx-auto max-w-6xl px-4">
 					<p className="text-neutral-600 mb-6">
 						These are just a few examples of our recent work. We complete 50+ projects every month!
@@ -378,7 +378,7 @@ export default function PortfolioPage() {
 			{/* Lightbox Modal */}
 			{lightboxOpen && selectedItem && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90">
-					<div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+					<div className="bg-neutral-50 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
 						{/* Modal Header */}
 						<div className="flex items-center justify-between p-6 border-b">
 							<div className="flex items-center gap-3">
