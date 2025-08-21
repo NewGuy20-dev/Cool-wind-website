@@ -190,11 +190,11 @@ export default function TestimonialsPage() {
 
 	const getServiceColor = (service: string) => {
 		switch (service) {
-			case 'AC Repair': return 'bg-blue-100 text-blue-700'
-			case 'Refrigerator Service': return 'bg-green-100 text-green-700'
-			case 'Spare Parts': return 'bg-purple-100 text-purple-700'
-			case 'Electronics': return 'bg-orange-100 text-orange-700'
-			case 'Installation': return 'bg-indigo-100 text-indigo-700'
+			case 'AC Repair': return 'bg-primary-100 text-primary-700'
+			case 'Refrigerator Service': return 'bg-secondary-100 text-secondary-800'
+			case 'Spare Parts': return 'bg-primary-200 text-primary-800'
+			case 'Electronics': return 'bg-secondary-100 text-secondary-800'
+			case 'Installation': return 'bg-primary-100 text-primary-700'
 			default: return 'bg-neutral-100 text-neutral-700'
 		}
 	}
@@ -204,7 +204,7 @@ export default function TestimonialsPage() {
 			<Star
 				key={i}
 				className={`h-4 w-4 ${
-					i < rating ? 'text-yellow-400 fill-current' : 'text-neutral-300'
+					i < rating ? 'text-secondary-400 fill-current' : 'text-neutral-300'
 				}`}
 			/>
 		))
@@ -245,7 +245,7 @@ export default function TestimonialsPage() {
 			</section>
 
 			{/* Featured Testimonials Carousel */}
-			<section className="py-16 bg-gradient-to-br from-blue-50 to-indigo-50">
+			<section className="py-16 bg-gradient-to-br from-primary-50 to-primary-200">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
@@ -266,7 +266,7 @@ export default function TestimonialsPage() {
 			</section>
 
 			{/* Testimonials Grid */}
-			<section className="py-16 bg-white">
+			<section className="py-16 bg-neutral-50">
 				<div className="mx-auto max-w-6xl px-4">
 					<div className="text-center mb-12">
 						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
@@ -402,7 +402,7 @@ export default function TestimonialsPage() {
 			</section>
 
 			{/* Customer Satisfaction Guarantee */}
-			<section className="py-16 bg-white">
+			<section className="py-16 bg-neutral-50">
 				<div className="mx-auto max-w-4xl px-4 text-center">
 					<div className="card p-8">
 						<div className="flex items-center justify-center mb-6">

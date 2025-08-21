@@ -285,7 +285,7 @@ export default function ContactForm({ compact = false, title, description }: Con
 
 				{/* Direct Contact Options */}
 				<div className="mt-6 p-4 bg-gradient-to-r from-secondary-100 to-primary-200 rounded-lg border border-secondary-200">
-					<p className="text-center text-sm font-medium text-gray-700 mb-3">
+					<p className="text-center text-sm font-medium text-neutral-700 mb-3">
 						Need immediate help? Contact us directly:
 					</p>
 					<div className="flex flex-col sm:flex-row gap-3">
