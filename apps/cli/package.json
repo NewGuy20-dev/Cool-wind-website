@@ -10,5 +10,10 @@
   "scripts": {
     "build": "tsc -b",
     "dev": "tsc -w -b"
+  },
+  "dependencies": {
+    "@logo-suite/runner": "workspace:*",
+    "@logo-suite/reporting": "workspace:*",
+    "@logo-suite/config": "workspace:*"
   }
 }
