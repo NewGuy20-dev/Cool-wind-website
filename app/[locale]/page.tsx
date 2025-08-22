@@ -4,8 +4,10 @@ import React from 'react'
 import Link from 'next/link'
 import { Phone, MessageCircle, Wrench, Snowflake, ShoppingCart, Recycle, Star, MapPin, Clock, CheckCircle } from 'lucide-react'
 import { analytics } from '@/lib/analytics'
-import ContactForm from '@/components/ContactForm'
-import TestimonialCarousel from '@/components/TestimonialCarousel'
+import dynamic from 'next/dynamic'
+// Avoid SSR for highly interactive components that can be mutated by extensions (e.g., fdprocessedid attributes)
+const ContactForm = dynamic(() => import('@/components/ContactForm'), { ssr: false })
+const TestimonialCarousel = dynamic(() => import('@/components/TestimonialCarousel'), { ssr: false })
 import { enhancedTestimonials, getTopTestimonialsForHome } from '@/lib/testimonials'
 import { motion } from 'framer-motion'
 

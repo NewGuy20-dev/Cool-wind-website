@@ -16,7 +16,9 @@ import {
 	Award,
 	Users
 } from 'lucide-react'
-import TestimonialCarouselFixed from '@/components/TestimonialCarouselFixed'
+import dynamic from 'next/dynamic'
+// Avoid SSR for carousel buttons that extensions may mutate (e.g., fdprocessedid)
+const TestimonialCarouselFixed = dynamic(() => import('@/components/TestimonialCarouselFixed'), { ssr: false })
 import { transformTestimonialsForCarousel } from '@/lib/testimonials'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'

@@ -12,7 +12,9 @@ import {
 	CheckCircle,
 	AlertCircle
 } from 'lucide-react'
-import ContactForm from '@/components/ContactForm'
+import dynamic from 'next/dynamic'
+// Avoid SSR for form inputs that extensions may mutate (e.g., fdprocessedid)
+const ContactForm = dynamic(() => import('@/components/ContactForm'), { ssr: false })
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'

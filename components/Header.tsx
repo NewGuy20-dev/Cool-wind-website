@@ -6,13 +6,24 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { PhoneCall, Menu, X } from 'lucide-react'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useAnimation } from 'framer-motion'
 
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
 
 export default function Header() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 	const pathname = usePathname()
+
+	// Controls for a single-spin animation on the logo
+	const logoControls = useAnimation()
+	const triggerLogoSpin = async () => {
+		await logoControls.start({
+			rotate: 360,
+			transition: { duration: 0.5, ease: [0.42, 0, 0.58, 1] },
+		})
+		// Reset rotation instantly after completing the spin
+		logoControls.set({ rotate: 0 })
+	}
 
 	const navigation = [
 		{ name: 'Home', href: '/' },
@@ -28,14 +39,24 @@ export default function Header() {
 			<div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
 				{/* Logo */}
 				<Link href="/" className="flex items-center space-x-2">
-					<Image
-						src="/logo.png"
-						alt="Cool Wind logo"
-						width={40}
-						height={40}
+					<motion.div
+						animate={logoControls}
+						onMouseEnter={triggerLogoSpin}
+						onClick={triggerLogoSpin}
+						onTouchStart={triggerLogoSpin}
 						className="rounded-lg"
-						priority
-					/>
+						style={{ display: 'inline-block' }}
+					>
+						<Image
+							src="/logo.png"
+							alt="Cool Wind logo"
+							width={40}
+							height={40}
+							unoptimized
+							className="rounded-lg"
+							priority
+						/>
+					</motion.div>
 					<span className="font-bold text-xl text-neutral-800">Cool Wind</span>
 				</Link>
 
