@@ -17,8 +17,9 @@ import {
 	Users
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { usePathname } from 'next/navigation'
 // Avoid SSR for carousel buttons that extensions may mutate (e.g., fdprocessedid)
-const TestimonialCarouselFixed = dynamic(() => import('@/components/TestimonialCarouselFixed'), { ssr: false })
+const TestimonialCarousel = dynamic(() => import('@/components/TestimonialCarousel'), { ssr: false })
 import { transformTestimonialsForCarousel } from '@/lib/testimonials'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
@@ -36,6 +37,8 @@ interface TestimonialItem {
 }
 
 export default function TestimonialsPage() {
+	const pathname = usePathname()
+	const prefix = pathname.startsWith('/ml') ? '/ml' : ''
 	const testimonials: TestimonialItem[] = [
 		{ id: '1', name: 'Priya M.', location: 'Thiruvalla', service: 'AC Repair', rating: 5, date: '2024-01-15', text: 'Quick response and fixed our AC same day! Very professional service. The technician was knowledgeable and explained everything clearly. Our AC is working better than ever.', serviceDetails: '1.5 ton split AC gas charging' },
 		{ id: '2', name: 'Ravi K.', location: 'Pathanamthitta', service: 'Refrigerator Service', rating: 5, date: '2024-01-12', text: 'Honest pricing and quality work on our fridge. Highly recommend! They diagnosed the compressor issue quickly and provided genuine Samsung parts.', serviceDetails: 'Samsung double door compressor replacement' },
@@ -115,7 +118,7 @@ export default function TestimonialsPage() {
 						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">Featured Customer Stories</h2>
 						<p className="text-lg text-neutral-600">Discover why our customers choose Cool Wind Services time and again</p>
 					</div>
-					<TestimonialCarouselFixed 
+					<TestimonialCarousel 
 						testimonials={transformTestimonialsForCarousel(testimonials.slice(0, 8))}
 						autoScrollInterval={10000}
 						showRating={true}
@@ -256,7 +259,7 @@ export default function TestimonialsPage() {
 					<h2 className="text-3xl md:text-4xl font-bold mb-6">Share Your Experience</h2>
 					<p className="text-lg mb-8 text-primary-100">Have you used our services? We'd love to hear about your experience. Your feedback helps us improve and helps other customers make informed decisions.</p>
 					<div className="flex flex-wrap justify-center gap-4">
-						<Link href="/contact" className="bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold hover:bg-primary-50 transition-colors duration-200">Leave a Review</Link>
+						<Link href={`${prefix}/contact`} className="bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold hover:bg-primary-50 transition-colors duration-200">Leave a Review</Link>
 						<a href={`https://wa.me/${WHATSAPP}?text=Hi, I'd like to share my experience with Cool Wind Services`} className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200 inline-flex items-center gap-2" target="_blank" rel="noopener noreferrer"><MessageCircle size={20} />WhatsApp Your Review</a>
 					</div>
 					<div className="mt-8 text-primary-200 text-sm"><p>Your honest feedback is valuable to us and our community</p></div>

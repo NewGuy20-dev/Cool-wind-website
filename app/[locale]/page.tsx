@@ -232,7 +232,7 @@ export default function HomePage() {
           </motion.div>
           
           <div className="text-center mt-8">
-            <Link href="/portfolio" className="btn-secondary">
+            <Link href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/portfolio' : '/portfolio'} className="btn-secondary">
               View All Projects
             </Link>
           </div>
@@ -256,7 +256,7 @@ export default function HomePage() {
           />
           
           <div className="text-center mt-8">
-            <Link href="/testimonials" className="btn-secondary">
+            <Link href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/testimonials' : '/testimonials'} className="btn-secondary">
               Read More Reviews
             </Link>
           </div>
