@@ -15,16 +15,7 @@ export default function LanguageSwitcher(){
 		setLocale(saved)
 	}, [])
 	function nextHref(target: 'en'|'ml'){
-		const path = pathname || '/'
-		if (target === 'en') {
-			if (path.startsWith('/ml')) return path.replace(/^\/ml(?=\/|$)/, '/')
-			if (path.startsWith('/en')) return path.replace(/^\/en(?=\/|$)/, '/')
-			return path
-		}
-		// target === 'ml'
-		if (path.startsWith('/ml')) return path
-		if (path.startsWith('/en')) return path.replace(/^\/en(?=\/|$)/, '/ml')
-		return path === '/' ? '/ml' : `/ml${path}`
+		return target === 'en' ? '/en' : '/ml'
 	}
 	function setNextLocaleCookie(target: 'en'|'ml'){
 		const maxAge = 60*60*24*365
