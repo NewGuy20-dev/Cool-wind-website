@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 // Avoid SSR for carousel buttons that extensions may mutate (e.g., fdprocessedid)
-const TestimonialCarouselFixed = dynamic(() => import('@/components/TestimonialCarouselFixed'), { ssr: false })
+const TestimonialCarousel = dynamic(() => import('@/components/TestimonialCarousel'), { ssr: false })
 import { transformTestimonialsForCarousel } from '@/lib/testimonials'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
@@ -115,7 +115,7 @@ export default function TestimonialsPage() {
 						<h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">Featured Customer Stories</h2>
 						<p className="text-lg text-neutral-600">Discover why our customers choose Cool Wind Services time and again</p>
 					</div>
-					<TestimonialCarouselFixed 
+					<TestimonialCarousel 
 						testimonials={transformTestimonialsForCarousel(testimonials.slice(0, 8))}
 						autoScrollInterval={10000}
 						showRating={true}

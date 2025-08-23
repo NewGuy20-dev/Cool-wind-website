@@ -44,8 +44,9 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   // Refs
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const transitionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Navigation functions
@@ -58,10 +59,11 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       const nextIndex = (prev + 1) % testimonials.length;
       return nextIndex;
     });
-    setTimeout(() => {
+    if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+    transitionTimeoutRef.current = setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
-  }, [testimonials.length, isTransitioning, currentIndex]);
+  }, [testimonials.length, isTransitioning]);
 
   const goToPrevious = useCallback(() => {
     if (isTransitioning) {
@@ -72,10 +74,11 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       const nextIndex = (prev - 1 + testimonials.length) % testimonials.length;
       return nextIndex;
     });
-    setTimeout(() => {
+    if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+    transitionTimeoutRef.current = setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
-  }, [testimonials.length, isTransitioning, currentIndex]);
+  }, [testimonials.length, isTransitioning]);
 
   const goToSlide = useCallback((index: number) => {
     if (isTransitioning || index === currentIndex) {
@@ -83,7 +86,8 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
     }
     setIsTransitioning(true);
     setCurrentIndex(index);
-    setTimeout(() => {
+    if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+    transitionTimeoutRef.current = setTimeout(() => {
       setIsTransitioning(false);
     }, 300);
   }, [currentIndex, isTransitioning]);
@@ -134,6 +138,12 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
       startAutoScroll();
     }
   }, [isHovered, isPlaying, startAutoScroll, stopAutoScroll]);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) clearTimeout(transitionTimeoutRef.current);
+    };
+  }, []);
 
   // Respect reduced motion preference by disabling auto-play
   useEffect(() => {
@@ -238,10 +248,9 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
 
   // Handle empty testimonials array
   if (!testimonials || testimonials.length === 0) {
-    console.log('No testimonials provided to carousel');
     return (
       <div className="w-full max-w-4xl mx-auto p-6 text-center">
-        <p className="text-neutral-500">No testimonials available. (Debug: {testimonials?.length || 0} testimonials)</p>
+        <p className="text-neutral-500">No testimonials available.</p>
       </div>
     );
   }
@@ -425,4 +434,4 @@ const TestimonialCarousel: React.FC<TestimonialCarouselProps> = ({
   );
 };
 
-export default TestimonialCarousel;
+export default React.memo(TestimonialCarousel);
