@@ -192,7 +192,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
+    <div className={`fixed bottom-24 right-4 md:bottom-4 md:right-20 z-50 ${className}`}>
       {/* Chat Button */}
       <AnimatePresence>
         {!isOpen && (
@@ -221,7 +221,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="bg-white rounded-lg shadow-2xl w-80 h-96 flex flex-col overflow-hidden border border-gray-200 md:w-96 md:h-[500px]"
+                         className="bg-white rounded-lg shadow-2xl w-80 h-96 flex flex-col overflow-hidden border border-gray-200 md:w-96 md:h-[500px] chat-window"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center justify-between">
@@ -315,6 +315,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
             width: 100% !important;
             height: 100% !important;
             border-radius: 0 !important;
+            z-index: 60 !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .chat-window {
+            bottom: 100px !important;
+            height: calc(100vh - 100px) !important;
           }
         }
       `}</style>
