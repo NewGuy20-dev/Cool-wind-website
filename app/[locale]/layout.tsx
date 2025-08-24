@@ -121,7 +121,7 @@ export default async function LocaleLayout({
 	children: React.ReactNode
 	params: Promise<{ locale: string }>
 }) {
-	const locale = params.locale
+	const { locale } = await params
 	const messages = (locale === 'ml' ? (mlMessages as any) : (enMessages as any))
 	const ld = {
 		"@context": "https://schema.org",
@@ -266,41 +266,18 @@ export default async function LocaleLayout({
 	}
 	
 	return (
-		<html lang={locale} suppressHydrationWarning>
-			<head>
-				<link rel="preconnect" href="https://fonts.googleapis.com"/>
-				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
-				<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-				{process.env.NEXT_PUBLIC_GA_ID ? (
-					<>
-						<script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}></script>
-						<script
-							dangerouslySetInnerHTML={{
-								__html: `
-								window.dataLayer = window.dataLayer || [];
-								function gtag(){dataLayer.push(arguments);} 
-								gtag('js', new Date());
-								gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
-							`,
-							}}
-						/>
-					</>
-				) : null}
-				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
-			</head>
-			<body className="min-h-screen antialiased">
-				{/* Google Translate mounts client-side; hidden UI */}
-				<GoogleTranslate targetLang={locale === 'ml' ? 'ml' : 'en'} />
-				<Providers locale={locale} messages={messages}>
-					<Header/>
-					<PageTransition>
-						{children}
-					</PageTransition>
-					<Footer/>
-					<FloatingCtas/>
-					<CookieConsent/>
-				</Providers>
-			</body>
-		</html>
+		<>
+			{/* Google Translate mounts client-side; hidden UI */}
+			<GoogleTranslate targetLang={locale === 'ml' ? 'ml' : 'en'} />
+			<Providers locale={locale} messages={messages}>
+				<Header/>
+				<PageTransition>
+					{children}
+				</PageTransition>
+				<Footer/>
+				<FloatingCtas/>
+				<CookieConsent/>
+			</Providers>
+		</>
 	)
 }

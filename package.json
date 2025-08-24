@@ -6,8 +6,9 @@
     "lib": "lib"
   },
   "scripts": {
-    "build": "pnpm -r build",
-    "dev": "pnpm -r dev",
+    "build": "next build",
+    "dev": "next dev",
+
     "lint": "eslint .",
     "test": "node simple-test.js",
     "build:packages": "pnpm -r --filter ./packages/** build",

@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { PhoneCall, Menu, X } from 'lucide-react'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useAnimation } from 'framer-motion'
 
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
 
