@@ -49,7 +49,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
   };
 
   // Auto-scroll effect
-  useEffect(() => {
+    useEffect(() => {
     if (!isHovered && testimonials && testimonials.length > 1) {
       const interval = setInterval(() => {
         setCurrentIndex(prev => (prev + 1) % testimonials.length);
@@ -58,7 +58,7 @@ const TestimonialCarouselFixed: React.FC<TestimonialCarouselProps> = ({
         clearInterval(interval);
       };
     }
-  }, [isHovered, autoScrollInterval, testimonials.length]); // Fixed: only depend on length, not the whole array
+  }, [isHovered, autoScrollInterval, testimonials]);
 
   // Handle empty testimonials
   if (!testimonials || testimonials.length === 0) {

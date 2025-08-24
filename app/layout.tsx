@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
 	title: 'Cool Wind Services | AC & Refrigerator Spare Parts, Repairs in Thiruvalla',
@@ -72,6 +74,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			</head>
 			<body className={`${inter.className} min-h-screen antialiased`}>
 				{children}
+				<Analytics />
+				<SpeedInsights />
 			</body>
 		</html>
 	)
