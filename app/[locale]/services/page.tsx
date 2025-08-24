@@ -411,12 +411,12 @@ export default function ServicesPage() {
 							<MessageCircle size={20} />
 							WhatsApp Us
 						</a>
-													<Link 
-								href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/contact' : '/contact'}
-								className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200"
-							>
-									Get Detailed Quote
-								</Link>
+						<Link 
+							href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/contact' : '/contact'}
+							className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200 inline-flex items-center gap-2"
+						>
+							Get Detailed Quote
+						</Link>
 					</div>
 					
 					<div className="mt-8 text-primary-200 text-sm">

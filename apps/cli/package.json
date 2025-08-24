@@ -1,0 +1,19 @@
+{
+  "name": "@logo-suite/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -w -b"
+  },
+  "dependencies": {
+    "@logo-suite/runner": "workspace:*",
+    "@logo-suite/reporting": "workspace:*",
+    "@logo-suite/config": "workspace:*"
+  }
+}

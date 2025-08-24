@@ -139,7 +139,7 @@ export default function HomePage() {
                   WhatsApp Us
                 </motion.a>
                 <motion.div variants={itemVariants}>
-                  <Link href="#contact" className="btn-secondary">
+                  <Link href="#contact" className="btn-secondary inline-flex items-center gap-2">
                   Get Quote
                   </Link>
                 </motion.div>
