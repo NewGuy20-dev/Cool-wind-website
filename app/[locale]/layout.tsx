@@ -5,11 +5,9 @@ import FloatingCtas from '@/components/FloatingCtas'
 import CookieConsent from '@/components/CookieConsent'
 import Providers from '@/components/Providers'
 import enMessages from '@/data/translations/en.json'
-<<<<<<< HEAD
+import mlMessages from '@/data/translations/ml.json'
 import PageTransition from '@/components/PageTransition'
-=======
-import PageTransition from '@/components/PageTransition'
->>>>>>> origin/cursor/analyse-and-plan-framer-motion-animations-4568
+import GoogleTranslate from '@/components/GoogleTranslate'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
 	const { locale } = await params
@@ -123,10 +121,9 @@ export default async function LocaleLayout({
 	children: React.ReactNode
 	params: Promise<{ locale: string }>
 }) {
-	const { locale } = await params
+	const locale = params.locale
 	const messages = (locale === 'ml' ? (mlMessages as any) : (enMessages as any))
-	
-	const enhancedLocalBusinessSchema = {
+	const ld = {
 		"@context": "https://schema.org",
 		"@type": "LocalBusiness",
 		"@id": "https://coolwindservices.com/#organization",
@@ -292,7 +289,9 @@ export default async function LocaleLayout({
 				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
 			</head>
 			<body className="min-h-screen antialiased">
-				<Providers locale={locale} messages={enMessages as any}>
+				{/* Google Translate mounts client-side; hidden UI */}
+				<GoogleTranslate targetLang={locale === 'ml' ? 'ml' : 'en'} />
+				<Providers locale={locale} messages={messages}>
 					<Header/>
 					<PageTransition>
 						{children}
@@ -303,6 +302,5 @@ export default async function LocaleLayout({
 				</Providers>
 			</body>
 		</html>
->>>>>>> origin/cursor/analyse-and-plan-framer-motion-animations-4568
 	)
 }
