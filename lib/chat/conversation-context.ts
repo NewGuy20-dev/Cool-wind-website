@@ -45,15 +45,15 @@ export class ConversationContext {
       this.context.conversationStage === 'escalation',
       this.hasComplexTechnicalQuery(),
       this.hasCustomerComplaint(),
-      this.hasUnansweredQuestions(),
-      this.hasRequestForHumanAgent()
+      this.hasExplicitHumanRequest(),
+      this.hasRepeatedUnansweredQuestions()
     ];
     
     return escalationTriggers.some(trigger => trigger);
   }
 
   private hasComplexTechnicalQuery(): boolean {
-    const complexKeywords = ['installation', 'warranty claim', 'bulk order', 'commercial'];
+    const complexKeywords = ['installation', 'warranty claim', 'bulk order', 'commercial', 'dispute'];
     const lastMessage = this.getLastUserMessage();
     
     if (!lastMessage) return false;
@@ -64,7 +64,7 @@ export class ConversationContext {
   }
 
   private hasCustomerComplaint(): boolean {
-    const complaintKeywords = ['complaint', 'dissatisfied', 'unhappy', 'problem with service'];
+    const complaintKeywords = ['complaint', 'dissatisfied', 'unhappy', 'poor service', 'bad experience', 'unsatisfactory'];
     const lastMessage = this.getLastUserMessage();
     
     if (!lastMessage) return false;
@@ -74,14 +74,8 @@ export class ConversationContext {
     );
   }
 
-  private hasUnansweredQuestions(): boolean {
-    // Simple heuristic: if conversation is longer than 8 messages and no resolution
-    return this.context.previousMessages.length > 8 && 
-           this.context.conversationStage !== 'resolution';
-  }
-
-  private hasRequestForHumanAgent(): boolean {
-    const humanRequestKeywords = ['human', 'person', 'speak to someone', 'agent', 'representative'];
+  private hasExplicitHumanRequest(): boolean {
+    const humanRequestKeywords = ['speak to human', 'talk to person', 'human agent', 'real person', 'human representative'];
     const lastMessage = this.getLastUserMessage();
     
     if (!lastMessage) return false;
@@ -89,6 +83,12 @@ export class ConversationContext {
     return humanRequestKeywords.some(keyword => 
       lastMessage.text.toLowerCase().includes(keyword)
     );
+  }
+
+  private hasRepeatedUnansweredQuestions(): boolean {
+    // Only escalate if conversation is very long (12+ messages) and seems stuck
+    return this.context.previousMessages.length > 12 && 
+           this.context.conversationStage !== 'resolution';
   }
 
   private getLastUserMessage(): ChatMessage | null {
@@ -102,12 +102,12 @@ export class ConversationContext {
     // Intent patterns for Cool Wind Services
     const intentPatterns = {
       SPARE_PARTS_INQUIRY: {
-        keywords: ['part', 'spare', 'component', 'compressor', 'thermostat', 'filter', 'coil', 'motor'],
+        keywords: ['part', 'parts', 'spare', 'component', 'compressor', 'thermostat', 'filter', 'coil', 'capacitor'],
         patterns: [
-          /need.*part/i,
-          /looking for.*part/i,
-          /buy.*part/i,
-          /order.*part/i,
+          /spare.*part/i,
+          /.*part.*need/i,
+          /.*part.*buy/i,
+          /.*part.*order/i,
           /.*part.*available/i,
           /.*part.*price/i
         ],
@@ -115,14 +115,16 @@ export class ConversationContext {
       },
       
       SERVICE_REQUEST: {
-        keywords: ['repair', 'fix', 'service', 'not working', 'broken', 'maintenance', 'emergency'],
+        keywords: ['repair', 'fix', 'service', 'not working', 'broken', 'maintenance', 'problem', 'issue', 'stopped working'],
         patterns: [
           /.*not cooling/i,
           /.*making noise/i,
           /need repair/i,
-          /emergency.*repair/i,
           /.*not working/i,
-          /service.*required/i
+          /service.*required/i,
+          /.*stopped working/i,
+          /.*problem.*with/i,
+          /needs.*fixing/i
         ],
         weight: 3
       },
@@ -152,12 +154,14 @@ export class ConversationContext {
       },
       
       EMERGENCY: {
-        keywords: ['emergency', 'urgent', 'immediately', 'asap', 'quickly'],
+        keywords: ['emergency', 'urgent', 'immediately', 'asap', 'critical', 'urgent repair'],
         patterns: [
-          /emergency/i,
+          /emergency.*repair/i,
           /urgent.*repair/i,
-          /immediately/i,
-          /as soon as possible/i
+          /immediately.*need/i,
+          /as soon as possible/i,
+          /critical.*repair/i,
+          /emergency.*service/i
         ],
         weight: 4
       }
