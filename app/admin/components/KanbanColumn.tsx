@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { FailedCallTask } from '../../../lib/failed-calls-db';
+import { FailedCallTask } from '../../../lib/failed-calls-types';
 
 interface KanbanColumnProps {
   title: string;
