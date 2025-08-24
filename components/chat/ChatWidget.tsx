@@ -192,7 +192,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={`fixed bottom-28 right-4 md:bottom-80 md:right-6 z-50 ${className}`}>
+    <div className={`fixed bottom-44 right-4 md:bottom-44 md:right-6 z-50 ${className}`}>
       {/* Chat Button */}
       <AnimatePresence>
         {!isOpen && (

@@ -27,7 +27,7 @@ export default function FloatingCtas() {
 	return (
 		<>
 			{/* Desktop Floating CTAs - Positioned to work with chat widget */}
-			<div className="hidden md:flex fixed bottom-6 right-6 z-40 flex-col gap-3">
+			<div className="hidden md:flex fixed bottom-20 right-6 z-40 flex-col gap-3">
 				<Link
 					href="/contact"
 					onClick={() => analytics.quoteRequestClick('floating_quote')}
@@ -40,6 +40,19 @@ export default function FloatingCtas() {
 					<span className="hidden group-hover:block whitespace-nowrap">Get Quote</span>
 				</Link>
 				<a
+					href={`tel:${PHONE}`}
+					onClick={() => analytics.phoneCallClick('floating_call')}
+					className="group inline-flex items-center gap-3 rounded-full bg-primary-600 px-4 py-3 text-white shadow-lg hover:bg-primary-700 hover:shadow-xl transition-all duration-200"
+					aria-label={`Call us at ${PHONE}`}
+				>
+					<Phone size={20} />
+					<span className="hidden group-hover:block whitespace-nowrap">Call Now</span>
+				</a>
+			</div>
+
+			{/* WhatsApp Widget - Bottom Right Only */}
+			<div className="hidden md:flex fixed bottom-6 right-6 z-40">
+				<a
 					href={`https://wa.me/${WHATSAPP}?text=Hi, I need help with my appliance`}
 					onClick={() => analytics.whatsappClick()}
 					className="group inline-flex items-center gap-3 rounded-full bg-secondary-600 px-4 py-3 text-neutral-900 shadow-lg hover:bg-secondary-700 hover:shadow-xl transition-all duration-200"
@@ -49,15 +62,6 @@ export default function FloatingCtas() {
 				>
 					<MessageCircle size={20} />
 					<span className="hidden group-hover:block whitespace-nowrap">WhatsApp Us</span>
-				</a>
-				<a
-					href={`tel:${PHONE}`}
-					onClick={() => analytics.phoneCallClick('floating_call')}
-					className="group inline-flex items-center gap-3 rounded-full bg-primary-600 px-4 py-3 text-white shadow-lg hover:bg-primary-700 hover:shadow-xl transition-all duration-200"
-					aria-label={`Call us at ${PHONE}`}
-				>
-					<Phone size={20} />
-					<span className="hidden group-hover:block whitespace-nowrap">Call Now</span>
 				</a>
 			</div>
 
