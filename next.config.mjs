@@ -6,21 +6,21 @@ const csp = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com",
     "img-src 'self' data: https://www.google-analytics.com https://translate.googleapis.com https://translate.google.com https://fonts.gstatic.com https://www.google.com",
     "font-src 'self' https://fonts.gstatic.com",
-    `connect-src 'self' ${isDev ? 'ws://localhost:* http://localhost:* ' : ''}https://www.google-analytics.com https://translate.googleapis.com https://translate.google.com https://va.vercel-scripts.com`,
+    `connect-src 'self' ${isDev ? 'ws://localhost:* http://localhost:* ' : ''}https://www.google-analytics.com https://translate.googleapis.com https://translate.google.com https://va.vercel-scripts.com https://vitals.vercel-analytics.com`,
     "frame-src 'self' https://translate.google.com",
 ].join('; ')
 
 const nextConfig = {
-	headers: async () => [
-		{
-			source: '/(.*)',
-			headers: [
-				{ key: 'X-Frame-Options', value: 'DENY' },
-				{ key: 'X-Content-Type-Options', value: 'nosniff' },
-				{ key: 'Content-Security-Policy', value: csp },
-			],
-		},
-	],
+    headers: async () => [
+        {
+            source: '/(.*)',
+            headers: [
+                { key: 'X-Frame-Options', value: 'DENY' },
+                { key: 'X-Content-Type-Options', value: 'nosniff' },
+                { key: 'Content-Security-Policy', value: csp },
+            ],
+        },
+    ],
 }
 
 export default nextConfig

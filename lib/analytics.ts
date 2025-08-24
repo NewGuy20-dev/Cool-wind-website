@@ -28,4 +28,7 @@ export const analytics = {
 	quoteRequestClick(label = 'floating_quote') {
 		pushToDataLayer({ event: 'quote_request_click', params: { event_category: 'quote_business', event_label: label, value: 1 } })
 	},
+	chatInteraction(action: string) {
+		pushToDataLayer({ event: 'chat_interaction', params: { event_category: 'support_chat', event_label: action, value: 1 } })
+	},
 }
