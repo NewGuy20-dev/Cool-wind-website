@@ -476,7 +476,7 @@ export default function AboutPage() {
 							WhatsApp Us
 						</a>
 						<Link 
-							href="/contact"
+							href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/contact' : '/contact'}
 							className="bg-secondary-600 text-neutral-900 px-8 py-4 rounded-lg font-semibold hover:bg-secondary-700 transition-colors duration-200"
 						>
 							Get in Touch

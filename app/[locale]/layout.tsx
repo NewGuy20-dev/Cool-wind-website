@@ -8,6 +8,7 @@ import enMessages from '@/data/translations/en.json'
 import mlMessages from '@/data/translations/ml.json'
 import PageTransition from '@/components/PageTransition'
 import GoogleTranslate from '@/components/GoogleTranslate'
+import { ChatWidget } from '@/components/chat/ChatWidget'
 
 export const metadata: Metadata = {
 	title: 'Cool Wind Services | AC & Refrigerator Spare Parts, Repairs in Thiruvalla',
@@ -61,6 +62,7 @@ export default async function LocaleLayout({
 				</PageTransition>
 				<Footer/>
 				<FloatingCtas/>
+				<ChatWidget />
 				<CookieConsent/>
 			</Providers>
 		</>

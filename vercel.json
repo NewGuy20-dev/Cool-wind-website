@@ -1,0 +1,51 @@
+{
+  "functions": {
+    "app/api/chat/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/*/route.ts": {
+      "maxDuration": 15
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/chat",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "POST, GET, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/chat-health",
+      "destination": "/api/chat?health=true"
+    }
+  ],
+  "env": {
+    "GOOGLE_AI_API_KEY": "@google_ai_api_key",
+    "GEMINI_MODEL": "gemini-2.0-flash-exp",
+    "CHAT_SESSION_TIMEOUT": "1800000",
+    "MAX_MESSAGES_PER_SESSION": "50",
+    "ENABLE_CHAT_ANALYTICS": "true"
+  },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  }
+}

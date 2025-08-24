@@ -22,9 +22,14 @@
     "node": ">=18.17"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.1",
+
     "cors": "2.8.5",
     "express": "4.19.2",
+
+    "@types/uuid": "^10.0.0",
+
     "framer-motion": "12.23.12",
     "helmet": "7.1.0",
     "lru-cache": "^11.1.0",
@@ -40,7 +45,11 @@
     "react-dom": "19.1.1",
     "react-hook-form": "^7.62.0",
     "sharp": "0.34.3",
+
     "ws": "8.18.0",
+=======
+    "uuid": "^11.1.0",
+
     "zod": "^4.0.17"
   },
   "devDependencies": {

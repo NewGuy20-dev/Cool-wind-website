@@ -25,4 +25,7 @@ export const analytics = {
 	formSubmission(formType: string, isUrgent: boolean) {
 		pushToDataLayer({ event: 'form_submission', params: { event_category: 'lead_generation', event_label: 'contact_form', form_type: formType, is_urgent: isUrgent } })
 	},
+	quoteRequestClick(label = 'floating_quote') {
+		pushToDataLayer({ event: 'quote_request_click', params: { event_category: 'quote_business', event_label: label, value: 1 } })
+	},
 }

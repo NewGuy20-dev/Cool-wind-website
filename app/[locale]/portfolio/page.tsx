@@ -460,7 +460,7 @@ export default function PortfolioPage() {
 									<MessageCircle size={18} />
 									WhatsApp About This
 								</a>
-								<Link href="/contact" className="btn-accent">
+								<Link href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/contact' : '/contact'} className="btn-accent">
 									Get Detailed Quote
 								</Link>
 							</div>
