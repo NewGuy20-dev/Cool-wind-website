@@ -192,7 +192,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
   };
 
   return (
-    <div className={`fixed bottom-24 right-4 md:bottom-4 md:right-20 z-50 ${className}`}>
+    <div className={`fixed bottom-28 right-4 md:bottom-80 md:right-6 z-50 ${className}`}>
       {/* Chat Button */}
       <AnimatePresence>
         {!isOpen && (
@@ -305,23 +305,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
 
       {/* Mobile fullscreen overlay */}
       <style jsx>{`
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
           .chat-window {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             right: 0 !important;
-            bottom: 0 !important;
+            bottom: 100px !important;
             width: 100% !important;
-            height: 100% !important;
+            height: calc(100vh - 100px) !important;
             border-radius: 0 !important;
             z-index: 60 !important;
-          }
-        }
-        @media (max-width: 768px) {
-          .chat-window {
-            bottom: 100px !important;
-            height: calc(100vh - 100px) !important;
           }
         }
       `}</style>
