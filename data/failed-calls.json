@@ -1,0 +1,81 @@
+[
+  {
+    "id": "task-1",
+    "customerName": "Maria Rodriguez",
+    "phoneNumber": "(555) 123-4567",
+    "problemDescription": "Water heater emergency - no hot water for 2 days",
+    "priority": "high",
+    "status": "new",
+    "createdAt": "2025-08-24T13:25:44.717Z",
+    "updatedAt": "2025-08-24T13:25:44.717Z",
+    "attemptCount": 0,
+    "callbackPreference": "After 6 PM today",
+    "notes": "Customer mentioned she has small children and prefers evening calls"
+  },
+  {
+    "id": "task-2",
+    "customerName": "John Smith",
+    "phoneNumber": "555-987-6543",
+    "problemDescription": "AC unit not cooling properly, temperature rising",
+    "priority": "medium",
+    "status": "unavailable",
+    "createdAt": "2025-08-24T11:55:44.717Z",
+    "updatedAt": "2025-08-24T13:10:44.717Z",
+    "attemptCount": 2,
+    "callbackPreference": "Between 9 AM - 5 PM",
+    "notes": "Customer works from home but was in meetings. Requested callback after 3 PM."
+  },
+  {
+    "id": "task-3",
+    "customerName": "Sarah Johnson",
+    "phoneNumber": "+1 (555) 456-7890",
+    "problemDescription": "Scheduled maintenance for HVAC system",
+    "priority": "low",
+    "status": "scheduled",
+    "createdAt": "2025-08-24T09:55:44.717Z",
+    "updatedAt": "2025-08-24T12:55:44.717Z",
+    "attemptCount": 1,
+    "callbackPreference": "Weekday mornings preferred",
+    "scheduledCallbackTime": "2025-08-25T13:55:44.717Z",
+    "notes": "Customer confirmed availability for tomorrow morning at 10 AM"
+  },
+  {
+    "id": "task-4",
+    "customerName": "Mike Chen",
+    "phoneNumber": "5551234567",
+    "problemDescription": "Furnace making strange noises, concerned about safety",
+    "priority": "high",
+    "status": "progress",
+    "createdAt": "2025-08-24T07:55:44.717Z",
+    "updatedAt": "2025-08-24T13:40:44.717Z",
+    "attemptCount": 3,
+    "callbackPreference": "Available all day",
+    "notes": "Technician dispatched. Customer confirmed availability and provided gate code: 1234"
+  },
+  {
+    "id": "task-5",
+    "customerName": "Emily Davis",
+    "phoneNumber": "(555) 321-9876",
+    "problemDescription": "Routine maintenance check completed successfully",
+    "priority": "low",
+    "status": "completed",
+    "createdAt": "2025-08-23T13:55:44.717Z",
+    "updatedAt": "2025-08-24T11:55:44.717Z",
+    "attemptCount": 1,
+    "callbackPreference": "No preference",
+    "notes": "Service completed. Customer was satisfied with the work. Follow-up scheduled for next year."
+  },
+  {
+    "id": "task-6",
+    "customerName": "Robert Wilson",
+    "phoneNumber": "555.789.0123",
+    "problemDescription": "Ductwork inspection and cleaning needed",
+    "priority": "medium",
+    "status": "new",
+    "createdAt": "2025-08-24T13:10:44.717Z",
+    "updatedAt": "2025-08-24T13:10:44.717Z",
+    "attemptCount": 0,
+    "callbackPreference": "Weekends only",
+    "notes": "Auto-created from chat agent. Customer mentioned failed call attempt during chat about ductwork services."
+  }
+]
