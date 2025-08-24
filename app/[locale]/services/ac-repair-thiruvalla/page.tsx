@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 			title: 'AC Repair Thiruvalla - Best Air Conditioner Service | Cool Wind Services',
 			description: 'Expert AC repair & installation in Thiruvalla. All brands, same-day service, genuine parts. 15+ years experience. Call +91-8547229991.',
 			url: `${base}/services/ac-repair-thiruvalla`,
-			type: 'service'
+			type: 'website'
 		},
 		keywords: [
 			'AC repair Thiruvalla',

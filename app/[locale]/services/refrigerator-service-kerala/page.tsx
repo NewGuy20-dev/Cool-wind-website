@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 			title: 'Refrigerator Service Kerala - Best Fridge Repair | Cool Wind Services',
 			description: 'Expert refrigerator repair & service across Kerala. All brands, same-day service, genuine parts. 15+ years experience. Call +91-8547229991.',
 			url: `${base}/services/refrigerator-service-kerala`,
-			type: 'service'
+			type: 'website'
 		},
 		keywords: [
 			'refrigerator service Kerala',

@@ -18,9 +18,6 @@ const nextConfig = {
 	// Compression
 	compress: true,
 	
-	// Power level for optimization
-	swcMinify: true,
-	
 	// Cache optimizations
 	onDemandEntries: {
 		maxInactiveAge: 25 * 1000,
