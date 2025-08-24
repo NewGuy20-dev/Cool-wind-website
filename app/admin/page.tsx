@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FailedCallTask } from '../../lib/failed-calls-db';
+import { FailedCallTask } from '../../lib/failed-calls-types';
 import LoginForm from './components/LoginForm';
 import KanbanBoard from './components/KanbanBoard';
 
