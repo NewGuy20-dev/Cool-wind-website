@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 			title: 'Appliance Repair Pathanamthitta - Best AC & Fridge Service | Cool Wind Services',
 			description: 'Expert appliance repair in Pathanamthitta. AC, refrigerator, washing machine service. Same-day service, genuine parts. Call +91-8547229991.',
 			url: `${base}/services/appliance-repair-pathanamthitta`,
-			type: 'service'
+			type: 'website'
 		},
 		keywords: [
 			'appliance repair Pathanamthitta',
