@@ -15,6 +15,11 @@ export interface FailedCallTask {
   attemptCount: number;
   notes?: string;
   scheduledCallbackTime?: string;
+  // AI-powered fields
+  aiPriorityScore?: 1 | 2 | 3; // AI-assigned priority (1=high, 2=medium, 3=low)
+  aiReasoning?: string; // AI explanation for priority assignment
+  aiTags?: string[]; // AI-generated tags for categorization
+  estimatedResponseTime?: string; // AI-suggested response timeframe
 }
 
 const DB_FILE_PATH = path.join(process.cwd(), 'data', 'failed-calls.json');
@@ -142,7 +147,57 @@ export const getTasksByStatus = (status: FailedCallTask['status']): FailedCallTa
   }
 };
 
-// Auto-create task from chat context (for agent integration)
+// Auto-create task from chat context with AI priority analysis (for agent integration)
+export const autoCreateTaskFromChatWithAI = async (
+  customerName: string,
+  phoneNumber: string,
+  conversationContext: string,
+  urgencyKeywords: string[] = [],
+  customerInfo?: any
+): Promise<FailedCallTask | null> => {
+  try {
+    // Import AI analyzer dynamically to avoid circular imports
+    const { aiPriorityAnalyzer } = await import('./ai-priority-analyzer');
+    
+    // Extract problem description from context
+    let problemDescription = 'Customer reported failed call attempt';
+    if (conversationContext.length > 20) {
+      // Take first 200 characters of context as problem description
+      problemDescription = conversationContext.substring(0, 200) + (conversationContext.length > 200 ? '...' : '');
+    }
+    
+    // Use AI to analyze priority
+    const aiAnalysis = await aiPriorityAnalyzer.analyzePriority(
+      problemDescription,
+      conversationContext,
+      customerInfo
+    );
+    
+    // Map AI priority score to string
+    const priority = aiAnalysis.urgencyLevel;
+    
+    return createTask({
+      customerName,
+      phoneNumber,
+      problemDescription,
+      priority,
+      status: 'new',
+      attemptCount: 0,
+      notes: `Auto-created from chat agent. AI Reasoning: ${aiAnalysis.reasoning}`,
+      // AI-powered fields
+      aiPriorityScore: aiAnalysis.priority,
+      aiReasoning: aiAnalysis.reasoning,
+      aiTags: aiAnalysis.tags,
+      estimatedResponseTime: aiAnalysis.estimatedResponseTime
+    });
+  } catch (error) {
+    console.error('Error auto-creating task with AI analysis:', error);
+    // Fallback to original method
+    return autoCreateTaskFromChat(customerName, phoneNumber, conversationContext, urgencyKeywords);
+  }
+};
+
+// Auto-create task from chat context (legacy method, kept for backward compatibility)
 export const autoCreateTaskFromChat = (
   customerName: string,
   phoneNumber: string,

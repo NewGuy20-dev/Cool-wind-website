@@ -48,14 +48,23 @@ export async function analyzeMessageForFailedCall(messageText: string): Promise<
 }
 
 /**
- * Automatically creates a failed call task from chat context
+ * Automatically creates a failed call task from chat context with AI priority analysis
  */
 export async function autoCreateFailedCallTask(
   customerName: string,
   phoneNumber: string,
   conversationContext: string,
-  urgencyKeywords: string[] = []
-): Promise<{ success: boolean; taskId?: string; message?: string }> {
+  urgencyKeywords: string[] = [],
+  customerInfo?: any,
+  useAI: boolean = true
+): Promise<{ 
+  success: boolean; 
+  taskId?: string; 
+  message?: string; 
+  responseTimeframe?: string;
+  aiTags?: string[];
+  priority?: string;
+}> {
   try {
     const response = await fetch('/api/failed-calls/auto-create', {
       method: 'POST',
@@ -67,6 +76,8 @@ export async function autoCreateFailedCallTask(
         phoneNumber,
         conversationContext,
         urgencyKeywords,
+        customerInfo,
+        useAI,
       }),
     });
 
@@ -76,6 +87,9 @@ export async function autoCreateFailedCallTask(
         success: true,
         taskId: result.taskId,
         message: result.message,
+        responseTimeframe: result.responseTimeframe,
+        aiTags: result.aiTags,
+        priority: result.priority,
       };
     } else {
       const error = await response.json();
@@ -132,22 +146,34 @@ export async function processMessageForFailedCall(
     .map(msg => `${msg.role}: ${msg.content}`)
     .join('\n');
 
-  // Auto-create the task
+  // Auto-create the task with AI priority analysis
   const taskResult = await autoCreateFailedCallTask(
     customerName,
     phoneNumber,
     conversationContext,
-    detectionResult.urgencyKeywords
+    detectionResult.urgencyKeywords,
+    {
+      name: customerName,
+      isReturningCustomer: false, // Could be enhanced with customer history
+      currentTopic: chatSession.currentTopic
+    },
+    true // Use AI analysis
   );
 
-  // Generate appropriate response based on priority
+  // Generate appropriate response based on AI priority analysis
   let suggestedResponse = '';
   if (taskResult.success) {
-    const timeframe = detectionResult.suggestedPriority === 'high' 
-      ? 'within the next few hours'
-      : 'by tomorrow';
+    const timeframe = taskResult.responseTimeframe || 'soon';
+    const topic = chatSession.currentTopic || 'request';
     
-    suggestedResponse = `Thanks for letting me know, ${customerName}. I've logged this and you'll receive a callback ${timeframe} to help with your ${chatSession.currentTopic || 'request'}.`;
+    // Use AI-informed response
+    if (taskResult.priority === 'high') {
+      suggestedResponse = `Thanks for letting me know, ${customerName}. I've logged this as urgent and you'll receive a callback ${timeframe} to help with your ${topic}.`;
+    } else if (taskResult.priority === 'medium') {
+      suggestedResponse = `Noted! I've logged your request and someone will reach out to you ${timeframe} to help with your ${topic}.`;
+    } else {
+      suggestedResponse = `I've recorded your request, ${customerName}. You'll receive a callback ${timeframe} to help with your ${topic}.`;
+    }
   } else {
     suggestedResponse = "I've noted your callback request. Someone from our team will reach out to you shortly.";
   }

@@ -204,6 +204,38 @@ export default function TaskCard({
         </div>
       )}
 
+      {/* AI Analysis Information */}
+      {task.aiPriorityScore && (
+        <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-medium text-blue-800">AI Analysis</span>
+            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+              Priority {task.aiPriorityScore}
+            </span>
+          </div>
+          {task.aiReasoning && (
+            <p className="text-xs text-blue-700 mb-1">{task.aiReasoning}</p>
+          )}
+          {task.estimatedResponseTime && (
+            <p className="text-xs text-blue-600">
+              <strong>Est. Response:</strong> {task.estimatedResponseTime}
+            </p>
+          )}
+          {task.aiTags && task.aiTags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {task.aiTags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="text-xs px-1.5 py-0.5 bg-blue-200 text-blue-800 rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Notes Section */}
       {(task.notes || isEditing) && (
         <div className="mt-3 pt-3 border-t border-gray-100">

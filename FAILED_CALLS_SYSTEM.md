@@ -94,7 +94,7 @@ Each task card displays:
 - Changes are saved to database immediately
 - No confirmation required for status updates
 
-## 🤖 Chat Agent Integration
+## 🤖 Chat Agent Integration with AI Priority Analysis
 
 ### Automatic Detection
 The system automatically detects failed call mentions in chat:
@@ -106,17 +106,43 @@ The system automatically detects failed call mentions in chat:
 - "No one picked up"
 - "Called but didn't get through"
 
-### Auto-Response Templates
-Based on priority, the agent responds:
+### 🧠 AI-Powered Priority Analysis
+The system uses Google's Gemini AI to intelligently analyze customer problems:
 
-**High Priority:**
+**Priority Grading (1-3 Scale):**
+- **Priority 1 (HIGH)**: Emergency situations requiring immediate response (2-4 hours)
+  - Complete appliance breakdown in extreme conditions
+  - Safety hazards (electrical issues, gas leaks, overheating)
+  - Health-related concerns (medicines, elderly/children affected)
+  - Business operations affected (commercial customers)
+
+- **Priority 2 (MEDIUM)**: Important issues requiring same-day response (24 hours)
+  - Partial functionality loss but appliance still working
+  - Intermittent problems affecting daily routine
+  - Service appointments and maintenance needs
+
+- **Priority 3 (LOW)**: Routine issues that can wait (2-3 business days)
+  - Routine maintenance requests
+  - Cosmetic issues or minor repairs
+  - Information inquiries and general questions
+
+### Auto-Response Templates
+Based on AI priority analysis, the agent responds:
+
+**AI Priority 1 (High):**
 > "Thanks for letting me know, [Name]. I've logged this as urgent and you'll receive a callback within the next few hours about your [issue]."
 
-**Medium Priority:**
-> "Noted! Someone will reach out to you via WhatsApp or phone call by tomorrow to help with your [issue]."
+**AI Priority 2 (Medium):**
+> "Noted! I've logged your request and someone will reach out to you within 24 hours to help with your [issue]."
 
-**Low Priority:**
-> "I've recorded this - expect a callback within 1-2 business days to help with your [issue]."
+**AI Priority 3 (Low):**
+> "I've recorded your request, [Name]. You'll receive a callback within 2-3 business days to help with your [issue]."
+
+### Silent AI Operation
+- **Customer Unaware**: All AI analysis happens in the background
+- **No Interaction**: Customers don't know their problems are being analyzed
+- **Automatic Processing**: Priority assignment happens instantly
+- **Seamless Integration**: Works with existing chat flows
 
 ### Integration Example
 ```typescript
@@ -138,8 +164,8 @@ if (result.shouldCreateTask) {
 - `PUT /api/failed-calls/[id]` - Update task
 - `DELETE /api/failed-calls/[id]` - Delete task
 
-### Chat Agent Integration
-- `POST /api/failed-calls/auto-create` - Auto-create from chat
+### Chat Agent Integration with AI
+- `POST /api/failed-calls/auto-create` - Auto-create from chat with AI analysis
 - `PUT /api/failed-calls/auto-create` - Analyze message for patterns
 
 ### Authentication
@@ -162,6 +188,11 @@ interface FailedCallTask {
   attemptCount: number;
   notes?: string;
   scheduledCallbackTime?: string;
+  // AI-powered fields
+  aiPriorityScore?: 1 | 2 | 3; // AI-assigned priority (1=high, 2=medium, 3=low)
+  aiReasoning?: string; // AI explanation for priority assignment
+  aiTags?: string[]; // AI-generated tags for categorization
+  estimatedResponseTime?: string; // AI-suggested response timeframe
 }
 ```
 
@@ -209,8 +240,10 @@ node scripts/seed-failed-calls.js
 ```env
 # Required
 ADMIN_PASSWORD=coolwind2024
+GOOGLE_AI_API_KEY=your_gemini_api_key_here
 
 # Optional
+GEMINI_MODEL=gemini-2.0-flash-exp
 DATABASE_URL=file:./failed-calls.db
 ```
 

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { autoCreateTaskFromChat } from '../../../../lib/failed-calls-db';
+import { autoCreateTaskFromChatWithAI, autoCreateTaskFromChat } from '../../../../lib/failed-calls-db';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerName, phoneNumber, conversationContext, urgencyKeywords } = body;
+    const { customerName, phoneNumber, conversationContext, urgencyKeywords, customerInfo, useAI = true } = body;
 
     // Validate required fields
     if (!customerName || !phoneNumber || !conversationContext) {
@@ -14,13 +14,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create task automatically based on conversation context
-    const newTask = autoCreateTaskFromChat(
-      customerName,
-      phoneNumber,
-      conversationContext,
-      urgencyKeywords || []
-    );
+    let newTask;
+    
+    // Use AI-powered priority analysis by default
+    if (useAI) {
+      try {
+        newTask = await autoCreateTaskFromChatWithAI(
+          customerName,
+          phoneNumber,
+          conversationContext,
+          urgencyKeywords || [],
+          customerInfo
+        );
+      } catch (aiError) {
+        console.error('AI analysis failed, falling back to keyword-based:', aiError);
+        // Fallback to keyword-based analysis
+        newTask = autoCreateTaskFromChat(
+          customerName,
+          phoneNumber,
+          conversationContext,
+          urgencyKeywords || []
+        );
+      }
+    } else {
+      // Use legacy keyword-based method if AI is disabled
+      newTask = autoCreateTaskFromChat(
+        customerName,
+        phoneNumber,
+        conversationContext,
+        urgencyKeywords || []
+      );
+    }
 
     if (!newTask) {
       return NextResponse.json(
@@ -29,12 +53,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate customer-friendly response based on AI priority
+    let responseMessage = 'Failed call has been logged for follow-up';
+    let responseTimeframe = 'soon';
+    
+    if (newTask.aiPriorityScore) {
+      switch (newTask.aiPriorityScore) {
+        case 1:
+          responseMessage = 'Your urgent request has been logged for immediate attention';
+          responseTimeframe = 'within the next few hours';
+          break;
+        case 2:
+          responseMessage = 'Your service request has been logged for follow-up';
+          responseTimeframe = 'within 24 hours';
+          break;
+        case 3:
+          responseMessage = 'Your request has been logged and will be addressed';
+          responseTimeframe = 'within 2-3 business days';
+          break;
+      }
+    }
+
     // Return success without revealing internal task details (for chat agent)
     return NextResponse.json({
       success: true,
-      message: 'Failed call has been logged for follow-up',
+      message: responseMessage,
+      responseTimeframe,
       taskId: newTask.id,
-      priority: newTask.priority
+      priority: newTask.priority,
+      // Include AI tags for debugging (won't be shown to customer)
+      aiTags: newTask.aiTags,
+      estimatedResponseTime: newTask.estimatedResponseTime
     }, { status: 201 });
   } catch (error) {
     console.error('Error auto-creating task from chat:', error);

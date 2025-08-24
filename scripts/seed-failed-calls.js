@@ -80,7 +80,49 @@ const sampleTasks = [
     updatedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
     attemptCount: 0,
     callbackPreference: 'Weekends only',
-    notes: 'Auto-created from chat agent. Customer mentioned failed call attempt during chat about ductwork services.'
+    notes: 'Auto-created from chat agent. AI Reasoning: Routine service request with flexible timing, no immediate concerns.',
+    // AI-powered fields
+    aiPriorityScore: 2,
+    aiReasoning: 'Routine service request with flexible timing, no immediate concerns',
+    aiTags: ['routine', 'ductwork', 'cleaning', 'maintenance'],
+    estimatedResponseTime: '24 hours'
+  },
+  {
+    id: 'task-7',
+    customerName: 'Dr. Lakshmi Nair',
+    phoneNumber: '+91 9876543210',
+    problemDescription: 'AC emergency - complete breakdown during heat wave, elderly patients affected',
+    priority: 'high',
+    status: 'new',
+    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
+    updatedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    attemptCount: 0,
+    callbackPreference: 'Immediate response needed',
+    notes: 'Auto-created from chat agent. AI Reasoning: Medical emergency scenario with vulnerable patients in extreme heat conditions.',
+    // AI-powered fields
+    aiPriorityScore: 1,
+    aiReasoning: 'Medical emergency scenario with vulnerable patients in extreme heat conditions',
+    aiTags: ['emergency', 'medical', 'heat-wave', 'elderly', 'ac-failure'],
+    estimatedResponseTime: '2-4 hours'
+  },
+  {
+    id: 'task-8',
+    customerName: 'Cafe Mocha Restaurant',
+    phoneNumber: '0469-2345678',
+    problemDescription: 'Commercial refrigerator temperature fluctuating, food safety concern',
+    priority: 'high',
+    status: 'progress',
+    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 90 minutes ago
+    updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    attemptCount: 1,
+    callbackPreference: 'Business hours only',
+    notes: 'Auto-created from chat agent. AI Reasoning: Commercial food safety issue requiring immediate attention to prevent spoilage and health risks.',
+    scheduledCallbackTime: new Date(Date.now() + 1000 * 60 * 60 * 2).toISOString(), // 2 hours from now
+    // AI-powered fields
+    aiPriorityScore: 1,
+    aiReasoning: 'Commercial food safety issue requiring immediate attention to prevent spoilage and health risks',
+    aiTags: ['commercial', 'food-safety', 'refrigerator', 'temperature', 'business'],
+    estimatedResponseTime: '2-4 hours'
   }
 ];
 
@@ -106,3 +148,8 @@ console.log('\nPriority distribution:');
 console.log('- High:', sampleTasks.filter(t => t.priority === 'high').length);
 console.log('- Medium:', sampleTasks.filter(t => t.priority === 'medium').length);
 console.log('- Low:', sampleTasks.filter(t => t.priority === 'low').length);
+console.log('\nAI-powered tasks:');
+console.log('- With AI Analysis:', sampleTasks.filter(t => t.aiPriorityScore).length);
+console.log('- AI Priority 1 (High):', sampleTasks.filter(t => t.aiPriorityScore === 1).length);
+console.log('- AI Priority 2 (Medium):', sampleTasks.filter(t => t.aiPriorityScore === 2).length);
+console.log('- AI Priority 3 (Low):', sampleTasks.filter(t => t.aiPriorityScore === 3).length);
