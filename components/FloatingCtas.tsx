@@ -4,7 +4,7 @@ import { MessageCircle, Phone, X } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { analytics } from '@/lib/analytics'
-import ChatWidget from './ChatWidget'
+import { ChatWidget } from './chat/ChatWidget'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
@@ -41,7 +41,7 @@ export default function FloatingCtas() {
 			</div>
 
 			{/* Chat Support Widget - Replaces Get Quote and WhatsApp */}
-			<ChatWidget isVisible={isVisible} />
+			<ChatWidget />
 
 			{/* Mobile Sticky Bottom Bar */}
 			<div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-neutral-50 border-t border-neutral-200 shadow-lg no-print">
