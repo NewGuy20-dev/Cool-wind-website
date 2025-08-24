@@ -5,10 +5,11 @@ import FloatingCtas from '@/components/FloatingCtas'
 import CookieConsent from '@/components/CookieConsent'
 import Providers from '@/components/Providers'
 import enMessages from '@/data/translations/en.json'
-import mlMessages from '@/data/translations/ml.json'
+<<<<<<< HEAD
 import PageTransition from '@/components/PageTransition'
-import GoogleTranslate from '@/components/GoogleTranslate'
-import { ChatWidget } from '@/components/chat/ChatWidget'
+=======
+import PageTransition from '@/components/PageTransition'
+>>>>>>> origin/cursor/analyse-and-plan-framer-motion-animations-4568
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
 	const { locale } = await params
@@ -268,24 +269,40 @@ export default async function LocaleLayout({
 	}
 	
 	return (
-		<>
-			{/* Google Translate mounts client-side; hidden UI */}
-			<GoogleTranslate targetLang={locale === 'ml' ? 'ml' : 'en'} />
-			<Providers locale={locale} messages={messages}>
-				{/* Enhanced Schema Markup for Locale */}
-				<script 
-					type="application/ld+json" 
-					dangerouslySetInnerHTML={{ __html: JSON.stringify(enhancedLocalBusinessSchema) }} 
-				/>
-				<Header/>
-				<PageTransition>
-					{children}
-				</PageTransition>
-				<Footer/>
-				<FloatingCtas/>
-				<ChatWidget />
-				<CookieConsent/>
-			</Providers>
-		</>
+		<html lang={locale} suppressHydrationWarning>
+			<head>
+				<link rel="preconnect" href="https://fonts.googleapis.com"/>
+				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
+				<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+				{process.env.NEXT_PUBLIC_GA_ID ? (
+					<>
+						<script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}></script>
+						<script
+							dangerouslySetInnerHTML={{
+								__html: `
+								window.dataLayer = window.dataLayer || [];
+								function gtag(){dataLayer.push(arguments);} 
+								gtag('js', new Date());
+								gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
+							`,
+							}}
+						/>
+					</>
+				) : null}
+				<script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
+			</head>
+			<body className="min-h-screen antialiased">
+				<Providers locale={locale} messages={enMessages as any}>
+					<Header/>
+					<PageTransition>
+						{children}
+					</PageTransition>
+					<Footer/>
+					<FloatingCtas/>
+					<CookieConsent/>
+				</Providers>
+			</body>
+		</html>
+>>>>>>> origin/cursor/analyse-and-plan-framer-motion-animations-4568
 	)
 }
