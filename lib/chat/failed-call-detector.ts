@@ -1,4 +1,5 @@
 import { ChatMessage, CustomerInfo, ConversationContextData } from '@/lib/types/chat';
+import { GeminiInformationExtractor } from '@/lib/gemini/information-extractor';
 
 export interface FailedCallData {
   detected: boolean;
@@ -85,7 +86,7 @@ export class FailedCallDetector {
   /**
    * Detect if a message contains failed call indicators
    */
-  static detectFailedCall(message: string, context: ConversationContextData): FailedCallData {
+  static async detectFailedCall(message: string, context: ConversationContextData): Promise<FailedCallData> {
     const lowerMessage = message.toLowerCase();
     
     // Check for trigger phrases
@@ -103,11 +104,11 @@ export class FailedCallDetector {
 
     console.log(`🔍 Failed call trigger detected: "${triggerPhrase}"`);
 
-    // Extract customer data from context and message
-    const customerData = this.extractCustomerData(message, context);
+    // Extract customer data using Gemini AI
+    const customerData = await this.extractCustomerDataWithGemini(message, context);
     const missingFields = this.identifyMissingFields(customerData);
     const problemDescription = this.inferProblemFromContext(message, context);
-    const location = this.extractLocation(message, context);
+    const location = customerData.location || this.extractLocation(message, context);
     const urgencyLevel = this.assessUrgency(message);
 
     return {
@@ -122,24 +123,58 @@ export class FailedCallDetector {
   }
 
   /**
-   * Extract customer information from message and context
+   * Extract customer information from message and context using Gemini AI
    */
-  private static extractCustomerData(message: string, context: ConversationContextData): Partial<CustomerInfo> {
+  private static async extractCustomerDataWithGemini(message: string, context: ConversationContextData): Promise<Partial<CustomerInfo>> {
     const customerData: Partial<CustomerInfo> = { ...context.customerInfo };
 
-    // Try to extract name
+    try {
+      // Use Gemini AI for extraction
+      const extracted = await GeminiInformationExtractor.extractCustomerInfo(message);
+      
+      // Merge with context data, prioritizing high-confidence extractions
+      if (extracted.name && extracted.confidence.name >= 0.6 && !customerData.name) {
+        customerData.name = extracted.name;
+      }
+      
+      if (extracted.phone && extracted.confidence.phone >= 0.6 && !customerData.phone) {
+        customerData.phone = extracted.phone;
+      }
+      
+      if (extracted.location && extracted.confidence.location >= 0.6 && !customerData.location) {
+        customerData.location = extracted.location;
+      }
+      
+      console.log('🤖 Gemini extracted customer data for failed call:', customerData);
+      
+    } catch (error) {
+      console.error('❌ Gemini extraction failed in failed call detector, using fallback:', error);
+      // Fallback to original extraction
+      return this.extractCustomerDataFallback(message, context);
+    }
+
+    return customerData;
+  }
+
+  /**
+   * Fallback extraction method
+   */
+  private static extractCustomerDataFallback(message: string, context: ConversationContextData): Partial<CustomerInfo> {
+    const customerData: Partial<CustomerInfo> = { ...context.customerInfo };
+
+    // Improved name extraction
     if (!customerData.name) {
-      const nameMatch = message.match(/(?:my name is|i am|i'm|call me)\s+([a-zA-Z\s]{2,30})/i);
+      const nameMatch = message.match(/(?:my name is|i am|i'm|call me)\s+([a-zA-Z]+)(?:\s|$|,|and)/i);
       if (nameMatch) {
         customerData.name = nameMatch[1].trim();
       }
     }
 
-    // Try to extract phone number
+    // Improved phone number extraction
     if (!customerData.phone) {
-      const phoneMatch = message.match(/(?:my number is|phone is|call me at|contact me on)\s*([+]?[0-9\s\-]{10,15})/i);
+      const phoneMatch = message.match(/(?:phone|number|no)\s*(?:is)?\s*([6-9]\d{9})/i);
       if (phoneMatch) {
-        customerData.phone = phoneMatch[1].replace(/\s|-/g, '');
+        customerData.phone = phoneMatch[1];
       }
     }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { TaskStorage, TaskData, generateTaskId } from '@/lib/storage/task-storage';
 
 // Task creation schema
 const TaskCreationSchema = z.object({
@@ -14,30 +15,6 @@ const TaskCreationSchema = z.object({
   location: z.string().optional(),
   urgencyKeywords: z.array(z.string()).optional()
 });
-
-export interface TaskData {
-  id: string;
-  customerName: string;
-  phoneNumber: string;
-  problemDescription: string;
-  priority: 'high' | 'medium' | 'low';
-  status: 'new' | 'in_progress' | 'completed' | 'cancelled';
-  source: string;
-  chatContext?: any[];
-  aiPriorityReason?: string;
-  location?: string;
-  urgencyKeywords?: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-// In-memory task storage (in production, use database)
-const tasks = new Map<string, TaskData>();
-
-// Generate task ID
-function generateTaskId(): string {
-  return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
 
 // AI Priority Assessment
 async function assessPriorityWithAI(problemDescription: string, location?: string): Promise<{
@@ -143,7 +120,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Store task
-    tasks.set(taskId, taskData);
+    TaskStorage.set(taskId, taskData);
 
     console.log('Task created successfully:', {
       taskId,
@@ -201,7 +178,7 @@ export async function GET(request: NextRequest) {
 
   if (taskId) {
     // Get specific task
-    const task = tasks.get(taskId);
+    const task = TaskStorage.get(taskId);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
@@ -209,9 +186,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Get all tasks
-  const allTasks = Array.from(tasks.values()).sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  const allTasks = TaskStorage.getAll();
 
   return NextResponse.json({ 
     tasks: allTasks,
