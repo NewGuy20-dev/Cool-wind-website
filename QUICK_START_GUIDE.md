@@ -86,11 +86,12 @@ Results:
 If you're deploying to Vercel, you need to set the secret:
 
 ```bash
-# Set the Vercel secret
-vercel secrets add google_ai_api_key "your_actual_api_key_here"
+# Set environment variables in Vercel dashboard
+# Go to Settings → Environment Variables in your Vercel project
 
-# Or set environment variables in Vercel dashboard
-vercel env add GOOGLE_AI_API_KEY
+# Or use Vercel CLI
+vercel env add GOOGLE_AI_API_KEY production
+vercel env add ADMIN_KEY production
 ```
 
 ## 💡 Key Points

@@ -69,7 +69,7 @@ If you're using Vercel, you need to set up the secret:
    - Add `ADMIN_KEY` with your admin password
 
 3. **Update vercel.json** (if needed):
-   The current `vercel.json` references `@google_ai_api_key` secret, which should work once you set it up.
+   Environment variables should be set in the Vercel dashboard, not in `vercel.json`.
 
 ### Method 3: Other Deployment Platforms
 
@@ -114,7 +114,7 @@ GEMINI_MODEL=gemini-2.0-flash-exp
 ## 🔍 Troubleshooting
 
 ### "Secret does not exist" Error
-- **Vercel**: Make sure you've added the secret: `vercel secrets add google_ai_api_key "your_key"`
+- **Vercel**: Set environment variables in the Vercel dashboard under Settings → Environment Variables
 - **Local**: Check that `.env.local` exists and has the correct variable name
 
 ### "Unauthorized" in Admin Dashboard

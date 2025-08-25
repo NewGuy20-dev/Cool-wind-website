@@ -36,13 +36,7 @@
       "destination": "/api/chat?health=true"
     }
   ],
-  "env": {
-    "GOOGLE_AI_API_KEY": "@google_ai_api_key",
-    "GEMINI_MODEL": "gemini-2.0-flash-exp",
-    "CHAT_SESSION_TIMEOUT": "1800000",
-    "MAX_MESSAGES_PER_SESSION": "50",
-    "ENABLE_CHAT_ANALYTICS": "true"
-  },
+
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"
