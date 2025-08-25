@@ -3,6 +3,8 @@
  * Particularly for failed call information collection
  */
 
+import { GeminiInformationExtractor } from '@/lib/gemini/information-extractor';
+
 export interface ChatState {
   collecting_callback_info?: {
     missingFields: string[];
@@ -91,9 +93,52 @@ export class ChatStateManager {
   }
 
   /**
-   * Extract customer information from user message
+   * Extract customer information from user message using Gemini AI
    */
-  static extractCustomerInfoFromMessage(message: string): {
+  static async extractCustomerInfoFromMessage(message: string): Promise<{
+    name?: string;
+    phone?: string;
+    location?: string;
+    problem?: string;
+  }> {
+    try {
+      // Use Gemini AI for intelligent extraction
+      const extracted = await GeminiInformationExtractor.extractCustomerInfo(message);
+      
+      // Convert to the expected format, only including fields with good confidence
+      const result: any = {};
+      
+      if (extracted.name && extracted.confidence.name >= 0.5) {
+        result.name = extracted.name;
+      }
+      
+      if (extracted.phone && extracted.confidence.phone >= 0.5) {
+        result.phone = extracted.phone;
+      }
+      
+      if (extracted.location && extracted.confidence.location >= 0.5) {
+        result.location = extracted.location;
+      }
+      
+      if (extracted.problem && extracted.confidence.problem >= 0.5) {
+        result.problem = extracted.problem;
+      }
+      
+      console.log('🤖 Gemini extracted customer info:', result);
+      console.log('🎯 Confidence scores:', extracted.confidence);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Gemini extraction failed, using fallback:', error);
+      return this.extractCustomerInfoFromMessageFallback(message);
+    }
+  }
+
+  /**
+   * Fallback extraction method using improved regex patterns
+   */
+  private static extractCustomerInfoFromMessageFallback(message: string): {
     name?: string;
     phone?: string;
     location?: string;
@@ -102,11 +147,10 @@ export class ChatStateManager {
     const extracted: any = {};
     const lowerMessage = message.toLowerCase();
 
-    // Extract name patterns
+    // Improved name extraction - stop at conjunctions
     const namePatterns = [
-      /(?:my name is|i am|i'm|call me)\s+([a-zA-Z\s]{2,30})/i,
-      /(?:this is|here is)\s+([a-zA-Z\s]{2,30})/i,
-      /^([a-zA-Z\s]{2,30})(?:\s|,|$)/i // Name at beginning of message
+      /(?:my name is|i am|i'm|call me)\s+([a-zA-Z]+)(?:\s|$|,|and|but|phone)/i,
+      /(?:this is|here is)\s+([a-zA-Z]+)(?:\s|$|,|and|but|phone)/i,
     ];
 
     for (const pattern of namePatterns) {
@@ -114,53 +158,53 @@ export class ChatStateManager {
       if (match && match[1]) {
         const name = match[1].trim();
         // Validate it looks like a name (not too generic)
-        if (name.length >= 2 && !['yes', 'no', 'ok', 'okay', 'sure', 'thanks'].includes(name.toLowerCase())) {
+        if (name.length >= 2 && !['yes', 'no', 'ok', 'okay', 'sure', 'thanks', 'and', 'phone'].includes(name.toLowerCase())) {
           extracted.name = name;
           break;
         }
       }
     }
 
-    // Extract phone number patterns
+    // Improved phone number extraction
     const phonePatterns = [
-      /(?:my number is|phone is|call me at|contact me on)\s*([+]?[0-9\s\-]{10,15})/i,
-      /(?:my phone|number)\s*[:is]*\s*([+]?[0-9\s\-]{10,15})/i,
-      /([+]?[0-9]{10,15})/g // Any sequence of 10+ digits
+      /(?:phone|number|no)\s*(?:is)?\s*([6-9]\d{9})/i, // Indian mobile pattern
+      /([6-9]\d{9})/g // Direct 10-digit Indian mobile
     ];
 
     for (const pattern of phonePatterns) {
       const match = message.match(pattern);
       if (match && match[1]) {
         const phone = match[1].replace(/[\s\-]/g, '');
-        if (phone.length >= 10) {
+        if (/^[6-9]\d{9}$/.test(phone)) {
           extracted.phone = phone;
           break;
         }
       }
     }
 
-    // Extract location patterns
-    const locationPatterns = [
-      /(?:in|at|from|located in|i'm in|i am in)\s+([a-zA-Z\s]{3,20})/i,
-      /(?:my location is|location)\s*[:is]*\s*([a-zA-Z\s]{3,20})/i
-    ];
-
-    // Known locations get priority
+    // Improved location extraction
     const knownLocations = ['thiruvalla', 'pathanamthitta', 'kerala'];
     for (const location of knownLocations) {
       if (lowerMessage.includes(location)) {
-        extracted.location = location;
+        extracted.location = location.charAt(0).toUpperCase() + location.slice(1);
         break;
       }
     }
 
     // If no known location found, try patterns
     if (!extracted.location) {
+      const locationPatterns = [
+        /(?:location is|in|at|from)\s+([a-zA-Z]+)(?:\s|$|,|and|but|problem)/i,
+      ];
+      
       for (const pattern of locationPatterns) {
         const match = message.match(pattern);
         if (match && match[1]) {
-          extracted.location = match[1].trim();
-          break;
+          const location = match[1].trim();
+          if (location.length >= 3 && !['and', 'problem', 'phone', 'is'].includes(location.toLowerCase())) {
+            extracted.location = location;
+            break;
+          }
         }
       }
     }
@@ -169,7 +213,7 @@ export class ChatStateManager {
     const problemPatterns = [
       /(?:problem is|issue is|trouble with)\s+([^.!?]+)/i,
       /(?:ac|refrigerator|fridge)\s+([^.!?]+)/i,
-      /(not working|broken|not cooling|leaking|making noise)/i
+      /(not working|broken|not cooling|leaking|burst|making noise)/i
     ];
 
     for (const pattern of problemPatterns) {
@@ -180,7 +224,7 @@ export class ChatStateManager {
       }
     }
 
-    console.log('Extracted customer info from message:', extracted);
+    console.log('📝 Fallback extracted customer info:', extracted);
     return extracted;
   }
 
@@ -201,26 +245,74 @@ export class ChatStateManager {
   }
 
   /**
-   * Check if all required fields are present
+   * Check if all required fields are present and valid
    */
   static hasAllRequiredFields(customerData: Record<string, any>): boolean {
     const required = ['name', 'phone', 'location'];
-    return required.every(field => 
-      customerData[field] && 
-      typeof customerData[field] === 'string' && 
-      customerData[field].trim().length > 0
-    );
+    
+    return required.every(field => {
+      if (!customerData[field] || typeof customerData[field] !== 'string') {
+        return false;
+      }
+      
+      const value = customerData[field].trim();
+      
+      if (value.length === 0) {
+        return false;
+      }
+      
+      // Additional validation based on field type
+      switch (field) {
+        case 'phone':
+          // Must be 10-digit Indian mobile number
+          return /^[6-9]\d{9}$/.test(value.replace(/[\s\-]/g, ''));
+        
+        case 'name':
+          // Must be at least 2 characters, only letters and spaces
+          return value.length >= 2 && /^[a-zA-Z\s]+$/.test(value);
+        
+        case 'location':
+          // Must be at least 3 characters, only letters and spaces
+          return value.length >= 3 && /^[a-zA-Z\s]+$/.test(value);
+        
+        default:
+          return true;
+      }
+    });
   }
 
   /**
-   * Get still missing fields
+   * Get still missing or invalid fields
    */
   static getStillMissingFields(customerData: Record<string, any>): string[] {
     const required = ['name', 'phone', 'location'];
     const missing: string[] = [];
 
     required.forEach(field => {
-      if (!customerData[field] || customerData[field].trim() === '') {
+      let isValid = false;
+      
+      if (customerData[field] && typeof customerData[field] === 'string') {
+        const value = customerData[field].trim();
+        
+        if (value.length > 0) {
+          // Additional validation based on field type
+          switch (field) {
+            case 'phone':
+              isValid = /^[6-9]\d{9}$/.test(value.replace(/[\s\-]/g, ''));
+              break;
+            case 'name':
+              isValid = value.length >= 2 && /^[a-zA-Z\s]+$/.test(value);
+              break;
+            case 'location':
+              isValid = value.length >= 3 && /^[a-zA-Z\s]+$/.test(value);
+              break;
+            default:
+              isValid = true;
+          }
+        }
+      }
+      
+      if (!isValid) {
         missing.push(field === 'phone' ? 'phone number' : field);
       }
     });

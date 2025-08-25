@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       console.log('📋 Currently collecting callback info, processing user response...');
       
       // Extract customer info from this message
-      const extractedInfo = ChatStateManager.extractCustomerInfoFromMessage(sanitizedMessage);
+      const extractedInfo = await ChatStateManager.extractCustomerInfoFromMessage(sanitizedMessage);
       
       // Merge with existing data
       const updatedCustomerData = ChatStateManager.mergeCustomerData(
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Check for failed call triggers in new messages
-      const failedCallData = FailedCallDetector.detectFailedCall(sanitizedMessage, context.getContext());
+      const failedCallData = await FailedCallDetector.detectFailedCall(sanitizedMessage, context.getContext());
       
       if (failedCallData.detected) {
         console.log('🚨 Failed call detected!', failedCallData.triggerPhrase);

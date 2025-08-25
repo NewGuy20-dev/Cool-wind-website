@@ -1,78 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { TaskStorage, TaskData } from '@/lib/storage/task-storage';
 
 // Simple admin authentication (in production, use proper auth)
-function isValidAdminRequest(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization');
-  const adminKey = process.env.ADMIN_API_KEY || 'admin123'; // Set this in production
+const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+
+function authenticateAdmin(request: NextRequest): boolean {
+  const authHeader = request.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return false;
+  }
   
-  return authHeader === `Bearer ${adminKey}`;
+  const token = authHeader.substring(7);
+  return token === ADMIN_KEY;
 }
 
+
+
 export async function GET(request: NextRequest) {
-  // Basic admin authentication
-  if (!isValidAdminRequest(request)) {
+  // Authenticate admin
+  if (!authenticateAdmin(request)) {
     return NextResponse.json(
-      { error: 'Unauthorized access' },
+      { error: 'Unauthorized' },
       { status: 401 }
     );
   }
 
   try {
-    // Get tasks from the task creation API
-    const tasksResponse = await fetch(`${request.nextUrl.origin}/api/tasks/auto-create`);
-    
-    if (!tasksResponse.ok) {
-      throw new Error('Failed to fetch tasks');
-    }
-
-    const tasksData = await tasksResponse.json();
-    
-    // Add some analytics
-    const tasks = tasksData.tasks || [];
-    const analytics = {
-      totalTasks: tasks.length,
-      tasksByPriority: {
-        high: tasks.filter((t: any) => t.priority === 'high').length,
-        medium: tasks.filter((t: any) => t.priority === 'medium').length,
-        low: tasks.filter((t: any) => t.priority === 'low').length
-      },
-      tasksByStatus: {
-        new: tasks.filter((t: any) => t.status === 'new').length,
-        in_progress: tasks.filter((t: any) => t.status === 'in_progress').length,
-        completed: tasks.filter((t: any) => t.status === 'completed').length,
-        cancelled: tasks.filter((t: any) => t.status === 'cancelled').length
-      },
-      recentTasks: tasks
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10)
-    };
+    const tasks = TaskStorage.getAll();
+    const analytics = TaskStorage.getAnalytics();
 
     return NextResponse.json({
-      success: true,
+      tasks,
       analytics,
-      tasks: tasks
+      success: true
     });
-
   } catch (error) {
-    console.error('Admin tasks fetch error:', error);
+    console.error('Admin API error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch tasks data' },
+      { error: 'Failed to fetch tasks' },
       { status: 500 }
     );
   }
 }
 
-// Update task status
 export async function PATCH(request: NextRequest) {
-  if (!isValidAdminRequest(request)) {
+  // Authenticate admin
+  if (!authenticateAdmin(request)) {
     return NextResponse.json(
-      { error: 'Unauthorized access' },
+      { error: 'Unauthorized' },
       { status: 401 }
     );
   }
 
   try {
-    const { taskId, status, notes } = await request.json();
+    const { taskId, status } = await request.json();
     
     if (!taskId || !status) {
       return NextResponse.json(
@@ -81,21 +62,31 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // In a real implementation, you would update the task in database
-    // For now, just log the update
-    console.log('📝 ADMIN TASK UPDATE:', {
-      taskId,
-      status,
-      notes,
-      updatedBy: 'admin',
-      updatedAt: new Date().toISOString()
-    });
+    // Validate status
+    const validStatuses = ['new', 'in_progress', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: 'Invalid status' },
+        { status: 400 }
+      );
+    }
 
+    // Update task status
+    const updated = TaskStorage.update(taskId, { status });
+    
+    if (!updated) {
+      return NextResponse.json(
+        { error: 'Task not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log(`✅ Admin updated task ${taskId} to status: ${status}`);
+    
     return NextResponse.json({
       success: true,
-      message: 'Task updated successfully'
+      message: 'Task status updated'
     });
-
   } catch (error) {
     console.error('Admin task update error:', error);
     return NextResponse.json(
