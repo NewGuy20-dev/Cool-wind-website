@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+// Initialize Gemini AI - handle missing API key gracefully
+const apiKey = process.env.GOOGLE_AI_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export interface ExtractedCustomerInfo {
   name?: string;
@@ -17,13 +18,13 @@ export interface ExtractedCustomerInfo {
 }
 
 export class GeminiInformationExtractor {
-  private static model = genAI.getGenerativeModel({ 
-    model: 'gemini-2.0-flash-exp',
+  private static model = genAI ? genAI.getGenerativeModel({ 
+    model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
     generationConfig: {
       temperature: 0.1, // Low temperature for consistent extraction
       maxOutputTokens: 500,
     }
-  });
+  }) : null;
 
   /**
    * Extract customer information using Gemini AI with structured prompting
@@ -56,6 +57,12 @@ RESPOND WITH ONLY THIS JSON FORMAT (no other text):
 }`;
 
     try {
+      // Check if Gemini is available
+      if (!this.model || !apiKey) {
+        console.log('⚠️ Gemini API key not found, using fallback extraction');
+        return this.getFallbackExtraction(message);
+      }
+
       console.log('🤖 Gemini: Extracting customer info from:', message);
       
       const result = await this.model.generateContent(prompt);
