@@ -15,4 +15,5 @@ export function generateJsonReport(input) {
     };
     return JSON.stringify(report, null, 2);
 }
-export default { generateJsonReport };
+const reporting = { generateJsonReport };
+export default reporting;

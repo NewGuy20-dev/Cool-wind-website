@@ -47,4 +47,5 @@ export function start(port = Number(process.env.PORT || 3333)) {
 	});
 }
 
-export default { createServer, start };
+const mcp = { createServer, start };
+export default mcp;

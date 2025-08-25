@@ -29,4 +29,5 @@ export function loadConfigFromEnv(): RunnerConfig {
 	return RunnerConfigSchema.parse(raw);
 }
 
-export default { RunnerConfigSchema, loadConfigFromEnv };
+const config = { RunnerConfigSchema, loadConfigFromEnv };
+export default config;

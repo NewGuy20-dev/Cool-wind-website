@@ -22,7 +22,7 @@ export declare const RunnerConfigSchema: z.ZodObject<{
 }, z.core.$strip>;
 export type RunnerConfig = z.infer<typeof RunnerConfigSchema>;
 export declare function loadConfigFromEnv(): RunnerConfig;
-declare const _default: {
+declare const config: {
     RunnerConfigSchema: z.ZodObject<{
         baseUrl: z.ZodString;
         routePath: z.ZodDefault<z.ZodString>;
@@ -46,4 +46,4 @@ declare const _default: {
     }, z.core.$strip>;
     loadConfigFromEnv: typeof loadConfigFromEnv;
 };
-export default _default;
+export default config;

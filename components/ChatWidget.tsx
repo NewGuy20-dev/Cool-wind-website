@@ -30,7 +30,7 @@ export default function ChatWidget({ isVisible }: ChatWidgetProps) {
       const timer = setTimeout(() => setIsTyping(true), 500)
       return () => clearTimeout(timer)
     }
-  }, [isOpen])
+  }, [isOpen, isTyping])
 
   const handleSendMessage = () => {
     if (message.trim()) {

@@ -53,8 +53,8 @@ async function testAIPriorityAnalysis() {
   // Import AI analyzer
   let AIPriorityAnalyzer;
   try {
-    const module = await import('../lib/ai-priority-analyzer.js');
-    AIPriorityAnalyzer = module.AIPriorityAnalyzer;
+    const aiAnalyzerModule = await import('../lib/ai-priority-analyzer.js');
+    AIPriorityAnalyzer = aiAnalyzerModule.AIPriorityAnalyzer;
   } catch (error) {
     console.error('Error importing AI analyzer:', error);
     console.log('Switching to API endpoint testing...\n');

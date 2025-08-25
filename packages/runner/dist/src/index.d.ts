@@ -20,7 +20,7 @@ export interface RunResult {
     meta: Record<string, unknown>;
 }
 export declare function runToMlRoute(options: RunOptions): Promise<RunResult>;
-declare const _default: {
+declare const runner: {
     runToMlRoute: typeof runToMlRoute;
 };
-export default _default;
+export default runner;

@@ -62,4 +62,5 @@ export async function runToMlRoute(options) {
     }
     return { success: false, attempts, pageLoadMs: now() - startAll, meta: { error: String(lastError), browser } };
 }
-export default { runToMlRoute };
+const runner = { runToMlRoute };
+export default runner;

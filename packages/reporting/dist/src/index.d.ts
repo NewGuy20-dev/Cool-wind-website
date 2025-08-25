@@ -25,7 +25,7 @@ export interface ReportInput {
     meta?: Record<string, unknown>;
 }
 export declare function generateJsonReport(input: ReportInput): string;
-declare const _default: {
+declare const reporting: {
     generateJsonReport: typeof generateJsonReport;
 };
-export default _default;
+export default reporting;
