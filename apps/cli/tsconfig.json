@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationDir": "dist",
+    "outDir": "dist",
+    "noEmit": false,
+    "baseUrl": ".",
+    "paths": {
+      "@logo-suite/*": ["../../packages/*/src"]
+    }
+  },
+  "references": [
+    { "path": "../../packages/runner" },
+    { "path": "../../packages/reporting" },
+    { "path": "../../packages/config" }
+  ],
+  "include": ["src/**/*"]
+}

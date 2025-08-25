@@ -71,4 +71,3 @@ export default function GoogleTranslate({ targetLang }: { targetLang: 'en'|'ml' 
 	return <div id="google_translate_element" style={{ display: 'none' }} />
 }
 
-

@@ -37,6 +37,15 @@
     }
   ],
 
+
+=======
+  "env": {
+    "GEMINI_MODEL": "gemini-2.0-flash-exp",
+    "CHAT_SESSION_TIMEOUT": "1800000",
+    "MAX_MESSAGES_PER_SESSION": "50",
+    "ENABLE_CHAT_ANALYTICS": "true"
+  },
+
   "build": {
     "env": {
       "NEXT_TELEMETRY_DISABLED": "1"

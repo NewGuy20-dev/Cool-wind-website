@@ -114,13 +114,13 @@ export default function Header() {
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -8 }}
 						transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-						className="md:hidden border-t bg-neutral-50"
+						className="md:hidden border-t bg-white"
 					>
 						<div className="px-4 py-3 space-y-1">
 							{navigation.map((item) => (
 								<Link
 									key={item.name}
-									href={withLocale(item.href)}
+									href={item.href}
 									className="block px-3 py-2 rounded-lg text-neutral-600 hover:text-primary-600 hover:bg-neutral-50 font-medium transition-colors duration-200"
 									onClick={() => setMobileMenuOpen(false)}
 								>

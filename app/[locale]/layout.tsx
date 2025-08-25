@@ -8,7 +8,6 @@ import enMessages from '@/data/translations/en.json'
 import mlMessages from '@/data/translations/ml.json'
 import PageTransition from '@/components/PageTransition'
 import GoogleTranslate from '@/components/GoogleTranslate'
-import { ChatWidget } from '@/components/chat/ChatWidget'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
 	const { locale } = await params
@@ -124,8 +123,7 @@ export default async function LocaleLayout({
 }) {
 	const { locale } = await params
 	const messages = (locale === 'ml' ? (mlMessages as any) : (enMessages as any))
-	
-	const enhancedLocalBusinessSchema = {
+	const ld = {
 		"@context": "https://schema.org",
 		"@type": "LocalBusiness",
 		"@id": "https://coolwindservices.com/#organization",
@@ -272,18 +270,12 @@ export default async function LocaleLayout({
 			{/* Google Translate mounts client-side; hidden UI */}
 			<GoogleTranslate targetLang={locale === 'ml' ? 'ml' : 'en'} />
 			<Providers locale={locale} messages={messages}>
-				{/* Enhanced Schema Markup for Locale */}
-				<script 
-					type="application/ld+json" 
-					dangerouslySetInnerHTML={{ __html: JSON.stringify(enhancedLocalBusinessSchema) }} 
-				/>
 				<Header/>
 				<PageTransition>
 					{children}
 				</PageTransition>
 				<Footer/>
 				<FloatingCtas/>
-				<ChatWidget />
 				<CookieConsent/>
 			</Providers>
 		</>

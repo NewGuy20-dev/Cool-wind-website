@@ -292,8 +292,8 @@ export class BusinessLogicProcessor {
     if (!text) return false;
     
     const urgentKeywords = [
-      'emergency', 'urgent', 'immediately', 'asap', 'broken down',
-      'not working', 'stopped working', 'completely dead'
+      'emergency', 'urgent', 'immediately', 'asap', 'critical',
+      'emergency repair', 'urgent repair', 'emergency service'
     ];
     
     const lowerText = text.toLowerCase();

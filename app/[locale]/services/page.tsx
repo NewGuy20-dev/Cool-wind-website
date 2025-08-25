@@ -314,16 +314,17 @@ export default function ServicesPage() {
 										<div className="mt-6 flex gap-4">
 											<a 
 												href={service.ctaLink} 
-												className="btn-primary"
+												className="btn-primary inline-flex items-center gap-2"
 											>
 												{service.cta}
 											</a>
 											<a 
 												href={`https://wa.me/${WHATSAPP}?text=Hi, I need ${service.title.toLowerCase()}`}
-												className="btn-secondary"
+												className="btn-secondary inline-flex items-center gap-2"
 												target="_blank"
 												rel="noopener noreferrer"
 											>
+												<MessageCircle size={20} />
 												WhatsApp for {service.title}
 											</a>
 										</div>
