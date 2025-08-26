@@ -1,6 +1,7 @@
 import { FailedCallTask } from '@/lib/failed-calls-types';
 import { TaskManagementIntent } from './intelligent-message-analyzer';
 import { ConversationContextData, CustomerInfo } from '@/lib/types/chat';
+import { TicketService, ServiceTicket, TicketCreationRequest } from '@/lib/ticket-service';
 
 export interface TaskOperationResult {
   success: boolean;
@@ -63,7 +64,7 @@ export class TaskManagementAgent {
   }
 
   /**
-   * Handle creating a new task
+   * Handle creating a new task with ticket service integration
    */
   private static async handleCreateTask(
     intent: TaskManagementIntent,
@@ -86,8 +87,8 @@ export class TaskManagementAgent {
         };
       }
 
-      // Create the task
-      const response = await fetch('/api/failed-calls', {
+      // Create both failed call task and service ticket
+      const failedCallResponse = await fetch('/api/failed-calls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -102,21 +103,38 @@ export class TaskManagementAgent {
         })
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        return {
-          success: true,
-          taskId: result.id,
-          message: `Perfect! I've created a new service request for ${taskDetails.customerName}. Your request ID is ${result.id}. Our team will contact you soon to schedule the service.`,
-          task: result,
-          nextAction: 'task_created'
-        };
-      } else {
-        throw new Error(`API Error: ${response.status}`);
+      let failedCallTask = null;
+      if (failedCallResponse.ok) {
+        failedCallTask = await failedCallResponse.json();
       }
 
+      // Create service ticket with enhanced details
+      const ticketRequest: TicketCreationRequest = {
+        customerName: taskDetails.customerName,
+        phoneNumber: taskDetails.phoneNumber,
+        email: context.customerInfo?.email,
+        location: taskDetails.location || 'Not specified',
+        serviceType: this.inferServiceType(taskDetails.description),
+        appliance: this.inferAppliance(taskDetails.description),
+        problemDescription: taskDetails.description || 'Service request from chat',
+        urgency: this.mapPriorityToUrgency(taskDetails.priority),
+        source: 'chat',
+        customerNotes: message,
+        relatedFailedCallId: failedCallTask?.id
+      };
+
+      const ticket = await TicketService.createTicket(ticketRequest);
+
+      return {
+        success: true,
+        taskId: ticket.id,
+        message: `Perfect! I've created service ticket ${ticket.ticketNumber} for ${taskDetails.customerName}. ${ticket.estimatedResponseTime}, our team will contact you to schedule the service. You can reference this ticket using number ${ticket.ticketNumber}.`,
+        task: this.convertTicketToTask(ticket),
+        nextAction: 'ticket_created'
+      };
+
     } catch (error) {
-      console.error('❌ Failed to create task:', error);
+      console.error('❌ Failed to create task with ticket service:', error);
       return {
         success: false,
         message: "I encountered an issue creating your service request. Let me connect you with our support team directly.",
@@ -127,7 +145,7 @@ export class TaskManagementAgent {
   }
 
   /**
-   * Handle updating an existing task
+   * Handle updating an existing ticket
    */
   private static async handleUpdateTask(
     intent: TaskManagementIntent,
@@ -136,55 +154,53 @@ export class TaskManagementAgent {
     sessionId: string
   ): Promise<TaskOperationResult> {
     try {
-      // First, find the task to update
-      const searchCriteria = this.buildSearchCriteria(intent, context);
-      const tasks = await this.searchTasks(searchCriteria);
+      // Find the ticket to update
+      const searchCriteria = this.buildTicketSearchCriteria(intent, context);
+      const tickets = await TicketService.getTickets(searchCriteria);
 
-      if (tasks.length === 0) {
+      if (tickets.length === 0) {
         return {
           success: false,
-          message: "I couldn't find any service requests matching your criteria. Could you provide more details like your phone number or request ID?",
+          message: "I couldn't find any service requests matching your criteria. Could you provide more details like your phone number or ticket number?",
           nextAction: 'request_more_info'
         };
       }
 
-      if (tasks.length > 1) {
+      if (tickets.length > 1) {
         return {
           success: false,
-          message: `I found ${tasks.length} service requests. Could you specify which one you'd like to update? You can provide the request ID or more specific details.`,
+          message: `I found ${tickets.length} service requests. Could you specify which one you'd like to update? You can provide the ticket number or more specific details.`,
           nextAction: 'clarify_task_selection'
         };
       }
 
-      const task = tasks[0];
-      const updates = this.extractUpdateDetails(intent, message);
+      const ticket = tickets[0];
+      const updates = this.extractTicketUpdateDetails(intent, message);
 
-      // Update the task
-      const response = await fetch(`/api/failed-calls/${task.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...updates,
-          updatedAt: new Date().toISOString(),
-          notes: `${task.notes || ''}\nUpdated via chat: ${message}`
-        })
-      });
+      const updatedTicket = await TicketService.updateTicket(ticket.id, updates);
 
-      if (response.ok) {
-        const updatedTask = await response.json();
+      if (updatedTicket) {
+        // Add communication entry
+        await TicketService.addCommunication(ticket.id, {
+          type: 'chat',
+          direction: 'inbound',
+          content: `Customer requested update: ${message}`,
+          author: ticket.customerName
+        });
+
         return {
           success: true,
-          taskId: task.id,
-          message: `I've successfully updated your service request (ID: ${task.id}). The changes have been saved and our team will be notified.`,
-          task: updatedTask,
-          nextAction: 'task_updated'
+          taskId: ticket.id,
+          message: `I've successfully updated your service request (Ticket: ${ticket.ticketNumber}). The changes have been saved and our team will be notified.`,
+          task: this.convertTicketToTask(updatedTicket),
+          nextAction: 'ticket_updated'
         };
       } else {
-        throw new Error(`Update failed: ${response.status}`);
+        throw new Error('Update failed');
       }
 
     } catch (error) {
-      console.error('❌ Failed to update task:', error);
+      console.error('❌ Failed to update ticket:', error);
       return {
         success: false,
         message: "I had trouble updating your service request. Let me connect you with our support team to help with this update.",
@@ -195,7 +211,7 @@ export class TaskManagementAgent {
   }
 
   /**
-   * Handle checking task status
+   * Handle checking task status with ticket service
    */
   private static async handleStatusCheck(
     intent: TaskManagementIntent,
@@ -204,39 +220,40 @@ export class TaskManagementAgent {
     sessionId: string
   ): Promise<TaskOperationResult> {
     try {
-      const searchCriteria = this.buildSearchCriteria(intent, context);
-      const tasks = await this.searchTasks(searchCriteria);
+      // Search for tickets based on customer information
+      const searchCriteria = this.buildTicketSearchCriteria(intent, context);
+      const tickets = await TicketService.getTickets(searchCriteria);
 
-      if (tasks.length === 0) {
+      if (tickets.length === 0) {
         return {
           success: false,
-          message: "I couldn't find any service requests for you. Could you provide your phone number or request ID so I can check the status?",
+          message: "I couldn't find any service requests for you. Could you provide your phone number or ticket number so I can check the status?",
           nextAction: 'request_identification'
         };
       }
 
-      if (tasks.length === 1) {
-        const task = tasks[0];
-        const statusMessage = this.generateStatusMessage(task);
+      if (tickets.length === 1) {
+        const ticket = tickets[0];
+        const statusMessage = this.generateTicketStatusMessage(ticket);
         return {
           success: true,
-          taskId: task.id,
+          taskId: ticket.id,
           message: statusMessage,
-          task,
+          task: this.convertTicketToTask(ticket),
           nextAction: 'status_provided'
         };
       }
 
-      // Multiple tasks found
-      const statusSummary = this.generateMultipleTasksStatus(tasks);
+      // Multiple tickets found
+      const statusSummary = this.generateMultipleTicketsStatus(tickets);
       return {
         success: true,
         message: statusSummary,
-        nextAction: 'multiple_tasks_status'
+        nextAction: 'multiple_tickets_status'
       };
 
     } catch (error) {
-      console.error('❌ Failed to check task status:', error);
+      console.error('❌ Failed to check ticket status:', error);
       return {
         success: false,
         message: "I'm having trouble checking your request status right now. Please call us at +91 85472 29991 for an immediate status update.",
@@ -247,7 +264,7 @@ export class TaskManagementAgent {
   }
 
   /**
-   * Handle listing tasks
+   * Handle listing tickets
    */
   private static async handleListTasks(
     intent: TaskManagementIntent,
@@ -256,28 +273,28 @@ export class TaskManagementAgent {
     sessionId: string
   ): Promise<TaskOperationResult> {
     try {
-      const searchCriteria = this.buildSearchCriteria(intent, context);
-      searchCriteria.limit = 5; // Limit to recent 5 tasks
+      const searchCriteria = this.buildTicketSearchCriteria(intent, context);
+      searchCriteria.limit = 5; // Limit to recent 5 tickets
       
-      const tasks = await this.searchTasks(searchCriteria);
+      const tickets = await TicketService.getTickets(searchCriteria);
 
-      if (tasks.length === 0) {
+      if (tickets.length === 0) {
         return {
           success: true,
           message: "I don't see any service requests for you currently. Would you like me to create a new one?",
-          nextAction: 'offer_task_creation'
+          nextAction: 'offer_ticket_creation'
         };
       }
 
-      const listMessage = this.generateTaskList(tasks);
+      const listMessage = this.generateTicketList(tickets);
       return {
         success: true,
         message: listMessage,
-        nextAction: 'tasks_listed'
+        nextAction: 'tickets_listed'
       };
 
     } catch (error) {
-      console.error('❌ Failed to list tasks:', error);
+      console.error('❌ Failed to list tickets:', error);
       return {
         success: false,
         message: "I'm having trouble retrieving your service requests. Please call us at +91 85472 29991 for assistance.",
@@ -552,5 +569,257 @@ Need any changes or have questions? Just let me know!`;
       'cancelled': '❌'
     };
     return emojiMap[status] || '📋';
+  }
+
+  /**
+   * Infer service type from description
+   */
+  private static inferServiceType(description: string): ServiceTicket['serviceType'] {
+    const desc = description.toLowerCase();
+    
+    if (desc.includes('emergency') || desc.includes('urgent') || desc.includes('critical')) {
+      return 'emergency';
+    }
+    if (desc.includes('install') || desc.includes('installation')) {
+      return 'installation';
+    }
+    if (desc.includes('maintenance') || desc.includes('service') || desc.includes('check')) {
+      return 'maintenance';
+    }
+    if (desc.includes('refrigerator') || desc.includes('fridge')) {
+      return 'refrigerator_repair';
+    }
+    if (desc.includes('consultation') || desc.includes('advice') || desc.includes('quote')) {
+      return 'consultation';
+    }
+    
+    return 'ac_repair'; // Default
+  }
+
+  /**
+   * Infer appliance details from description
+   */
+  private static inferAppliance(description: string): ServiceTicket['appliance'] {
+    const desc = description.toLowerCase();
+    
+    const appliance: ServiceTicket['appliance'] = {
+      type: 'ac' // default
+    };
+    
+    if (desc.includes('refrigerator') || desc.includes('fridge')) {
+      appliance.type = 'refrigerator';
+    } else if (desc.includes('ac') || desc.includes('air conditioner') || desc.includes('cooling')) {
+      appliance.type = 'ac';
+    } else {
+      appliance.type = 'other';
+    }
+    
+    // Try to extract brand
+    const brands = ['samsung', 'lg', 'whirlpool', 'godrej', 'haier', 'voltas', 'blue star'];
+    for (const brand of brands) {
+      if (desc.includes(brand)) {
+        appliance.brand = brand.charAt(0).toUpperCase() + brand.slice(1);
+        break;
+      }
+    }
+    
+    return appliance;
+  }
+
+  /**
+   * Map priority to urgency
+   */
+  private static mapPriorityToUrgency(priority?: string): ServiceTicket['urgency'] {
+    switch (priority) {
+      case 'high': return 'high';
+      case 'low': return 'low';
+      case 'critical': return 'critical';
+      default: return 'medium';
+    }
+  }
+
+  /**
+   * Build ticket search criteria
+   */
+  private static buildTicketSearchCriteria(intent: TaskManagementIntent, context: ConversationContextData) {
+    return {
+      customerName: intent.taskDetails?.customerName || context.customerInfo?.name,
+      phoneNumber: intent.taskDetails?.phoneNumber || context.customerInfo?.phone,
+      status: intent.taskDetails?.status,
+      priority: intent.taskDetails?.priority,
+      limit: 10
+    };
+  }
+
+  /**
+   * Convert ticket to task format for compatibility
+   */
+  private static convertTicketToTask(ticket: ServiceTicket): Partial<FailedCallTask> {
+    return {
+      id: ticket.id,
+      customerName: ticket.customerName,
+      phoneNumber: ticket.phoneNumber,
+      problemDescription: ticket.problemDescription,
+      priority: ticket.priority as any,
+      status: this.mapTicketStatusToTaskStatus(ticket.status),
+      createdAt: ticket.createdAt,
+      updatedAt: ticket.updatedAt,
+      notes: `Ticket: ${ticket.ticketNumber} | ${ticket.estimatedResponseTime}`
+    };
+  }
+
+  /**
+   * Map ticket status to task status
+   */
+  private static mapTicketStatusToTaskStatus(ticketStatus: ServiceTicket['status']): FailedCallTask['status'] {
+    switch (ticketStatus) {
+      case 'new': return 'new';
+      case 'acknowledged': return 'progress';
+      case 'scheduled': return 'scheduled';
+      case 'in_progress': return 'progress';
+      case 'completed': return 'completed';
+      case 'cancelled': return 'completed';
+      default: return 'new';
+    }
+  }
+
+  /**
+   * Generate ticket status message
+   */
+  private static generateTicketStatusMessage(ticket: ServiceTicket): string {
+    const statusMap = {
+      'new': 'New - We\'ve received your request and will contact you soon',
+      'acknowledged': 'Acknowledged - Your request has been assigned to a technician',
+      'scheduled': 'Scheduled - Your service appointment has been booked',
+      'in_progress': 'In Progress - Our technician is working on your request',
+      'completed': 'Completed - Your service request has been resolved',
+      'cancelled': 'Cancelled - This request has been cancelled',
+      'on_hold': 'On Hold - Temporarily paused, waiting for parts or customer availability'
+    };
+
+    const statusText = statusMap[ticket.status] || `Status: ${ticket.status}`;
+    const createdDate = new Date(ticket.createdAt).toLocaleDateString();
+    
+    let message = `Here's the status of your service request:\n\n`;
+    message += `🎫 **Ticket:** ${ticket.ticketNumber}\n`;
+    message += `📋 **Service:** ${ticket.problemDescription}\n`;
+    message += `📅 **Created:** ${createdDate}\n`;
+    message += `🎯 **Priority:** ${ticket.priority.toUpperCase()}\n`;
+    message += `📊 **Status:** ${statusText}\n`;
+    
+    if (ticket.assignedTechnician) {
+      message += `👨‍🔧 **Technician:** ${ticket.assignedTechnician}\n`;
+    }
+    
+    if (ticket.estimatedResponseTime) {
+      message += `⏱️ **Response Time:** ${ticket.estimatedResponseTime}\n`;
+    }
+    
+    if (ticket.scheduledAt) {
+      message += `📅 **Scheduled:** ${new Date(ticket.scheduledAt).toLocaleString()}\n`;
+    }
+    
+    message += `\nNeed any changes or have questions? Just let me know!`;
+    
+    return message;
+  }
+
+  /**
+   * Generate status summary for multiple tickets
+   */
+  private static generateMultipleTicketsStatus(tickets: ServiceTicket[]): string {
+    let summary = `I found ${tickets.length} service requests for you:\n\n`;
+    
+    tickets.forEach((ticket, index) => {
+      const createdDate = new Date(ticket.createdAt).toLocaleDateString();
+      const statusEmoji = this.getTicketStatusEmoji(ticket.status);
+      
+      summary += `${index + 1}. ${statusEmoji} **${ticket.problemDescription}**\n`;
+      summary += `   🎫 ${ticket.ticketNumber} | 📅 ${createdDate} | 🎯 ${ticket.priority.toUpperCase()}\n\n`;
+    });
+    
+    summary += "Would you like details about any specific request? Just mention the ticket number.";
+    return summary;
+  }
+
+  /**
+   * Generate ticket list message
+   */
+  private static generateTicketList(tickets: ServiceTicket[]): string {
+    let list = `Here are your recent service requests:\n\n`;
+    
+    tickets.forEach((ticket, index) => {
+      const createdDate = new Date(ticket.createdAt).toLocaleDateString();
+      const statusEmoji = this.getTicketStatusEmoji(ticket.status);
+      
+      list += `${index + 1}. ${statusEmoji} **${ticket.problemDescription}**\n`;
+      list += `   🎫 ${ticket.ticketNumber} | 📅 ${createdDate} | 🎯 ${ticket.priority.toUpperCase()}\n`;
+      if (ticket.assignedTechnician) {
+        list += `   👨‍🔧 ${ticket.assignedTechnician}\n`;
+      }
+      list += `\n`;
+    });
+    
+    list += "Need to update any of these requests? Just let me know!";
+    return list;
+  }
+
+  /**
+   * Get emoji for ticket status
+   */
+  private static getTicketStatusEmoji(status: ServiceTicket['status']): string {
+    const emojiMap = {
+      'new': '🆕',
+      'acknowledged': '👀',
+      'scheduled': '📅',
+      'in_progress': '⚙️',
+      'completed': '✅',
+      'cancelled': '❌',
+      'on_hold': '⏸️'
+    };
+    return emojiMap[status] || '📋';
+  }
+
+  /**
+   * Extract ticket update details from message
+   */
+  private static extractTicketUpdateDetails(intent: TaskManagementIntent, message: string): Partial<ServiceTicket> {
+    const updates: Partial<ServiceTicket> = {};
+    
+    // Extract priority changes
+    if (message.toLowerCase().includes('urgent') || message.toLowerCase().includes('emergency')) {
+      updates.urgency = 'critical';
+      updates.priority = 'critical';
+    } else if (message.toLowerCase().includes('low priority') || message.toLowerCase().includes('no rush')) {
+      updates.urgency = 'low';
+      updates.priority = 'low';
+    }
+    
+    // Extract status changes
+    const statusKeywords = {
+      'completed': ['completed', 'finished', 'done', 'resolved'],
+      'in_progress': ['in progress', 'working on', 'started'],
+      'scheduled': ['scheduled', 'appointment', 'booked'],
+      'on_hold': ['hold', 'pause', 'wait']
+    };
+    
+    for (const [status, keywords] of Object.entries(statusKeywords)) {
+      if (keywords.some(keyword => message.toLowerCase().includes(keyword))) {
+        updates.status = status as ServiceTicket['status'];
+        break;
+      }
+    }
+    
+    // Include task details from intent
+    if (intent.taskDetails) {
+      if (intent.taskDetails.description) {
+        updates.problemDescription = intent.taskDetails.description;
+      }
+    }
+    
+    // Add customer note
+    updates.customerNotes = message;
+    
+    return updates;
   }
 }
