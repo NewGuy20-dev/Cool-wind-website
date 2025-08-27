@@ -1,159 +1,183 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TicketService, TicketCreationRequest } from '@/lib/ticket-service';
+import { TaskService } from '@/lib/supabase/tasks';
 
-// GET /api/tickets - Get all tickets with optional filtering
+/**
+ * Tickets API Route
+ * This provides compatibility with the existing admin dashboard by mapping tasks to tickets
+ * In the new architecture, tickets and tasks are unified into the tasks table
+ */
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
-    // Extract query parameters for filtering
-    const filters = {
-      status: searchParams.get('status') || undefined,
-      priority: searchParams.get('priority') || undefined,
-      serviceType: searchParams.get('serviceType') || undefined,
-      assignedTechnician: searchParams.get('assignedTechnician') || undefined,
-      customerName: searchParams.get('customerName') || undefined,
-      phoneNumber: searchParams.get('phoneNumber') || undefined,
-      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
-      dateRange: searchParams.get('startDate') && searchParams.get('endDate') ? {
-        start: searchParams.get('startDate')!,
-        end: searchParams.get('endDate')!
-      } : undefined
-    };
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const status = searchParams.get('status') as any;
+    const priority = searchParams.get('priority') as any;
 
-    // Remove undefined values
-    const cleanFilters = Object.fromEntries(
-      Object.entries(filters).filter(([_, value]) => value !== undefined)
-    );
+    // Get tasks and map them to ticket format for backwards compatibility
+    const result = await TaskService.getAllTasks(status, priority, limit);
 
-    const tickets = await TicketService.getTickets(cleanFilters);
-    
+    if (!result.success) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: result.error 
+        },
+        { status: 500 }
+      );
+    }
+
+    // Map tasks to ticket format (for backwards compatibility)
+    const tickets = result.data?.map(task => ({
+      id: task.id,
+      ticketNumber: task.task_number,
+      customerName: task.customer_name,
+      phoneNumber: task.phone_number,
+      problemDescription: task.problem_description,
+      status: task.status,
+      priority: task.priority,
+      location: task.location,
+      source: task.source,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
+      completedAt: task.completed_at,
+      // Additional ticket-specific fields
+      title: task.title,
+      description: task.description,
+      category: task.category,
+      aiPriorityReason: task.ai_priority_reason,
+      urgencyKeywords: task.urgency_keywords,
+      metadata: task.metadata
+    })) || [];
+
     return NextResponse.json({
       success: true,
       data: tickets,
-      total: tickets.length
+      count: tickets.length
     });
-    
+
   } catch (error) {
-    console.error('Error fetching tickets:', error);
+    console.error('❌ Tickets API error:', error);
     return NextResponse.json(
       { 
-        success: false, 
-        error: 'Failed to fetch tickets',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: 'Failed to fetch tickets' 
       },
       { status: 500 }
     );
   }
 }
 
-// POST /api/tickets - Create a new ticket
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Validate required fields
-    const requiredFields = ['customerName', 'phoneNumber', 'location', 'serviceType', 'appliance', 'problemDescription'];
-    const missingFields = requiredFields.filter(field => !body[field]);
+    // Create task with ticket source
+    const taskData = {
+      ...body,
+      source: 'admin-manual' as const,
+      // Map ticket fields to task fields
+      customerName: body.customerName || body.customer_name,
+      phoneNumber: body.phoneNumber || body.phone_number,
+      problemDescription: body.problemDescription || body.problem_description,
+    };
     
-    if (missingFields.length > 0) {
+    const result = await TaskService.createTask(taskData);
+    
+    if (!result.success) {
       return NextResponse.json(
         { 
-          success: false, 
-          error: 'Missing required fields',
-          missingFields 
+          success: false,
+          error: result.error 
+        },
+        { status: 500 }
+      );
+    }
+
+    // Map back to ticket format
+    const task = result.data!;
+    const ticket = {
+      id: task.id,
+      ticketNumber: task.task_number,
+      customerName: task.customer_name,
+      phoneNumber: task.phone_number,
+      problemDescription: task.problem_description,
+      status: task.status,
+      priority: task.priority,
+      location: task.location,
+      source: task.source,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
+      title: task.title,
+      description: task.description,
+      category: task.category
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: ticket,
+      message: 'Ticket created successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Ticket creation error:', error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'Failed to create ticket' 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Ticket ID is required' 
         },
         { status: 400 }
       );
     }
 
-    // Create ticket creation request
-    const ticketRequest: TicketCreationRequest = {
-      customerName: body.customerName,
-      phoneNumber: body.phoneNumber,
-      email: body.email,
-      location: body.location,
-      serviceType: body.serviceType,
-      appliance: body.appliance,
-      problemDescription: body.problemDescription,
-      urgency: body.urgency || 'medium',
-      preferredDate: body.preferredDate,
-      preferredTime: body.preferredTime,
-      source: body.source || 'website',
-      customerNotes: body.customerNotes,
-      relatedFailedCallId: body.relatedFailedCallId
+    // Map ticket updates to task updates
+    const taskUpdates = {
+      ...updates,
+      customer_name: updates.customerName || updates.customer_name,
+      phone_number: updates.phoneNumber || updates.phone_number,
+      problem_description: updates.problemDescription || updates.problem_description,
     };
 
-    const ticket = await TicketService.createTicket(ticketRequest);
+    const result = await TaskService.updateTask(id, taskUpdates);
     
+    if (!result.success) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: result.error 
+        },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
-      data: ticket,
-      message: `Ticket ${ticket.ticketNumber} created successfully`
-    }, { status: 201 });
-    
-  } catch (error) {
-    console.error('Error creating ticket:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to create ticket',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT /api/tickets - Bulk update tickets (for admin operations)
-export async function PUT(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { ticketIds, updates } = body;
-    
-    if (!ticketIds || !Array.isArray(ticketIds) || ticketIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'ticketIds array is required' },
-        { status: 400 }
-      );
-    }
-    
-    if (!updates || typeof updates !== 'object') {
-      return NextResponse.json(
-        { success: false, error: 'updates object is required' },
-        { status: 400 }
-      );
-    }
-
-    const results = [];
-    for (const ticketId of ticketIds) {
-      try {
-        const updatedTicket = await TicketService.updateTicket(ticketId, updates);
-        results.push({ ticketId, success: true, data: updatedTicket });
-      } catch (error) {
-        results.push({ 
-          ticketId, 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Update failed' 
-        });
-      }
-    }
-    
-    const successCount = results.filter(r => r.success).length;
-    
-    return NextResponse.json({
-      success: successCount > 0,
-      message: `${successCount}/${ticketIds.length} tickets updated successfully`,
-      results
+      data: result.data,
+      message: 'Ticket updated successfully'
     });
-    
+
   } catch (error) {
-    console.error('Error bulk updating tickets:', error);
+    console.error('❌ Ticket update error:', error);
     return NextResponse.json(
       { 
-        success: false, 
-        error: 'Failed to bulk update tickets',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        error: 'Failed to update ticket' 
       },
       { status: 500 }
     );

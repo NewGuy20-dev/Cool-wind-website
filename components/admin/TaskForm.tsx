@@ -132,7 +132,8 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
       const allSuccessful = results.every(result => result.success);
       
       if (allSuccessful) {
-        const ticketNumber = results.find(r => r.ticketNumber)?.ticketNumber;
+        const successResult = results.find((r: any) => r.success && 'ticketNumber' in r) as any;
+        const ticketNumber = successResult?.ticketNumber;
         setSubmitStatus({
           type: 'success',
           message: `Task created successfully!${ticketNumber ? ` Ticket number: ${ticketNumber}` : ''}`,
