@@ -5,7 +5,7 @@ import {
   ExclamationTriangleIcon, 
   CheckCircleIcon,
   ClockIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   UsersIcon
 } from '@heroicons/react/24/outline';
 
@@ -83,7 +83,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Completion Rate</h3>
-            <TrendingUpIcon className="h-5 w-5 text-gray-400" />
+            <ArrowTrendingUpIcon className="h-5 w-5 text-gray-400" />
           </div>
           
           <div className="text-3xl font-bold text-gray-900 mb-2">
