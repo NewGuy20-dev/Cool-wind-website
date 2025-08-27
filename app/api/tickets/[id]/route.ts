@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { TicketService } from '@/lib/ticket-service';
+import { TaskService } from '@/lib/supabase/tasks';
 
-// GET /api/tickets/[id] - Get a specific ticket
+// GET /api/tickets/[id] - Get a specific ticket (mapped to task)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = params.id;
+    const { id: ticketId } = await params;
     
     if (!ticketId) {
       return NextResponse.json(
@@ -16,14 +16,34 @@ export async function GET(
       );
     }
 
-    const ticket = await TicketService.getTicketById(ticketId);
+    const result = await TaskService.getTaskById(ticketId);
     
-    if (!ticket) {
+    if (!result.success || !result.data) {
       return NextResponse.json(
         { success: false, error: 'Ticket not found' },
         { status: 404 }
       );
     }
+
+    // Map task to ticket format for backward compatibility
+    const task = result.data;
+    const ticket = {
+      id: task.id,
+      ticketNumber: task.task_number,
+      customerName: task.customer_name,
+      phoneNumber: task.phone_number,
+      problemDescription: task.problem_description,
+      status: task.status,
+      priority: task.priority,
+      location: task.location,
+      source: task.source,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
+      completedAt: task.completed_at,
+      title: task.title,
+      description: task.description,
+      category: task.category
+    };
     
     return NextResponse.json({
       success: true,
@@ -46,10 +66,10 @@ export async function GET(
 // PUT /api/tickets/[id] - Update a specific ticket
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = params.id;
+    const { id: ticketId } = await params;
     const updates = await request.json();
     
     if (!ticketId) {
@@ -59,19 +79,27 @@ export async function PUT(
       );
     }
 
-    const updatedTicket = await TicketService.updateTicket(ticketId, updates);
+    // Map ticket updates to task updates
+    const taskUpdates = {
+      ...updates,
+      customer_name: updates.customerName || updates.customer_name,
+      phone_number: updates.phoneNumber || updates.phone_number,
+      problem_description: updates.problemDescription || updates.problem_description,
+    };
+
+    const result = await TaskService.updateTask(ticketId, taskUpdates);
     
-    if (!updatedTicket) {
+    if (!result.success) {
       return NextResponse.json(
-        { success: false, error: 'Ticket not found' },
-        { status: 404 }
+        { success: false, error: result.error },
+        { status: 500 }
       );
     }
     
     return NextResponse.json({
       success: true,
-      data: updatedTicket,
-      message: `Ticket ${updatedTicket.ticketNumber} updated successfully`
+      data: result.data,
+      message: `Ticket updated successfully`
     });
     
   } catch (error) {
@@ -90,10 +118,10 @@ export async function PUT(
 // DELETE /api/tickets/[id] - Cancel a specific ticket (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = params.id;
+    const { id: ticketId } = await params;
     
     if (!ticketId) {
       return NextResponse.json(
@@ -102,31 +130,19 @@ export async function DELETE(
       );
     }
 
-    // Instead of deleting, mark as cancelled
-    const cancelledTicket = await TicketService.updateTicket(ticketId, {
-      status: 'cancelled',
-      updatedAt: new Date().toISOString()
-    });
+    // Soft delete the task
+    const result = await TaskService.deleteTask(ticketId, 'Ticket cancelled via API');
     
-    if (!cancelledTicket) {
+    if (!result.success) {
       return NextResponse.json(
-        { success: false, error: 'Ticket not found' },
-        { status: 404 }
+        { success: false, error: result.error },
+        { status: 500 }
       );
     }
-
-    // Add communication entry
-    await TicketService.addCommunication(ticketId, {
-      type: 'internal_note',
-      direction: 'internal',
-      content: 'Ticket cancelled via API',
-      author: 'admin'
-    });
     
     return NextResponse.json({
       success: true,
-      data: cancelledTicket,
-      message: `Ticket ${cancelledTicket.ticketNumber} cancelled successfully`
+      message: 'Ticket cancelled successfully'
     });
     
   } catch (error) {

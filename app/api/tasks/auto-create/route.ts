@@ -20,7 +20,7 @@ const TaskCreationSchema = z.object({
   category: z.string().optional(),
   estimatedDuration: z.string().optional(),
   dueDate: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 // AI Priority Assessment (enhanced from original)

@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Check if requesting analytics/stats
-    const analytics = searchParams.get('analytics');
-    if (analytics === 'true') {
+    const requestAnalytics = searchParams.get('analytics');
+    if (requestAnalytics === 'true') {
       const startDate = searchParams.get('startDate') || undefined;
       const endDate = searchParams.get('endDate') || undefined;
       
@@ -82,15 +82,15 @@ export async function GET(request: NextRequest) {
     const result = await TaskService.searchTasks(searchParams_);
 
     // Also get additional analytics data
-    const analytics = await TaskService.getTaskStats();
-    const urgentTasks = await TaskService.getUrgentTasks();
+    const analyticsResult = await TaskService.getTaskStats();
+    const urgentTasksResult = await TaskService.getUrgentTasks();
 
     return NextResponse.json({
       success: true,
       tasks: result.tasks,
       pagination: result.pagination,
-      analytics: analytics.success ? analytics.data : null,
-      urgentTasks: urgentTasks.success ? urgentTasks.data : [],
+      analytics: analyticsResult.success ? analyticsResult.data : null,
+      urgentTasks: urgentTasksResult.success ? urgentTasksResult.data : [],
       totalTasks: result.pagination.total
     });
 

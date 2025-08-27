@@ -6,7 +6,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createRealtimeSubscription } from '@/lib/supabase/client';
 import { TaskService } from '@/lib/supabase/tasks';
-import { Task, DashboardData, RecentTask, UrgentTask } from '@/lib/types/database';
+import { Task, DashboardData, RecentTask, UrgentTask, TaskStatus, TaskPriority, TaskSource } from '@/lib/types/database';
 
 // Real-time tasks hook
 export function useRealtimeTasks(initialTasks: Task[] = []) {
@@ -221,7 +221,10 @@ export function useRealtimeTaskSearch(searchParams: {
     
     try {
       const result = await TaskService.searchTasks({
-        ...params,
+        search: params.search,
+        status: params.status as TaskStatus,
+        priority: params.priority as TaskPriority,
+        source: params.source as TaskSource,
         page: pagination.page,
         limit: pagination.limit,
       });

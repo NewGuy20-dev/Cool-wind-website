@@ -488,7 +488,19 @@ function TasksView() {
 }
 
 // Supporting Components
-function StatCard({ title, value, icon: Icon, color, subtitle }: any) {
+function StatCard({ 
+  title, 
+  value, 
+  icon: Icon, 
+  color, 
+  subtitle 
+}: {
+  title: string;
+  value: number | string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: 'blue' | 'orange' | 'purple' | 'green' | 'red';
+  subtitle: string;
+}) {
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600',
     orange: 'bg-orange-50 text-orange-600',
@@ -513,7 +525,17 @@ function StatCard({ title, value, icon: Icon, color, subtitle }: any) {
   );
 }
 
-function PriorityCard({ title, count, color, onClick }: any) {
+function PriorityCard({ 
+  title, 
+  count, 
+  color, 
+  onClick 
+}: {
+  title: string;
+  count: number;
+  color: 'red' | 'orange' | 'yellow' | 'gray';
+  onClick?: () => void;
+}) {
   const colorClasses = {
     red: 'bg-red-100 text-red-800 border-red-200',
     orange: 'bg-orange-100 text-orange-800 border-orange-200',
