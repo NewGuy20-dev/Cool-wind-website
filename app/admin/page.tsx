@@ -71,7 +71,7 @@ export default function AdminPage() {
     setState(prev => ({ ...prev, loading: true }));
     
     try {
-      // Load data based on active tab
+      // Load data based on active tab using new Supabase endpoints
       if (state.activeTab === 'dashboard' || state.activeTab === 'tickets') {
         await Promise.all([
           loadTicketStats(),

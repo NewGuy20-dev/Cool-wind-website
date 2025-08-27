@@ -387,15 +387,20 @@ export class FailedCallDetector {
   }
 
   /**
-   * Create task via API
+   * Create task via API (updated for Supabase integration)
    */
   static async createTask(taskRequest: TaskCreationRequest): Promise<{
     success: boolean;
     taskId?: string;
+    taskNumber?: string;
     error?: string;
   }> {
     try {
-      console.log('Creating task:', taskRequest);
+      console.log('🔄 Creating task via Supabase API:', {
+        customer: taskRequest.customerName,
+        priority: taskRequest.priority,
+        source: taskRequest.source
+      });
       
       // Construct proper API URL - handle both client and server side
       const baseUrl = typeof window !== 'undefined' 
@@ -403,17 +408,43 @@ export class FailedCallDetector {
         : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       const apiUrl = `${baseUrl}/api/tasks/auto-create`;
       
+      // Map old interface to new Supabase API format
+      const apiPayload = {
+        customerName: taskRequest.customerName,
+        phoneNumber: taskRequest.phoneNumber,
+        problemDescription: taskRequest.problemDescription,
+        priority: taskRequest.priority,
+        status: 'pending',
+        source: taskRequest.source,
+        location: taskRequest.location,
+        urgencyKeywords: taskRequest.urgencyKeywords,
+        chatContext: taskRequest.chatContext,
+        title: `Service request: ${taskRequest.problemDescription.substring(0, 50)}${taskRequest.problemDescription.length > 50 ? '...' : ''}`,
+        metadata: {
+          created_by: 'failed-call-detector',
+          original_request: taskRequest,
+          detection_timestamp: new Date().toISOString()
+        }
+      };
+      
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(taskRequest)
+        body: JSON.stringify(apiPayload)
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API returned error status:', response.status, errorText);
+        let errorText: string;
+        try {
+          const errorData = await response.json();
+          errorText = errorData.error || errorData.message || `HTTP ${response.status}`;
+        } catch {
+          errorText = await response.text() || `HTTP ${response.status}`;
+        }
+        
+        console.error('❌ API returned error status:', response.status, errorText);
         return {
           success: false,
           error: `API error (${response.status}): ${errorText}`
@@ -423,20 +454,26 @@ export class FailedCallDetector {
       const result = await response.json();
       
       if (result.success) {
-        console.log('Task created successfully:', result.taskId);
+        console.log('🎉 Task created successfully in Supabase:', {
+          taskId: result.taskId,
+          taskNumber: result.taskNumber,
+          priority: result.priority
+        });
+        
         return {
           success: true,
-          taskId: result.taskId
+          taskId: result.taskId,
+          taskNumber: result.taskNumber
         };
       } else {
-        console.error('Task creation failed:', result.error);
+        console.error('❌ Task creation failed:', result.error);
         return {
           success: false,
           error: result.error || 'Failed to create task'
         };
       }
     } catch (error: any) {
-      console.error('Task creation request failed:', error);
+      console.error('❌ Task creation request failed:', error);
       
       // Provide more specific error messages
       if (error.name === 'TypeError' && error.message.includes('Failed to parse URL')) {
