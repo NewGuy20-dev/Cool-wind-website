@@ -370,10 +370,10 @@ export class ChatStateManager {
 
     if (mappedFields.length === 1) {
       const field = missingFields[0];
-      if (field === 'name') return 'What's your name?';
-      if (field === 'phone number') return 'What's the best 10-digit number to reach you?';
-      if (field === 'location') return 'Which area are you in?';
-      if (field === 'problem description') return 'What's the specific problem with your AC or refrigerator? Please describe what's happening.';
+      if (field === 'name') return "What's your name?";
+      if (field === 'phone number') return "What's the best 10-digit number to reach you?";
+      if (field === 'location') return "Which area are you in?";
+      if (field === 'problem description') return "What's the specific problem with your AC or refrigerator? Please describe what's happening.";
       return `Could you share ${mappedFields[0]}?`;
     } else if (mappedFields.length === 2) {
       return `Could you share ${mappedFields[0]} and ${mappedFields[1]}?`;

@@ -326,10 +326,10 @@ export class FailedCallDetector {
     
     if (mappedFields.length === 1) {
       const field = missingFields[0];
-      if (field === 'name') return 'Got it. What's your name?';
-      if (field === 'phone number') return 'Thanks. What's the best 10-digit number to reach you?';
-      if (field === 'location') return 'Thanks. Which area are you in?';
-      if (field === 'problem description') return 'What's the specific problem with your AC or refrigerator? Please describe what's happening - is it not cooling, making noise, leaking, or something else?';
+      if (field === 'name') return "Got it. What's your name?";
+      if (field === 'phone number') return "Thanks. What's the best 10-digit number to reach you?";
+      if (field === 'location') return "Thanks. Which area are you in?";
+      if (field === 'problem description') return "What's the specific problem with your AC or refrigerator? Please describe what's happening - is it not cooling, making noise, leaking, or something else?";
       return `Could you share ${mappedFields[0]}?`;
     } else if (mappedFields.length === 2) {
       return `Could you share ${mappedFields[0]} and ${mappedFields[1]}?`;
