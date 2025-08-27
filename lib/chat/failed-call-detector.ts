@@ -33,6 +33,7 @@ export class FailedCallDetector {
     "called number but didnt respond",
     "called number but didn't respond",
     "tried calling but no answer",
+    "tried calling but didnt answer",
     "called but nobody picked up",
     "phone didn't respond",
     "phone didnt respond",
@@ -58,6 +59,9 @@ export class FailedCallDetector {
     "line was busy",
     "phone was busy",
     "no answer when i called",
+    "no answer",
+    "didn't answer",
+    "didnt answer",
     "tried reaching you by phone",
     "attempted to call but",
     "phone went straight to voicemail",
@@ -106,8 +110,8 @@ export class FailedCallDetector {
 
     // Extract customer data using Gemini AI
     const customerData = await this.extractCustomerDataWithGemini(message, context);
-    const missingFields = this.identifyMissingFields(customerData);
     const problemDescription = this.inferProblemFromContext(message, context);
+    const missingFields = this.identifyMissingFields(customerData, problemDescription);
     const location = customerData.location || this.extractLocation(message, context);
     const urgencyLevel = this.assessUrgency(message);
 
@@ -224,13 +228,13 @@ export class FailedCallDetector {
   /**
    * Infer problem description from chat context
    */
-  private static inferProblemFromContext(message: string, context: ConversationContextData): string {
+  private static inferProblemFromContext(message: string, context: ConversationContextData): string | undefined {
     const lowerMessage = message.toLowerCase();
     
     // Check if appliance type is mentioned
     const applianceType = context.inquiryDetails.appliance_type || 'appliance';
     
-    // Common problems
+    // Specific problem descriptions - these are meaningful
     if (lowerMessage.includes('not cooling') || lowerMessage.includes('no cooling')) {
       return `${applianceType} not cooling properly`;
     }
@@ -239,22 +243,33 @@ export class FailedCallDetector {
       return `${applianceType} not working`;
     }
     
+    if (lowerMessage.includes('leaking') || lowerMessage.includes('water leak')) {
+      return `${applianceType} leaking water`;
+    }
+    
+    if (lowerMessage.includes('making noise') || lowerMessage.includes('strange noise') || lowerMessage.includes('loud noise')) {
+      return `${applianceType} making unusual noise`;
+    }
+    
+    if (lowerMessage.includes('sparking') || lowerMessage.includes('burning smell')) {
+      return `${applianceType} sparking or burning smell - emergency`;
+    }
+    
+    if (lowerMessage.includes('temperature') && lowerMessage.includes('not')) {
+      return `${applianceType} temperature issue`;
+    }
+
+    // Generic requests are NOT sufficient problem descriptions
     if (lowerMessage.includes('repair') || lowerMessage.includes('service')) {
-      return `${applianceType} repair/service needed`;
+      return undefined; // Need more specific problem details
     }
     
     if (lowerMessage.includes('parts') || lowerMessage.includes('spare')) {
-      return `${applianceType} spare parts needed`;
+      return undefined; // Need to know what part and why
     }
 
-    // Generic problem based on appliance type
-    if (applianceType === 'ac' || applianceType === 'air conditioner') {
-      return 'AC service needed';
-    } else if (applianceType === 'refrigerator' || applianceType === 'fridge') {
-      return 'Refrigerator service needed';
-    }
-
-    return 'AC/refrigerator service needed';
+    // Only return undefined so the system will ask for specific problem description
+    return undefined;
   }
 
   /**
@@ -280,13 +295,14 @@ export class FailedCallDetector {
   /**
    * Identify missing required fields for task creation
    */
-  private static identifyMissingFields(customerData: Partial<CustomerInfo>): string[] {
-    const required = ['name', 'phone', 'location'];
+  private static identifyMissingFields(customerData: Partial<CustomerInfo>, problemDescription?: string): string[] {
+    const required = ['name', 'phone', 'location', 'problem'];
     const missing: string[] = [];
 
     if (!customerData.name) missing.push('name');
     if (!customerData.phone) missing.push('phone number');
     if (!customerData.location) missing.push('location');
+    if (!problemDescription || problemDescription.trim().length < 5) missing.push('problem description');
 
     return missing;
   }
@@ -301,19 +317,25 @@ export class FailedCallDetector {
 
     const fieldMap: Record<string, string> = {
       'name': 'your name',
-      'phone number': 'your phone number',
-      'location': 'your location'
+      'phone number': 'a 10-digit phone number',
+      'location': 'your location',
+      'problem description': 'the specific problem'
     };
 
     const mappedFields = missingFields.map(field => fieldMap[field] || field);
     
     if (mappedFields.length === 1) {
-      return `I'd be happy to help you get a callback! To ensure our technician can reach you properly, could you please provide ${mappedFields[0]}? This will help us prioritize and schedule your service call.`;
+      const field = missingFields[0];
+      if (field === 'name') return "Got it. What's your name?";
+      if (field === 'phone number') return "Thanks. What's the best 10-digit number to reach you?";
+      if (field === 'location') return "Thanks. Which area are you in?";
+      if (field === 'problem description') return "What's the specific problem with your AC or refrigerator? Please describe what's happening - is it not cooling, making noise, leaking, or something else?";
+      return `Could you share ${mappedFields[0]}?`;
     } else if (mappedFields.length === 2) {
-      return `I'd be happy to help you get a callback! To ensure our technician can reach you properly, could you please provide ${mappedFields[0]} and ${mappedFields[1]}? This will help us prioritize and schedule your service call.`;
+      return `Could you share ${mappedFields[0]} and ${mappedFields[1]}?`;
     } else {
       const lastField = mappedFields.pop();
-      return `I'd be happy to help you get a callback! To ensure our technician can reach you properly, could you please provide ${mappedFields.join(', ')}, and ${lastField}? This will help us prioritize and schedule your service call.`;
+      return `Could you share ${mappedFields.join(', ')}, and ${lastField}?`;
     }
   }
 
@@ -327,15 +349,32 @@ export class FailedCallDetector {
     location: string,
     chatContext: any[]
   ): TaskCreationRequest {
+    // Validate required fields
+    if (!customerData.name || customerData.name.trim().length < 2) {
+      throw new Error('Customer name is required and must be at least 2 characters');
+    }
+    
+    if (!customerData.phone || !/^[6-9]\d{9}$/.test(customerData.phone.replace(/[\s\-]/g, ''))) {
+      throw new Error('Valid 10-digit phone number is required');
+    }
+    
+    if (!location || location.trim().length < 3) {
+      throw new Error('Location is required and must be at least 3 characters');
+    }
+    
+    if (!problemDescription || problemDescription.trim().length < 5) {
+      throw new Error('Problem description is required and must be at least 5 characters');
+    }
+
     return {
-      customerName: customerData.name!,
-      phoneNumber: customerData.phone!,
-      problemDescription: `${problemDescription} in ${location}`,
+      customerName: customerData.name.trim(),
+      phoneNumber: customerData.phone.replace(/[\s\-]/g, ''),
+      problemDescription: `${problemDescription.trim()} in ${location.trim()}`,
       priority: urgencyLevel,
       status: 'new',
       source: 'chat-failed-call',
       chatContext,
-      location,
+      location: location.trim(),
       urgencyKeywords: this.getUrgencyKeywords(urgencyLevel)
     };
   }
@@ -358,7 +397,13 @@ export class FailedCallDetector {
     try {
       console.log('Creating task:', taskRequest);
       
-      const response = await fetch('/api/tasks/auto-create', {
+      // Construct proper API URL - handle both client and server side
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const apiUrl = `${baseUrl}/api/tasks/auto-create`;
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -366,9 +411,18 @@ export class FailedCallDetector {
         body: JSON.stringify(taskRequest)
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API returned error status:', response.status, errorText);
+        return {
+          success: false,
+          error: `API error (${response.status}): ${errorText}`
+        };
+      }
+
       const result = await response.json();
       
-      if (response.ok && result.success) {
+      if (result.success) {
         console.log('Task created successfully:', result.taskId);
         return {
           success: true,
@@ -381,11 +435,27 @@ export class FailedCallDetector {
           error: result.error || 'Failed to create task'
         };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Task creation request failed:', error);
+      
+      // Provide more specific error messages
+      if (error.name === 'TypeError' && error.message.includes('Failed to parse URL')) {
+        return {
+          success: false,
+          error: 'Invalid API endpoint configuration'
+        };
+      }
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        return {
+          success: false,
+          error: 'Network connection error - please check your internet connection'
+        };
+      }
+      
       return {
         success: false,
-        error: 'Network error while creating task'
+        error: error.message || 'Network error while creating task'
       };
     }
   }
@@ -395,6 +465,6 @@ export class FailedCallDetector {
    */
   static generateSuccessResponse(customerName: string, location?: string): string {
     const locationText = location ? ` in ${location}` : '';
-    return `Perfect! I've noted this down, ${customerName}. You'll receive a callback via WhatsApp or phone call by tomorrow regarding your AC/refrigerator service needs${locationText}. Our team will prioritize this based on the urgency of your situation.`;
+    return `Thanks, ${customerName}. We’ll be in touch shortly about your service${locationText}.`;
   }
 }

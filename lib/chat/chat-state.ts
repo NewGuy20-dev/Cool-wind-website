@@ -124,6 +124,15 @@ export class ChatStateManager {
         result.problem = extracted.problem;
       }
       
+      // Backfill with fallback parser when Gemini returns low-confidence or missing fields
+      if (!result.name || !result.phone || !result.location) {
+        const fallback = this.extractCustomerInfoFromMessageFallback(message);
+        if (!result.name && fallback.name) result.name = fallback.name;
+        if (!result.phone && fallback.phone) result.phone = fallback.phone;
+        if (!result.location && fallback.location) result.location = fallback.location;
+        if (!result.problem && fallback.problem) result.problem = fallback.problem;
+      }
+
       console.log('🤖 Gemini extracted customer info:', result);
       console.log('🎯 Confidence scores:', extracted.confidence);
       
@@ -151,6 +160,8 @@ export class ChatStateManager {
     const namePatterns = [
       /(?:my name is|i am|i'm|call me)\s+([a-zA-Z]+)(?:\s|$|,|and|but|phone)/i,
       /(?:this is|here is)\s+([a-zA-Z]+)(?:\s|$|,|and|but|phone)/i,
+      // Single-token reply that looks like a name (no digits, short)
+      /^(?:name\s*is\s*)?([a-zA-Z]{2,20})$/i,
     ];
 
     for (const pattern of namePatterns) {
@@ -170,6 +181,14 @@ export class ChatStateManager {
       /(?:phone|number|no)\s*(?:is)?\s*([6-9]\d{9})/i, // Indian mobile pattern
       /([6-9]\d{9})/g // Direct 10-digit Indian mobile
     ];
+    // Handle short replies that are only a phone number (e.g., "8848850922")
+    if (!extracted.phone) {
+      const onlyDigits = message.replace(/\D/g, '');
+      if (/^[6-9]\d{9}$/.test(onlyDigits)) {
+        extracted.phone = onlyDigits;
+      }
+    }
+
 
     for (const pattern of phonePatterns) {
       const match = message.match(pattern);
@@ -195,6 +214,8 @@ export class ChatStateManager {
     if (!extracted.location) {
       const locationPatterns = [
         /(?:location is|in|at|from)\s+([a-zA-Z]+)(?:\s|$|,|and|but|problem)/i,
+        // Single-token reply that looks like a place
+        /^([a-zA-Z]{3,20})$/i,
       ];
       
       for (const pattern of locationPatterns) {
@@ -248,7 +269,7 @@ export class ChatStateManager {
    * Check if all required fields are present and valid
    */
   static hasAllRequiredFields(customerData: Record<string, any>): boolean {
-    const required = ['name', 'phone', 'location'];
+    const required = ['name', 'phone', 'location', 'problem'];
     
     return required.every(field => {
       if (!customerData[field] || typeof customerData[field] !== 'string') {
@@ -275,6 +296,10 @@ export class ChatStateManager {
           // Must be at least 3 characters, only letters and spaces
           return value.length >= 3 && /^[a-zA-Z\s]+$/.test(value);
         
+        case 'problem':
+          // Must be at least 5 characters for meaningful problem description
+          return value.length >= 5;
+        
         default:
           return true;
       }
@@ -285,7 +310,7 @@ export class ChatStateManager {
    * Get still missing or invalid fields
    */
   static getStillMissingFields(customerData: Record<string, any>): string[] {
-    const required = ['name', 'phone', 'location'];
+    const required = ['name', 'phone', 'location', 'problem'];
     const missing: string[] = [];
 
     required.forEach(field => {
@@ -306,6 +331,9 @@ export class ChatStateManager {
             case 'location':
               isValid = value.length >= 3 && /^[a-zA-Z\s]+$/.test(value);
               break;
+            case 'problem':
+              isValid = value.length >= 5;
+              break;
             default:
               isValid = true;
           }
@@ -313,7 +341,10 @@ export class ChatStateManager {
       }
       
       if (!isValid) {
-        missing.push(field === 'phone' ? 'phone number' : field);
+        let fieldName = field;
+        if (field === 'phone') fieldName = 'phone number';
+        else if (field === 'problem') fieldName = 'problem description';
+        missing.push(fieldName);
       }
     });
 
@@ -331,18 +362,24 @@ export class ChatStateManager {
     const fieldMap: Record<string, string> = {
       'name': 'your name',
       'phone number': 'your phone number', 
-      'location': 'your location'
+      'location': 'your location',
+      'problem description': 'the specific problem'
     };
 
     const mappedFields = missingFields.map(field => fieldMap[field] || field);
 
     if (mappedFields.length === 1) {
-      return `Thank you! I still need ${mappedFields[0]} to set up the callback properly.`;
+      const field = missingFields[0];
+      if (field === 'name') return "What's your name?";
+      if (field === 'phone number') return "What's the best 10-digit number to reach you?";
+      if (field === 'location') return "Which area are you in?";
+      if (field === 'problem description') return "What's the specific problem with your AC or refrigerator? Please describe what's happening.";
+      return `Could you share ${mappedFields[0]}?`;
     } else if (mappedFields.length === 2) {
-      return `Thank you! I still need ${mappedFields[0]} and ${mappedFields[1]} to set up the callback properly.`;
+      return `Could you share ${mappedFields[0]} and ${mappedFields[1]}?`;
     } else {
       const lastField = mappedFields.pop();
-      return `Thank you! I still need ${mappedFields.join(', ')}, and ${lastField} to set up the callback properly.`;
+      return `Could you share ${mappedFields.join(', ')}, and ${lastField}?`;
     }
   }
 

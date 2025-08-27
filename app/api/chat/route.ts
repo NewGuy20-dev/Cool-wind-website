@@ -5,8 +5,6 @@ import { ConversationContext } from '@/lib/chat/conversation-context';
 import { ChatMessage, ChatSession } from '@/lib/types/chat';
 import { FailedCallDetector } from '@/lib/chat/failed-call-detector';
 import { ChatStateManager } from '@/lib/chat/chat-state';
-import { IntelligentMessageAnalyzer } from '@/lib/chat/intelligent-message-analyzer';
-import { TaskManagementAgent } from '@/lib/chat/task-management-agent';
 
 // In-memory session storage (in production, use Redis or database)
 const sessions = new Map<string, { context: ConversationContext; session: ChatSession }>();
@@ -123,59 +121,64 @@ export async function POST(request: NextRequest) {
     // Recognize intent
     const intent = context.recognizeIntent(sanitizedMessage);
     
-    // ===== ENHANCED AI-POWERED MESSAGE ANALYSIS =====
-    console.log('🧠 Starting intelligent message analysis...');
+    // ===== FAILED CALL DETECTION & TASK CREATION =====
+    console.log('🔍 Checking for failed call triggers in message:', sanitizedMessage);
     
-    // Analyze message with AI for comprehensive understanding
-    const analysis = await IntelligentMessageAnalyzer.analyzeMessage(
-      sanitizedMessage,
-      context.getContext(),
-      session.messages.slice(-5) // Last 5 messages for context
-    );
-    
-    console.log('📊 Analysis result:', {
-      isFailedCall: analysis.isFailedCallScenario,
-      confidence: analysis.failedCallConfidence,
-      needsTaskMgmt: analysis.needsTaskManagement,
-      taskConfidence: analysis.taskConfidence,
-      urgency: analysis.urgencyLevel,
-      frustration: analysis.customerFrustration,
-      strategy: analysis.responseStrategy
-    });
-
-    let response: any;
-    let isEnhancedResponse = false;
-    
-    // Check if we're currently collecting callback information (legacy support)
+    // Check if we're currently collecting callback information
     const collectingCallbackInfo = ChatStateManager.getCallbackInfoState(session.sessionId);
     
+    let response: any;
+    let isFailedCallResponse = false;
+    
     if (collectingCallbackInfo) {
-      console.log('📋 Handling legacy callback info collection...');
-      // Keep existing callback info collection logic for backward compatibility
+      console.log('📋 Currently collecting callback info, processing user response...');
+      
+      // Extract customer info from this message
       const extractedInfo = await ChatStateManager.extractCustomerInfoFromMessage(sanitizedMessage);
+      
+      // Merge with existing data
       const updatedCustomerData = ChatStateManager.mergeCustomerData(
         collectingCallbackInfo.customerData,
         extractedInfo
       );
       
+      // Update the state
       ChatStateManager.updateCallbackInfoState(session.sessionId, {
         customerData: updatedCustomerData,
         attempts: collectingCallbackInfo.attempts + 1
       });
       
+      // Check if we now have all required information
       if (ChatStateManager.hasAllRequiredFields(updatedCustomerData)) {
-        const taskRequest = FailedCallDetector.createTaskRequest(
-          updatedCustomerData as any,
-          collectingCallbackInfo.originalMessage,
-          analysis.urgencyLevel === 'critical' ? 'high' : analysis.urgencyLevel === 'low' ? 'low' : 'medium',
-          updatedCustomerData.location || 'Not specified',
-          session.messages.slice(-5)
-        );
+        console.log('✅ All required information collected, creating task...');
         
-        const taskResult = await FailedCallDetector.createTask(taskRequest);
+        // Create task
+        let taskResult;
+        try {
+          const taskRequest = FailedCallDetector.createTaskRequest(
+            updatedCustomerData as any,
+            updatedCustomerData.problem || collectingCallbackInfo.originalMessage,
+            'medium', // Default priority, will be assessed by AI
+            updatedCustomerData.location || 'Not specified',
+            session.messages.slice(-5) // Last 5 messages for context
+          );
+          
+          taskResult = await FailedCallDetector.createTask(taskRequest);
+        } catch (validationError: any) {
+          console.error('❌ Task creation validation failed:', validationError.message);
+          taskResult = {
+            success: false,
+            error: `Validation error: ${validationError.message}`
+          };
+        }
         
         if (taskResult.success) {
+          console.log('🎉 Task created successfully:', taskResult.taskId);
+          
+          // Clear the collection state
           ChatStateManager.clearChatState(session.sessionId, 'collecting_callback_info');
+          
+          // Generate success response
           response = {
             text: FailedCallDetector.generateSuccessResponse(
               updatedCustomerData.name!,
@@ -187,10 +190,23 @@ export async function POST(request: NextRequest) {
               { text: "More Services", value: "our_services" }
             ]
           };
-          isEnhancedResponse = true;
+          isFailedCallResponse = true;
+        } else {
+          console.error('❌ Failed to create task:', taskResult.error);
+          response = {
+            text: "Thanks for the details. There was a technical issue on our side. Please call us at +91 85472 29991 for immediate help.",
+            quickReplies: [
+              { text: "📞 Call Now", action: "tel:+918547229991" },
+              { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+            ]
+          };
+          isFailedCallResponse = true;
         }
       } else {
+        // Still missing information
         const stillMissing = ChatStateManager.getStillMissingFields(updatedCustomerData);
+        console.log('📝 Still missing information:', stillMissing);
+        
         response = {
           text: ChatStateManager.generateFollowUpRequest(stillMissing),
           quickReplies: [
@@ -198,147 +214,40 @@ export async function POST(request: NextRequest) {
             { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
           ]
         };
-        isEnhancedResponse = true;
+        isFailedCallResponse = true;
       }
-    }
-    // PRIORITY 1: Handle Task Management Requests
-    else if (analysis.needsTaskManagement && analysis.taskConfidence > 50) {
-      console.log('🎯 Detected task management intent, processing...');
-      
-      const taskIntent = await IntelligentMessageAnalyzer.detectTaskManagementIntent(
-        sanitizedMessage,
-        context.getContext()
-      );
-      
-      if (taskIntent.action && taskIntent.confidence > 40) {
-        const taskResult = await TaskManagementAgent.handleTaskManagement(
-          taskIntent,
-          sanitizedMessage,
-          context.getContext(),
-          session.sessionId
-        );
-        
-        response = {
-          text: taskResult.message,
-          quickReplies: taskResult.success ? [
-            { text: "📞 Call Us", action: "tel:+918547229991" },
-            { text: "💬 WhatsApp", action: "https://wa.me/918547229991" },
-            { text: "More Help", value: "help" }
-          ] : [
-            { text: "📞 Call Support", action: "tel:+918547229991" },
-            { text: "💬 WhatsApp", action: "https://wa.me/918547229991" },
-            { text: "Try Again", value: "retry_task" }
-          ]
-        };
-        isEnhancedResponse = true;
-        
-        // Log task management activity
-        console.log('📊 TASK MANAGEMENT ACTIVITY:', {
-          sessionId: session.sessionId,
-          action: taskIntent.action,
-          confidence: taskIntent.confidence,
-          success: taskResult.success,
-          taskId: taskResult.taskId
-        });
-      }
-    }
-    // PRIORITY 2: Handle Failed Call Scenarios with High Confidence
-    else if (analysis.isFailedCallScenario && analysis.failedCallConfidence > 60) {
-      console.log('🚨 High-confidence failed call scenario detected');
-      
-      // Use the intelligent analysis to create appropriate response
-      const contextualResponse = IntelligentMessageAnalyzer.generateContextualResponse(
-        analysis,
-        context.getContext().customerInfo?.name
-      );
-      
-      // Extract customer information for task creation
-      const customerName = context.getContext().customerInfo?.name || 'Customer';
-      const phoneNumber = context.getContext().customerInfo?.phone || '';
-      
-      if (phoneNumber && customerName !== 'Customer') {
-        // Create failed call task automatically with AI insights
-        const conversationContext = session.messages.slice(-3)
-          .map(msg => `${msg.sender}: ${msg.text}`)
-          .join('\n');
-        
-        try {
-          const taskCreationResponse = await fetch('/api/failed-calls/auto-create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              customerName,
-              phoneNumber,
-              conversationContext,
-              urgencyKeywords: analysis.implicitNeeds,
-              customerInfo: {
-                name: customerName,
-                frustrationLevel: analysis.customerFrustration,
-                urgencyLevel: analysis.urgencyLevel
-              },
-              useAI: true
-            })
-          });
-          
-          if (taskCreationResponse.ok) {
-            const taskResult = await taskCreationResponse.json();
-            
-            // Enhanced response based on AI analysis and task creation
-            let enhancedText = contextualResponse.text;
-            if (analysis.customerFrustration >= 7) {
-              enhancedText += ` I've marked this as urgent (Priority: ${taskResult.priority}) and you'll receive ${taskResult.responseTimeframe}.`;
-            } else {
-              enhancedText += ` I've logged this and you'll receive ${taskResult.responseTimeframe}.`;
-            }
-            
-            response = {
-              text: enhancedText,
-              quickReplies: contextualResponse.quickReplies
-            };
-            
-            console.log('🎉 Failed call task created with AI insights:', taskResult.taskId);
-          } else {
-            response = contextualResponse;
-          }
-        } catch (error) {
-          console.error('❌ Failed to create task from AI analysis:', error);
-          response = contextualResponse;
-        }
-      } else {
-        // Missing information, start collection process
-        response = {
-          text: "I understand you tried reaching us. To ensure I get you the right callback, could you please share your name and phone number?",
-          quickReplies: [
-            { text: "📞 Call Now", action: "tel:+918547229991" },
-            { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
-          ]
-        };
-      }
-      
-      isEnhancedResponse = true;
-    }
-    // PRIORITY 3: Use Legacy Failed Call Detection as Fallback
-    else {
-      console.log('💬 Using legacy detection and generating normal response...');
-      
-      // Legacy failed call detection for backward compatibility
+    } else {
+      // Check for failed call triggers in new messages
       const failedCallData = await FailedCallDetector.detectFailedCall(sanitizedMessage, context.getContext());
       
       if (failedCallData.detected) {
-        console.log('🔍 Legacy failed call detection triggered');
+        console.log('🚨 Failed call detected!', failedCallData.triggerPhrase);
         
         if (failedCallData.missingFields.length === 0) {
-          const taskRequest = FailedCallDetector.createTaskRequest(
-            failedCallData.customerData as any,
-            failedCallData.problemDescription!,
-            failedCallData.urgencyLevel!,
-            failedCallData.location || 'Not specified',
-            session.messages.slice(-3)
-          );
+          // All information available, create task immediately
+          console.log('✅ All information available, creating task immediately...');
           
-          const taskResult = await FailedCallDetector.createTask(taskRequest);
+          let taskResult;
+          try {
+            const taskRequest = FailedCallDetector.createTaskRequest(
+              failedCallData.customerData as any,
+              failedCallData.problemDescription!,
+              failedCallData.urgencyLevel!,
+              failedCallData.location || 'Not specified',
+              session.messages.slice(-3) // Last 3 messages for context
+            );
+            
+            taskResult = await FailedCallDetector.createTask(taskRequest);
+          } catch (validationError: any) {
+            console.error('❌ Task creation validation failed:', validationError.message);
+            taskResult = {
+              success: false,
+              error: `Validation error: ${validationError.message}`
+            };
+          }
           
           if (taskResult.success) {
+            console.log('🎉 Task created immediately:', taskResult.taskId);
             response = {
               text: FailedCallDetector.generateSuccessResponse(
                 failedCallData.customerData.name!,
@@ -350,12 +259,26 @@ export async function POST(request: NextRequest) {
                 { text: "More Services", value: "our_services" }
               ]
             };
-            isEnhancedResponse = true;
+            isFailedCallResponse = true;
+          } else {
+            console.error('❌ Failed to create task:', taskResult.error);
+            response = {
+              text: "I understand you tried calling but couldn’t reach us. There was a technical issue—please call +91 85472 29991 for immediate help.",
+              quickReplies: [
+                { text: "📞 Call Now", action: "tel:+918547229991" },
+                { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+              ]
+            };
+            isFailedCallResponse = true;
           }
         } else {
+          // Missing information, start collection process
+          console.log('📋 Missing information, starting collection process:', failedCallData.missingFields);
+          
+          // Set up collection state
           ChatStateManager.setChatState(session.sessionId, 'collecting_callback_info', {
             missingFields: failedCallData.missingFields,
-            originalMessage: failedCallData.problemDescription!,
+            originalMessage: failedCallData.problemDescription || 'Customer needs service assistance',
             triggerPhrase: failedCallData.triggerPhrase!,
             customerData: failedCallData.customerData,
             attempts: 0,
@@ -369,30 +292,21 @@ export async function POST(request: NextRequest) {
               { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
             ]
           };
-          isEnhancedResponse = true;
+          isFailedCallResponse = true;
         }
       }
     }
     
-    // If no enhanced response was generated, use normal Gemini response
-    if (!isEnhancedResponse) {
-      console.log('💬 Generating standard Gemini response...');
+    // If not a failed call response, generate normal Gemini response
+    if (!isFailedCallResponse) {
+      console.log('💬 Generating normal Gemini response...');
       response = await geminiClient.generateResponse(
         sanitizedMessage,
         session.messages,
         context.getContext()
       );
-      
-      // Apply response strategy from analysis if available
-      if (analysis.responseStrategy === 'empathetic' && analysis.customerFrustration > 5) {
-        response.text = `I understand your concern. ${response.text}`;
-      } else if (analysis.responseStrategy === 'escalation' && analysis.urgencyLevel === 'critical') {
-        response.quickReplies = [
-          { text: "📞 Urgent Call", action: "tel:+918547229991" },
-          { text: "💬 WhatsApp Now", action: "https://wa.me/918547229991" },
-          ...(response.quickReplies || [])
-        ];
-      }
+    } else {
+      console.log('🎯 Using failed call response instead of Gemini');
     }
 
     // Create bot message
@@ -405,15 +319,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         category: intent.name.toLowerCase() as any,
         confidence: intent.confidence,
-        escalated: context.shouldEscalate(),
-        // Enhanced metadata from AI analysis
-        aiAnalysis: {
-          isFailedCall: analysis.isFailedCallScenario,
-          needsTaskManagement: analysis.needsTaskManagement,
-          urgencyLevel: analysis.urgencyLevel,
-          customerFrustration: analysis.customerFrustration,
-          responseStrategy: analysis.responseStrategy
-        }
+        escalated: context.shouldEscalate()
       }
     };
 
@@ -425,47 +331,33 @@ export async function POST(request: NextRequest) {
     context.updateConversationStage(sanitizedMessage, response.text);
 
     // Check for escalation
-    const shouldEscalate = context.shouldEscalate() || 
-                          analysis.responseStrategy === 'escalation' ||
-                          analysis.customerFrustration >= 8;
+    const shouldEscalate = context.shouldEscalate();
     if (shouldEscalate) {
       session.context.escalated = true;
     }
 
-    // Enhanced analytics tracking
+    // Track analytics (basic implementation)
     if (process.env.ENABLE_CHAT_ANALYTICS === 'true') {
-      trackChatEvent('enhanced_message_processed', {
+      trackChatEvent('message_sent', {
         sessionId: session.sessionId,
         intentName: intent.name,
         confidence: intent.confidence,
         escalated: shouldEscalate,
         hasPII: piiCheck.hasPhone || piiCheck.hasEmail,
-        // AI analysis metrics
-        isFailedCallScenario: analysis.isFailedCallScenario,
-        failedCallConfidence: analysis.failedCallConfidence,
-        needsTaskManagement: analysis.needsTaskManagement,
-        taskConfidence: analysis.taskConfidence,
-        urgencyLevel: analysis.urgencyLevel,
-        customerFrustration: analysis.customerFrustration,
-        responseStrategy: analysis.responseStrategy,
-        isEnhancedResponse,
-        hasCallbackState: !!collectingCallbackInfo
+        isFailedCallResponse,
+        hasActiveCallbackState: !!collectingCallbackInfo
       });
     }
 
-    // Enhanced logging
-    console.log('📊 ENHANCED CHAT METRICS:', {
-      sessionId: session.sessionId,
-      messageCount: session.messages.length,
-      aiAnalysisUsed: true,
-      isFailedCall: analysis.isFailedCallScenario,
-      taskManagement: analysis.needsTaskManagement,
-      urgency: analysis.urgencyLevel,
-      frustration: analysis.customerFrustration,
-      strategy: analysis.responseStrategy,
-      enhancedResponse: isEnhancedResponse,
-      timestamp: new Date().toISOString()
-    });
+    // Additional logging for failed call system
+    if (isFailedCallResponse) {
+      console.log('📊 FAILED CALL SYSTEM METRICS:', {
+        sessionId: session.sessionId,
+        messageCount: session.messages.length,
+        hasCallbackState: !!collectingCallbackInfo,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Prepare response
     const responseData = {
@@ -480,22 +372,13 @@ export async function POST(request: NextRequest) {
         confidence: intent.confidence
       },
       escalated: shouldEscalate,
-      conversationStage: context.getContext().conversationStage,
-      // Enhanced response metadata
-      aiInsights: {
-        analysisUsed: true,
-        failedCallDetected: analysis.isFailedCallScenario,
-        taskManagementDetected: analysis.needsTaskManagement,
-        urgencyLevel: analysis.urgencyLevel,
-        responseStrategy: analysis.responseStrategy,
-        enhancedResponse: isEnhancedResponse
-      }
+      conversationStage: context.getContext().conversationStage
     };
 
     return NextResponse.json(responseData);
 
   } catch (error) {
-    console.error('Enhanced Chat API Error:', error);
+    console.error('Chat API Error:', error);
     
     return NextResponse.json({
       response: {
@@ -505,11 +388,7 @@ export async function POST(request: NextRequest) {
           { text: "WhatsApp", action: "https://wa.me/918547229991" }
         ]
       },
-      error: true,
-      aiInsights: {
-        analysisUsed: false,
-        error: true
-      }
+      error: true
     }, { status: 500 });
   }
 }
