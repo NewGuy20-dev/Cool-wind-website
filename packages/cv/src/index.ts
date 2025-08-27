@@ -38,4 +38,5 @@ export class NoopCvAdapter implements CvAdapter {
 	}
 }
 
-export default { NoopCvAdapter };
+const cv = { NoopCvAdapter };
+export default cv;

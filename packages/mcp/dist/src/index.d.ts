@@ -8,8 +8,8 @@ export interface McpServer {
 }
 export declare function createServer(): McpServer;
 export declare function start(port?: number): void;
-declare const _default: {
+declare const mcp: {
     createServer: typeof createServer;
     start: typeof start;
 };
-export default _default;
+export default mcp;

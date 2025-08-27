@@ -3,10 +3,11 @@ import { getTaskById, updateTask, deleteTask } from '../../../../lib/failed-call
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const task = getTaskById(params.id);
+    const task = getTaskById(id);
     
     if (!task) {
       return NextResponse.json(
@@ -27,8 +28,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const body = await request.json();
     const updates = body;
@@ -55,7 +57,7 @@ export async function PUT(
       }
     }
 
-    const updatedTask = updateTask(params.id, updates);
+    const updatedTask = updateTask(id, updates);
     
     if (!updatedTask) {
       return NextResponse.json(
@@ -76,10 +78,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const success = deleteTask(params.id);
+    const success = deleteTask(id);
     
     if (!success) {
       return NextResponse.json(

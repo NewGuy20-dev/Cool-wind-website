@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FailedCallTask, formatPhoneNumber, cleanPhoneNumber } from '../../../lib/failed-calls-db';
+import { FailedCallTask, formatPhoneNumber, cleanPhoneNumber } from '../../../lib/failed-calls-types';
 import { 
   Phone, 
   Clock, 

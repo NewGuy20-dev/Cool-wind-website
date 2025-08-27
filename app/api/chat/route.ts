@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { GeminiClient } from '@/lib/gemini/client';
 import { ConversationContext } from '@/lib/chat/conversation-context';
 import { ChatMessage, ChatSession } from '@/lib/types/chat';
+import { FailedCallDetector } from '@/lib/chat/failed-call-detector';
+import { ChatStateManager } from '@/lib/chat/chat-state';
 
 // In-memory session storage (in production, use Redis or database)
 const sessions = new Map<string, { context: ConversationContext; session: ChatSession }>();
@@ -119,12 +121,193 @@ export async function POST(request: NextRequest) {
     // Recognize intent
     const intent = context.recognizeIntent(sanitizedMessage);
     
-    // Generate response using Gemini
-    const response = await geminiClient.generateResponse(
-      sanitizedMessage,
-      session.messages,
-      context.getContext()
-    );
+    // ===== FAILED CALL DETECTION & TASK CREATION =====
+    console.log('🔍 Checking for failed call triggers in message:', sanitizedMessage);
+    
+    // Check if we're currently collecting callback information
+    const collectingCallbackInfo = ChatStateManager.getCallbackInfoState(session.sessionId);
+    
+    let response: any;
+    let isFailedCallResponse = false;
+    
+    if (collectingCallbackInfo) {
+      console.log('📋 Currently collecting callback info, processing user response...');
+      
+      // Extract customer info from this message
+      const extractedInfo = await ChatStateManager.extractCustomerInfoFromMessage(sanitizedMessage);
+      
+      // Merge with existing data
+      const updatedCustomerData = ChatStateManager.mergeCustomerData(
+        collectingCallbackInfo.customerData,
+        extractedInfo
+      );
+      
+      // Update the state
+      ChatStateManager.updateCallbackInfoState(session.sessionId, {
+        customerData: updatedCustomerData,
+        attempts: collectingCallbackInfo.attempts + 1
+      });
+      
+      // Check if we now have all required information
+      if (ChatStateManager.hasAllRequiredFields(updatedCustomerData)) {
+        console.log('✅ All required information collected, creating task...');
+        
+        // Create task
+        let taskResult;
+        try {
+          const taskRequest = FailedCallDetector.createTaskRequest(
+            updatedCustomerData as any,
+            updatedCustomerData.problem || collectingCallbackInfo.originalMessage,
+            'medium', // Default priority, will be assessed by AI
+            updatedCustomerData.location || 'Not specified',
+            session.messages.slice(-5) // Last 5 messages for context
+          );
+          
+          taskResult = await FailedCallDetector.createTask(taskRequest);
+        } catch (validationError: any) {
+          console.error('❌ Task creation validation failed:', validationError.message);
+          taskResult = {
+            success: false,
+            error: `Validation error: ${validationError.message}`
+          };
+        }
+        
+        if (taskResult.success) {
+          console.log('🎉 Task created successfully:', taskResult.taskId);
+          
+          // Clear the collection state
+          ChatStateManager.clearChatState(session.sessionId, 'collecting_callback_info');
+          
+          // Generate success response
+          response = {
+            text: FailedCallDetector.generateSuccessResponse(
+              updatedCustomerData.name!,
+              updatedCustomerData.location
+            ),
+            quickReplies: [
+              { text: "📞 Call Now", action: "tel:+918547229991" },
+              { text: "💬 WhatsApp", action: "https://wa.me/918547229991" },
+              { text: "More Services", value: "our_services" }
+            ]
+          };
+          isFailedCallResponse = true;
+        } else {
+          console.error('❌ Failed to create task:', taskResult.error);
+          response = {
+            text: "Thanks for the details. There was a technical issue on our side. Please call us at +91 85472 29991 for immediate help.",
+            quickReplies: [
+              { text: "📞 Call Now", action: "tel:+918547229991" },
+              { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+            ]
+          };
+          isFailedCallResponse = true;
+        }
+      } else {
+        // Still missing information
+        const stillMissing = ChatStateManager.getStillMissingFields(updatedCustomerData);
+        console.log('📝 Still missing information:', stillMissing);
+        
+        response = {
+          text: ChatStateManager.generateFollowUpRequest(stillMissing),
+          quickReplies: [
+            { text: "📞 Call Instead", action: "tel:+918547229991" },
+            { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+          ]
+        };
+        isFailedCallResponse = true;
+      }
+    } else {
+      // Check for failed call triggers in new messages
+      const failedCallData = await FailedCallDetector.detectFailedCall(sanitizedMessage, context.getContext());
+      
+      if (failedCallData.detected) {
+        console.log('🚨 Failed call detected!', failedCallData.triggerPhrase);
+        
+        if (failedCallData.missingFields.length === 0) {
+          // All information available, create task immediately
+          console.log('✅ All information available, creating task immediately...');
+          
+          let taskResult;
+          try {
+            const taskRequest = FailedCallDetector.createTaskRequest(
+              failedCallData.customerData as any,
+              failedCallData.problemDescription!,
+              failedCallData.urgencyLevel!,
+              failedCallData.location || 'Not specified',
+              session.messages.slice(-3) // Last 3 messages for context
+            );
+            
+            taskResult = await FailedCallDetector.createTask(taskRequest);
+          } catch (validationError: any) {
+            console.error('❌ Task creation validation failed:', validationError.message);
+            taskResult = {
+              success: false,
+              error: `Validation error: ${validationError.message}`
+            };
+          }
+          
+          if (taskResult.success) {
+            console.log('🎉 Task created immediately:', taskResult.taskId);
+            response = {
+              text: FailedCallDetector.generateSuccessResponse(
+                failedCallData.customerData.name!,
+                failedCallData.location
+              ),
+              quickReplies: [
+                { text: "📞 Call Now", action: "tel:+918547229991" },
+                { text: "💬 WhatsApp", action: "https://wa.me/918547229991" },
+                { text: "More Services", value: "our_services" }
+              ]
+            };
+            isFailedCallResponse = true;
+          } else {
+            console.error('❌ Failed to create task:', taskResult.error);
+            response = {
+              text: "I understand you tried calling but couldn’t reach us. There was a technical issue—please call +91 85472 29991 for immediate help.",
+              quickReplies: [
+                { text: "📞 Call Now", action: "tel:+918547229991" },
+                { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+              ]
+            };
+            isFailedCallResponse = true;
+          }
+        } else {
+          // Missing information, start collection process
+          console.log('📋 Missing information, starting collection process:', failedCallData.missingFields);
+          
+          // Set up collection state
+          ChatStateManager.setChatState(session.sessionId, 'collecting_callback_info', {
+            missingFields: failedCallData.missingFields,
+            originalMessage: failedCallData.problemDescription || 'Customer needs service assistance',
+            triggerPhrase: failedCallData.triggerPhrase!,
+            customerData: failedCallData.customerData,
+            attempts: 0,
+            startedAt: new Date().toISOString()
+          });
+          
+          response = {
+            text: FailedCallDetector.generateMissingInfoRequest(failedCallData.missingFields),
+            quickReplies: [
+              { text: "📞 Call Instead", action: "tel:+918547229991" },
+              { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+            ]
+          };
+          isFailedCallResponse = true;
+        }
+      }
+    }
+    
+    // If not a failed call response, generate normal Gemini response
+    if (!isFailedCallResponse) {
+      console.log('💬 Generating normal Gemini response...');
+      response = await geminiClient.generateResponse(
+        sanitizedMessage,
+        session.messages,
+        context.getContext()
+      );
+    } else {
+      console.log('🎯 Using failed call response instead of Gemini');
+    }
 
     // Create bot message
     const botMessage: ChatMessage = {
@@ -160,7 +343,19 @@ export async function POST(request: NextRequest) {
         intentName: intent.name,
         confidence: intent.confidence,
         escalated: shouldEscalate,
-        hasPII: piiCheck.hasPhone || piiCheck.hasEmail
+        hasPII: piiCheck.hasPhone || piiCheck.hasEmail,
+        isFailedCallResponse,
+        hasActiveCallbackState: !!collectingCallbackInfo
+      });
+    }
+
+    // Additional logging for failed call system
+    if (isFailedCallResponse) {
+      console.log('📊 FAILED CALL SYSTEM METRICS:', {
+        sessionId: session.sessionId,
+        messageCount: session.messages.length,
+        hasCallbackState: !!collectingCallbackInfo,
+        timestamp: new Date().toISOString()
       });
     }
 

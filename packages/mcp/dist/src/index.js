@@ -33,4 +33,5 @@ export function start(port = Number(process.env.PORT || 3333)) {
         logger.info({ port }, 'MCP server listening');
     });
 }
-export default { createServer, start };
+const mcp = { createServer, start };
+export default mcp;
