@@ -358,12 +358,16 @@ export class ChatStateManager {
     const mappedFields = missingFields.map(field => fieldMap[field] || field);
 
     if (mappedFields.length === 1) {
-      return `Thank you! I still need ${mappedFields[0]} to set up the callback properly.`;
+      const field = missingFields[0];
+      if (field === 'name') return 'What’s your name?';
+      if (field === 'phone number') return 'What’s the best 10-digit number to reach you?';
+      if (field === 'location') return 'Which area are you in?';
+      return `Could you share ${mappedFields[0]}?`;
     } else if (mappedFields.length === 2) {
-      return `Thank you! I still need ${mappedFields[0]} and ${mappedFields[1]} to set up the callback properly.`;
+      return `Could you share ${mappedFields[0]} and ${mappedFields[1]}?`;
     } else {
       const lastField = mappedFields.pop();
-      return `Thank you! I still need ${mappedFields.join(', ')}, and ${lastField} to set up the callback properly.`;
+      return `Could you share ${mappedFields.join(', ')}, and ${lastField}?`;
     }
   }
 

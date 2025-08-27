@@ -305,19 +305,23 @@ export class FailedCallDetector {
 
     const fieldMap: Record<string, string> = {
       'name': 'your name',
-      'phone number': 'your phone number',
+      'phone number': 'a 10-digit phone number',
       'location': 'your location'
     };
 
     const mappedFields = missingFields.map(field => fieldMap[field] || field);
     
     if (mappedFields.length === 1) {
-      return `I'd be happy to help you get a callback! To ensure our technician can reach you properly, could you please provide ${mappedFields[0]}? This will help us prioritize and schedule your service call.`;
+      const field = missingFields[0];
+      if (field === 'name') return 'Got it. What’s your name?';
+      if (field === 'phone number') return 'Thanks. What’s the best 10-digit number to reach you?';
+      if (field === 'location') return 'Thanks. Which area are you in?';
+      return `Could you share ${mappedFields[0]}?`;
     } else if (mappedFields.length === 2) {
-      return `I'd be happy to help you get a callback! To ensure our technician can reach you properly, could you please provide ${mappedFields[0]} and ${mappedFields[1]}? This will help us prioritize and schedule your service call.`;
+      return `Could you share ${mappedFields[0]} and ${mappedFields[1]}?`;
     } else {
       const lastField = mappedFields.pop();
-      return `I'd be happy to help you get a callback! To ensure our technician can reach you properly, could you please provide ${mappedFields.join(', ')}, and ${lastField}? This will help us prioritize and schedule your service call.`;
+      return `Could you share ${mappedFields.join(', ')}, and ${lastField}?`;
     }
   }
 
@@ -399,6 +403,6 @@ export class FailedCallDetector {
    */
   static generateSuccessResponse(customerName: string, location?: string): string {
     const locationText = location ? ` in ${location}` : '';
-    return `Perfect! I've noted this down, ${customerName}. You'll receive a callback via WhatsApp or phone call by tomorrow regarding your AC/refrigerator service needs${locationText}. Our team will prioritize this based on the urgency of your situation.`;
+    return `Thanks, ${customerName}. We’ll be in touch shortly about your service${locationText}.`;
   }
 }
