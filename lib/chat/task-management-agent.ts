@@ -129,7 +129,7 @@ export class TaskManagementAgent {
         success: true,
         taskId: ticket.id,
         message: `Perfect! I've created service ticket ${ticket.ticketNumber} for ${taskDetails.customerName}. ${ticket.estimatedResponseTime}, our team will contact you to schedule the service. You can reference this ticket using number ${ticket.ticketNumber}.`,
-        task: this.convertTicketToTask(ticket),
+        task: this.convertTicketToTask(ticket) as FailedCallTask,
         nextAction: 'ticket_created'
       };
 
@@ -192,7 +192,7 @@ export class TaskManagementAgent {
           success: true,
           taskId: ticket.id,
           message: `I've successfully updated your service request (Ticket: ${ticket.ticketNumber}). The changes have been saved and our team will be notified.`,
-          task: this.convertTicketToTask(updatedTicket),
+          task: this.convertTicketToTask(updatedTicket) as FailedCallTask,
           nextAction: 'ticket_updated'
         };
       } else {
@@ -239,7 +239,7 @@ export class TaskManagementAgent {
           success: true,
           taskId: ticket.id,
           message: statusMessage,
-          task: this.convertTicketToTask(ticket),
+          task: this.convertTicketToTask(ticket) as FailedCallTask,
           nextAction: 'status_provided'
         };
       }
@@ -560,7 +560,7 @@ Need any changes or have questions? Just let me know!`;
    * Get emoji for task status
    */
   private static getStatusEmoji(status: string): string {
-    const emojiMap = {
+    const emojiMap: Record<string, string> = {
       'new': '🆕',
       'unavailable': '📞',
       'scheduled': '📅',

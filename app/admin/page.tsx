@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   PlusIcon, 
@@ -41,17 +41,6 @@ export default function AdminPage() {
     failedCalls: []
   });
 
-  useEffect(() => {
-    // Check authentication status
-    checkAuthStatus();
-  }, []);
-
-  useEffect(() => {
-    if (state.isAuthenticated) {
-      loadDashboardData();
-    }
-  }, [state.isAuthenticated, state.activeTab]);
-
   const checkAuthStatus = () => {
     const isAuthenticated = sessionStorage.getItem('admin_authenticated') === 'true';
     setState(prev => ({ ...prev, isAuthenticated, loading: false }));
@@ -65,27 +54,6 @@ export default function AdminPage() {
     sessionStorage.removeItem('admin_authenticated');
     setState(prev => ({ ...prev, isAuthenticated: false }));
     router.push('/');
-  };
-
-  const loadDashboardData = async () => {
-    setState(prev => ({ ...prev, loading: true }));
-    
-    try {
-      // Load data based on active tab
-      if (state.activeTab === 'dashboard' || state.activeTab === 'tickets') {
-        await Promise.all([
-          loadTicketStats(),
-          loadTickets(),
-          loadFailedCalls()
-        ]);
-      } else if (state.activeTab === 'failed-calls') {
-        await loadFailedCalls();
-      }
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setState(prev => ({ ...prev, loading: false }));
-    }
   };
 
   const loadTicketStats = async () => {
@@ -123,6 +91,38 @@ export default function AdminPage() {
       console.error('Error loading failed calls:', error);
     }
   };
+
+  const loadDashboardData = useCallback(async () => {
+    setState(prev => ({ ...prev, loading: true }));
+    
+    try {
+      // Load data based on active tab using new Supabase endpoints
+      if (state.activeTab === 'dashboard' || state.activeTab === 'tickets') {
+        await Promise.all([
+          loadTicketStats(),
+          loadTickets(),
+          loadFailedCalls()
+        ]);
+      } else if (state.activeTab === 'failed-calls') {
+        await loadFailedCalls();
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setState(prev => ({ ...prev, loading: false }));
+    }
+  }, [state.activeTab]);
+
+  useEffect(() => {
+    // Check authentication status
+    checkAuthStatus();
+  }, []);
+
+  useEffect(() => {
+    if (state.isAuthenticated) {
+      loadDashboardData();
+    }
+  }, [state.isAuthenticated, state.activeTab, loadDashboardData]);
 
   const refreshData = () => {
     loadDashboardData();
