@@ -58,7 +58,7 @@ export class IntelligentMessageAnalyzer {
       const response = await this.geminiClient.generateResponse(
         analysisPrompt,
         [],
-        { ...context, skipBusinessLogic: true }
+        context
       );
 
       return this.parseAnalysisResponse(response.text);
@@ -270,7 +270,7 @@ Respond in JSON format:
       const response = await this.geminiClient.generateResponse(
         taskPrompt,
         [],
-        { ...context, skipBusinessLogic: true }
+        context
       );
 
       const jsonMatch = response.text.match(/\{[\s\S]*\}/);
@@ -289,7 +289,7 @@ Respond in JSON format:
     } catch (error) {
       console.error('❌ Task management intent detection failed:', error);
       return {
-        action: null,
+        action: 'status' as const,
         confidence: 0,
         reasoning: 'Analysis failed, using fallback'
       };

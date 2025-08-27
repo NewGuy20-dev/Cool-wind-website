@@ -4,10 +4,10 @@ import { TicketService } from '@/lib/ticket-service';
 // GET /api/tickets/[id] - Get a specific ticket
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = params.id;
+    const { id: ticketId } = await params;
     
     if (!ticketId) {
       return NextResponse.json(
@@ -46,10 +46,10 @@ export async function GET(
 // PUT /api/tickets/[id] - Update a specific ticket
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = params.id;
+    const { id: ticketId } = await params;
     const updates = await request.json();
     
     if (!ticketId) {
@@ -90,10 +90,10 @@ export async function PUT(
 // DELETE /api/tickets/[id] - Cancel a specific ticket (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = params.id;
+    const { id: ticketId } = await params;
     
     if (!ticketId) {
       return NextResponse.json(
