@@ -228,3 +228,13 @@ export const autoCreateTaskFromChat = (
   }
 };
 
+// Backward-compatible alias exports expected by older modules
+// These provide read/write helpers that mirror getAllTasks/save operations
+export const readFailedCallsData = (): FailedCallTask[] => {
+  return getAllTasks();
+};
+
+export const writeFailedCallsData = (tasks: FailedCallTask[]): boolean => {
+  return (saveTasks as any)(tasks);
+};
+

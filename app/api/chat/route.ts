@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
         } else {
           console.error('❌ Failed to create task:', taskResult.error);
           response = {
-            text: "I've noted your information, but there was a technical issue creating your callback request. Please call us directly at +91 85472 29991 for immediate assistance.",
+            text: "Thanks for the details. There was a technical issue on our side. Please call us at +91 85472 29991 for immediate help.",
             quickReplies: [
               { text: "📞 Call Now", action: "tel:+918547229991" },
               { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
           } else {
             console.error('❌ Failed to create task:', taskResult.error);
             response = {
-              text: "I understand you tried calling but couldn't reach us. There was a technical issue, but please call us directly at +91 85472 29991 for immediate assistance.",
+              text: "I understand you tried calling but couldn’t reach us. There was a technical issue—please call +91 85472 29991 for immediate help.",
               quickReplies: [
                 { text: "📞 Call Now", action: "tel:+918547229991" },
                 { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
