@@ -88,7 +88,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -133,7 +133,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -178,7 +178,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -219,7 +219,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -251,12 +251,12 @@ export class TaskService {
       // Use the database search function for complex queries
       const { data: tasks, error } = await supabase
         .rpc('search_tasks', {
-          search_term: search || null,
-          filter_status: status || null,
-          filter_priority: priority || null,
-          filter_source: source || null,
-          date_from: dateFrom || null,
-          date_to: dateTo || null,
+          search_term: search || undefined,
+          filter_status: status || undefined,
+          filter_priority: priority || undefined,
+          filter_source: source || undefined,
+          date_from: dateFrom || undefined,
+          date_to: dateTo || undefined,
           limit_count: limit,
           offset_count: offset,
         });
@@ -285,7 +285,7 @@ export class TaskService {
       const totalPages = Math.ceil((count || 0) / limit);
       
       return {
-        tasks: tasks || [],
+        tasks: (tasks || []) as unknown as Task[],
         pagination: {
           page,
           limit,
@@ -296,7 +296,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         tasks: [],
@@ -344,7 +344,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -377,12 +377,12 @@ export class TaskService {
       
       return {
         success: true,
-        data: dashboardData,
+        data: dashboardData as unknown as DashboardData,
       };
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -416,12 +416,12 @@ export class TaskService {
       
       return {
         success: true,
-        data: insights,
+        data: insights as unknown as CustomerInsights,
       };
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -448,12 +448,12 @@ export class TaskService {
       
       return {
         success: true,
-        data: data || [],
+        data: (data || []) as unknown as Task[],
       };
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -481,7 +481,7 @@ export class TaskService {
       // Auto-set completion timestamp
       if (status === 'completed') {
         updates.completed_at = new Date().toISOString();
-      } else if (status !== 'completed') {
+      } else {
         updates.completed_at = null;
       }
       
@@ -501,7 +501,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -519,8 +519,8 @@ export class TaskService {
     try {
       const { data, error } = await supabase
         .rpc('get_task_stats', {
-          start_date: startDate || null,
-          end_date: endDate || null,
+          start_date: startDate || undefined,
+          end_date: endDate || undefined,
         });
       
       if (error) throw error;
@@ -534,7 +534,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -564,7 +564,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,
@@ -603,7 +603,7 @@ export class TaskService {
       
     } catch (error) {
       timer.end();
-      const errorInfo = handleSupabaseError(error);
+      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
         success: false,

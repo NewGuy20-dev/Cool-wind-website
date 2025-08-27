@@ -69,7 +69,7 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
   const [submitStatus, setSubmitStatus] = useState<{
     type: 'success' | 'error' | null;
     message: string;
-    ticketNumber?: string;
+    taskNumber?: string;
   }>({ type: null, message: '' });
 
   const handleInputChange = (field: keyof TaskFormData, value: string) => {
@@ -116,10 +116,10 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
     try {
       const results = [];
       
-      // Create service ticket if requested
+      // Create service task if requested
       if (formData.taskType === 'service_ticket' || formData.taskType === 'both') {
-        const ticketResponse = await createServiceTicket();
-        results.push(ticketResponse);
+        const taskResponse = await createServiceTask();
+        results.push(taskResponse);
       }
       
       // Create failed call entry if requested
@@ -132,12 +132,12 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
       const allSuccessful = results.every(result => result.success);
       
       if (allSuccessful) {
-        const successResult = results.find((r: any) => r.success && 'ticketNumber' in r) as any;
-        const ticketNumber = successResult?.ticketNumber;
+        const successResult = results.find((r: any) => r.success && 'taskNumber' in r) as any;
+        const taskNumber = successResult?.taskNumber;
         setSubmitStatus({
           type: 'success',
-          message: `Task created successfully!${ticketNumber ? ` Ticket number: ${ticketNumber}` : ''}`,
-          ticketNumber
+          message: `Task created successfully!${taskNumber ? ` Task number: ${taskNumber}` : ''}`,
+          taskNumber
         });
         
         // Reset form
@@ -181,29 +181,28 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
     }
   };
 
-  const createServiceTicket = async () => {
+  const createServiceTask = async () => {
     try {
-      const response = await fetch('/api/tickets', {
+      const response = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerName: formData.customerName,
-          phoneNumber: formData.phoneNumber,
+          customer_name: formData.customerName,
+          phone_number: formData.phoneNumber,
           email: formData.email || undefined,
           location: formData.location,
-          serviceType: formData.serviceType,
-          appliance: {
-            type: formData.applianceType,
-            brand: formData.applianceBrand || undefined,
-            model: formData.applianceModel || undefined,
-            age: formData.applianceAge || undefined
-          },
-          problemDescription: formData.problemDescription,
-          urgency: formData.urgency,
-          preferredDate: formData.preferredDate || undefined,
-          preferredTime: formData.preferredTime || undefined,
+          service_type: formData.serviceType,
+          appliance_type: formData.applianceType,
+          appliance_brand: formData.applianceBrand || undefined,
+          appliance_model: formData.applianceModel || undefined,
+          appliance_age: formData.applianceAge || undefined,
+          problem_description: formData.problemDescription,
+          priority: formData.urgency,
+          preferred_date: formData.preferredDate || undefined,
+          preferred_time: formData.preferredTime || undefined,
           source: formData.source,
-          customerNotes: formData.customerNotes || undefined
+          notes: formData.customerNotes || undefined,
+          category: formData.serviceType
         })
       });
       
@@ -212,21 +211,21 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
       if (response.ok && result.success) {
         return {
           success: true,
-          ticketNumber: result.data.ticketNumber,
-          type: 'service_ticket'
+          taskNumber: result.data.task_number,
+          type: 'service_task'
         };
       } else {
         return {
           success: false,
-          error: result.error || 'Failed to create service ticket',
-          type: 'service_ticket'
+          error: result.error || 'Failed to create service task',
+          type: 'service_task'
         };
       }
     } catch (error) {
       return {
         success: false,
-        error: 'Network error while creating service ticket',
-        type: 'service_ticket'
+        error: 'Network error while creating service task',
+        type: 'service_task'
       };
     }
   };

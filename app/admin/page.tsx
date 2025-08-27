@@ -56,27 +56,27 @@ export default function AdminPage() {
     router.push('/');
   };
 
-  const loadTicketStats = async () => {
+  const loadTaskStats = async () => {
     try {
-      const response = await fetch('/api/tickets/stats');
+      const response = await fetch('/api/tasks/stats');
       if (response.ok) {
         const result = await response.json();
         setState(prev => ({ ...prev, stats: result.data }));
       }
     } catch (error) {
-      console.error('Error loading ticket stats:', error);
+      console.error('Error loading task stats:', error);
     }
   };
 
-  const loadTickets = async () => {
+  const loadTasks = async () => {
     try {
-      const response = await fetch('/api/tickets?limit=50');
+      const response = await fetch('/api/tasks?limit=50');
       if (response.ok) {
         const result = await response.json();
         setState(prev => ({ ...prev, tickets: result.data }));
       }
     } catch (error) {
-      console.error('Error loading tickets:', error);
+      console.error('Error loading tasks:', error);
     }
   };
 
@@ -99,8 +99,8 @@ export default function AdminPage() {
       // Load data based on active tab using new Supabase endpoints
       if (state.activeTab === 'dashboard' || state.activeTab === 'tickets') {
         await Promise.all([
-          loadTicketStats(),
-          loadTickets(),
+          loadTaskStats(),
+          loadTasks(),
           loadFailedCalls()
         ]);
       } else if (state.activeTab === 'failed-calls') {
@@ -328,17 +328,17 @@ function DashboardView({ stats, tickets, failedCalls, onTabChange }: {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-gray-900">
-                        {ticket.ticketNumber}
+                        {ticket.task_number}
                       </span>
                       <StatusBadge status={ticket.status} />
                     </div>
                     <p className="text-sm text-gray-600 mt-1 truncate">
-                      {ticket.problemDescription}
+                      {ticket.problem_description}
                     </p>
                     <div className="flex items-center text-xs text-gray-500 mt-2">
-                      <span>{ticket.customerName}</span>
+                      <span>{ticket.customer_name}</span>
                       <span className="mx-2">•</span>
-                      <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                      <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                   <PriorityBadge priority={ticket.priority} />
@@ -373,17 +373,17 @@ function DashboardView({ stats, tickets, failedCalls, onTabChange }: {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-gray-900">
-                        {call.customerName}
+                        {call.customer_name}
                       </span>
                       <StatusBadge status={call.status} />
                     </div>
                     <p className="text-sm text-gray-600 mt-1 truncate">
-                      {call.problemDescription}
+                      {call.problem_description}
                     </p>
                     <div className="flex items-center text-xs text-gray-500 mt-2">
-                      <span>{call.phoneNumber}</span>
+                      <span>{call.phone_number}</span>
                       <span className="mx-2">•</span>
-                      <span>{new Date(call.createdAt).toLocaleDateString()}</span>
+                      <span>{new Date(call.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                   <PriorityBadge priority={call.priority} />

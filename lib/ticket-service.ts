@@ -540,7 +540,7 @@ export class TicketService {
     };
     
     const location = ticket.location.toLowerCase();
-    const availableTechs = technicians[location] || technicians['thiruvalla'];
+    const availableTechs = (technicians as any)[location] || technicians['thiruvalla'];
     
     if (availableTechs.length > 0) {
       // Simple round-robin assignment
@@ -588,13 +588,13 @@ export class TicketService {
     
     tickets.forEach(ticket => {
       // Count by status
-      stats.byStatus[ticket.status] = (stats.byStatus[ticket.status] || 0) + 1;
+      (stats.byStatus as any)[ticket.status] = ((stats.byStatus as any)[ticket.status] || 0) + 1;
       
       // Count by priority
-      stats.byPriority[ticket.priority] = (stats.byPriority[ticket.priority] || 0) + 1;
+      (stats.byPriority as any)[ticket.priority] = ((stats.byPriority as any)[ticket.priority] || 0) + 1;
       
       // Count by service type
-      stats.byServiceType[ticket.serviceType] = (stats.byServiceType[ticket.serviceType] || 0) + 1;
+      (stats.byServiceType as any)[ticket.serviceType] = ((stats.byServiceType as any)[ticket.serviceType] || 0) + 1;
     });
     
     // Calculate completion rate

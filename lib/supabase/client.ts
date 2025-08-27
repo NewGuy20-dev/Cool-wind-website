@@ -266,10 +266,10 @@ export async function batchInsert<T>(
     const batch = records.slice(i, i + batchSize);
     
     try {
-      const { error, count } = await supabaseAdmin
-        .from(table)
+      const { error, data } = await supabaseAdmin
+        .from(table as any)
         .insert(batch)
-        .select('*', { count: 'exact' });
+        .select();
       
       if (error) {
         errors.push({
@@ -277,7 +277,7 @@ export async function batchInsert<T>(
           error: handleSupabaseError(error),
         });
       } else {
-        totalInserted += count || batch.length;
+        totalInserted += data?.length || batch.length;
       }
     } catch (error) {
       errors.push({
@@ -298,7 +298,7 @@ export async function batchInsert<T>(
 export async function getConnectionStats() {
   try {
     const { data, error } = await supabaseAdmin
-      .rpc('get_connection_stats');
+      .rpc('get_connection_stats' as any);
     
     if (error) {
       throw error;
