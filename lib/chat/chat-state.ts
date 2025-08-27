@@ -269,7 +269,7 @@ export class ChatStateManager {
    * Check if all required fields are present and valid
    */
   static hasAllRequiredFields(customerData: Record<string, any>): boolean {
-    const required = ['name', 'phone', 'location'];
+    const required = ['name', 'phone', 'location', 'problem'];
     
     return required.every(field => {
       if (!customerData[field] || typeof customerData[field] !== 'string') {
@@ -296,6 +296,10 @@ export class ChatStateManager {
           // Must be at least 3 characters, only letters and spaces
           return value.length >= 3 && /^[a-zA-Z\s]+$/.test(value);
         
+        case 'problem':
+          // Must be at least 5 characters for meaningful problem description
+          return value.length >= 5;
+        
         default:
           return true;
       }
@@ -306,7 +310,7 @@ export class ChatStateManager {
    * Get still missing or invalid fields
    */
   static getStillMissingFields(customerData: Record<string, any>): string[] {
-    const required = ['name', 'phone', 'location'];
+    const required = ['name', 'phone', 'location', 'problem'];
     const missing: string[] = [];
 
     required.forEach(field => {
@@ -327,6 +331,9 @@ export class ChatStateManager {
             case 'location':
               isValid = value.length >= 3 && /^[a-zA-Z\s]+$/.test(value);
               break;
+            case 'problem':
+              isValid = value.length >= 5;
+              break;
             default:
               isValid = true;
           }
@@ -334,7 +341,10 @@ export class ChatStateManager {
       }
       
       if (!isValid) {
-        missing.push(field === 'phone' ? 'phone number' : field);
+        let fieldName = field;
+        if (field === 'phone') fieldName = 'phone number';
+        else if (field === 'problem') fieldName = 'problem description';
+        missing.push(fieldName);
       }
     });
 
@@ -352,16 +362,18 @@ export class ChatStateManager {
     const fieldMap: Record<string, string> = {
       'name': 'your name',
       'phone number': 'your phone number', 
-      'location': 'your location'
+      'location': 'your location',
+      'problem description': 'the specific problem'
     };
 
     const mappedFields = missingFields.map(field => fieldMap[field] || field);
 
     if (mappedFields.length === 1) {
       const field = missingFields[0];
-      if (field === 'name') return 'What’s your name?';
-      if (field === 'phone number') return 'What’s the best 10-digit number to reach you?';
-      if (field === 'location') return 'Which area are you in?';
+      if (field === 'name') return "What's your name?";
+      if (field === 'phone number') return "What's the best 10-digit number to reach you?";
+      if (field === 'location') return "Which area are you in?";
+      if (field === 'problem description') return "What's the specific problem with your AC or refrigerator? Please describe what's happening.";
       return `Could you share ${mappedFields[0]}?`;
     } else if (mappedFields.length === 2) {
       return `Could you share ${mappedFields[0]} and ${mappedFields[1]}?`;

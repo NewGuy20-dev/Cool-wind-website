@@ -153,15 +153,24 @@ export async function POST(request: NextRequest) {
         console.log('✅ All required information collected, creating task...');
         
         // Create task
-        const taskRequest = FailedCallDetector.createTaskRequest(
-          updatedCustomerData as any,
-          collectingCallbackInfo.originalMessage,
-          'medium', // Default priority, will be assessed by AI
-          updatedCustomerData.location || 'Not specified',
-          session.messages.slice(-5) // Last 5 messages for context
-        );
-        
-        const taskResult = await FailedCallDetector.createTask(taskRequest);
+        let taskResult;
+        try {
+          const taskRequest = FailedCallDetector.createTaskRequest(
+            updatedCustomerData as any,
+            updatedCustomerData.problem || collectingCallbackInfo.originalMessage,
+            'medium', // Default priority, will be assessed by AI
+            updatedCustomerData.location || 'Not specified',
+            session.messages.slice(-5) // Last 5 messages for context
+          );
+          
+          taskResult = await FailedCallDetector.createTask(taskRequest);
+        } catch (validationError: any) {
+          console.error('❌ Task creation validation failed:', validationError.message);
+          taskResult = {
+            success: false,
+            error: `Validation error: ${validationError.message}`
+          };
+        }
         
         if (taskResult.success) {
           console.log('🎉 Task created successfully:', taskResult.taskId);
@@ -218,15 +227,24 @@ export async function POST(request: NextRequest) {
           // All information available, create task immediately
           console.log('✅ All information available, creating task immediately...');
           
-          const taskRequest = FailedCallDetector.createTaskRequest(
-            failedCallData.customerData as any,
-            failedCallData.problemDescription!,
-            failedCallData.urgencyLevel!,
-            failedCallData.location || 'Not specified',
-            session.messages.slice(-3) // Last 3 messages for context
-          );
-          
-          const taskResult = await FailedCallDetector.createTask(taskRequest);
+          let taskResult;
+          try {
+            const taskRequest = FailedCallDetector.createTaskRequest(
+              failedCallData.customerData as any,
+              failedCallData.problemDescription!,
+              failedCallData.urgencyLevel!,
+              failedCallData.location || 'Not specified',
+              session.messages.slice(-3) // Last 3 messages for context
+            );
+            
+            taskResult = await FailedCallDetector.createTask(taskRequest);
+          } catch (validationError: any) {
+            console.error('❌ Task creation validation failed:', validationError.message);
+            taskResult = {
+              success: false,
+              error: `Validation error: ${validationError.message}`
+            };
+          }
           
           if (taskResult.success) {
             console.log('🎉 Task created immediately:', taskResult.taskId);
@@ -260,7 +278,7 @@ export async function POST(request: NextRequest) {
           // Set up collection state
           ChatStateManager.setChatState(session.sessionId, 'collecting_callback_info', {
             missingFields: failedCallData.missingFields,
-            originalMessage: failedCallData.problemDescription!,
+            originalMessage: failedCallData.problemDescription || 'Customer needs service assistance',
             triggerPhrase: failedCallData.triggerPhrase!,
             customerData: failedCallData.customerData,
             attempts: 0,
