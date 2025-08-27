@@ -124,6 +124,15 @@ export class ChatStateManager {
         result.problem = extracted.problem;
       }
       
+      // Backfill with fallback parser when Gemini returns low-confidence or missing fields
+      if (!result.name || !result.phone || !result.location) {
+        const fallback = this.extractCustomerInfoFromMessageFallback(message);
+        if (!result.name && fallback.name) result.name = fallback.name;
+        if (!result.phone && fallback.phone) result.phone = fallback.phone;
+        if (!result.location && fallback.location) result.location = fallback.location;
+        if (!result.problem && fallback.problem) result.problem = fallback.problem;
+      }
+
       console.log('🤖 Gemini extracted customer info:', result);
       console.log('🎯 Confidence scores:', extracted.confidence);
       
@@ -151,6 +160,8 @@ export class ChatStateManager {
     const namePatterns = [
       /(?:my name is|i am|i'm|call me)\s+([a-zA-Z]+)(?:\s|$|,|and|but|phone)/i,
       /(?:this is|here is)\s+([a-zA-Z]+)(?:\s|$|,|and|but|phone)/i,
+      // Single-token reply that looks like a name (no digits, short)
+      /^(?:name\s*is\s*)?([a-zA-Z]{2,20})$/i,
     ];
 
     for (const pattern of namePatterns) {
@@ -170,6 +181,14 @@ export class ChatStateManager {
       /(?:phone|number|no)\s*(?:is)?\s*([6-9]\d{9})/i, // Indian mobile pattern
       /([6-9]\d{9})/g // Direct 10-digit Indian mobile
     ];
+    // Handle short replies that are only a phone number (e.g., "8848850922")
+    if (!extracted.phone) {
+      const onlyDigits = message.replace(/\D/g, '');
+      if (/^[6-9]\d{9}$/.test(onlyDigits)) {
+        extracted.phone = onlyDigits;
+      }
+    }
+
 
     for (const pattern of phonePatterns) {
       const match = message.match(pattern);
@@ -195,6 +214,8 @@ export class ChatStateManager {
     if (!extracted.location) {
       const locationPatterns = [
         /(?:location is|in|at|from)\s+([a-zA-Z]+)(?:\s|$|,|and|but|problem)/i,
+        // Single-token reply that looks like a place
+        /^([a-zA-Z]{3,20})$/i,
       ];
       
       for (const pattern of locationPatterns) {
