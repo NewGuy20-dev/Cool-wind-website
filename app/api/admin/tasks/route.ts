@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TaskService } from '@/lib/supabase/tasks';
-import { TaskStatus, TaskPriority, TaskSearchParams, TaskUpdateRequest } from '@/lib/types/database';
+import { TaskStatus, TaskPriority, TaskSearchParams, TaskUpdateRequest, TaskSource } from '@/lib/types/database';
 
 // Simple admin authentication (in production, use proper auth)
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
@@ -67,11 +67,41 @@ export async function GET(request: NextRequest) {
     }
     
     // Parse search parameters
+    const rawSource = searchParams.get('source');
+    let normalizedSource: TaskSource | undefined = undefined;
+    if (rawSource) {
+      const v = rawSource.trim().toLowerCase();
+      const hyphened = v.replace(/_/g, '-');
+      const collapsed = v.replace(/[^a-z]/g, '');
+      const map: Record<string, TaskSource> = {
+        'chat-failed-call': 'chat-failed-call',
+        'chat_failed_call': 'chat-failed-call',
+        'chatfailedcall': 'chat-failed-call',
+        'admin-manual': 'admin-manual',
+        'admin_manual': 'admin-manual',
+        'adminmanual': 'admin-manual',
+        'api-direct': 'api-direct',
+        'api_direct': 'api-direct',
+        'apidirect': 'api-direct',
+        'webhook': 'webhook',
+        'email': 'email',
+        'phone': 'phone',
+      };
+      const validList: TaskSource[] = ['chat-failed-call','admin-manual','api-direct','webhook','email','phone'];
+      normalizedSource = map[v] || map[hyphened] || map[collapsed] || ((validList as string[]).includes(hyphened) ? (hyphened as TaskSource) : undefined);
+      if (!normalizedSource) {
+        return NextResponse.json(
+          { error: `Invalid source value: ${rawSource}. Valid values: ${validList.join(', ')}` },
+          { status: 400 }
+        );
+      }
+    }
+
     const searchParams_: TaskSearchParams = {
       search: searchParams.get('search') || undefined,
       status: (searchParams.get('status') as TaskStatus) || undefined,
       priority: (searchParams.get('priority') as TaskPriority) || undefined,
-      source: searchParams.get('source') as any || undefined,
+      source: normalizedSource,
       dateFrom: searchParams.get('dateFrom') || undefined,
       dateTo: searchParams.get('dateTo') || undefined,
       page: parseInt(searchParams.get('page') || '1'),

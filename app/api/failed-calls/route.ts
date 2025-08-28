@@ -86,25 +86,16 @@ export async function POST(request: NextRequest) {
     
     // Create task with failed call source
     const taskData = {
-      // Required snake_case fields expected by TaskService.createTask
-      customer_name: body.customer_name || body.customerName,
-      phone_number: body.phone_number || body.phoneNumber,
-      problem_description: body.problem_description || body.problemDescription || body.originalMessage,
-      // Optional fields
-      location: body.location ?? null,
-      title: body.title,
-      description: body.description ?? null,
-      priority: body.priority,
-      status: body.status,
-      // Force failed-calls source
+      ...body,
       source: 'chat-failed-call' as const,
-      ai_priority_reason: body.aiPriorityReason || body.ai_priority_reason || null,
-      urgency_keywords: body.urgencyKeywords || body.urgency_keywords || null,
-      chat_context: body.chatContext || body.chat_context || null,
+      // Map failed call fields to task fields
+      customerName: body.customerName || body.customer_name,
+      phoneNumber: body.phoneNumber || body.phone_number,
+      problemDescription: body.problemDescription || body.problem_description || body.originalMessage,
       metadata: {
         ...body.metadata,
         triggerPhrase: body.triggerPhrase,
-        callbackRequested: body.callbackRequested ?? true,
+        callbackRequested: body.callbackRequested || true,
         originalMessage: body.originalMessage,
         urgencyLevel: body.urgencyLevel,
         created_by: 'failed-calls-api'

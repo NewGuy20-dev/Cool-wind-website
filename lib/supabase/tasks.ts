@@ -250,13 +250,41 @@ export class TaskService {
       
       const offset = (page - 1) * limit;
       
+      // Defensive normalization of source to hyphenated TaskSource enum
+      const normalizeSource = (raw?: any): TaskSource | undefined => {
+        if (!raw) return undefined;
+        const v = String(raw).trim().toLowerCase();
+        const hyphened = v.replace(/_/g, '-');
+        const collapsed = v.replace(/[^a-z]/g, '');
+        const map: Record<string, TaskSource> = {
+          'chat-failed-call': 'chat-failed-call',
+          'chat_failed_call': 'chat-failed-call',
+          'chatfailedcall': 'chat-failed-call',
+          'admin-manual': 'admin-manual',
+          'admin_manual': 'admin-manual',
+          'adminmanual': 'admin-manual',
+          'api-direct': 'api-direct',
+          'api_direct': 'api-direct',
+          'apidirect': 'api-direct',
+          'webhook': 'webhook',
+          'email': 'email',
+          'phone': 'phone',
+        };
+        const validList: TaskSource[] = ['chat-failed-call','admin-manual','api-direct','webhook','email','phone'];
+        return map[v] || map[hyphened] || map[collapsed] || ((validList as string[]).includes(hyphened) ? (hyphened as TaskSource) : undefined);
+      };
+      const normalizedSource = normalizeSource(source);
+      if (source && !normalizedSource) {
+        console.warn('searchTasks: invalid source provided, ignoring filter', { source });
+      }
+      
       // Use the database search function for complex queries
       const { data: tasks, error } = await client
         .rpc('search_tasks', {
           search_term: search || undefined,
           filter_status: status || undefined,
           filter_priority: priority || undefined,
-          filter_source: source || undefined,
+          filter_source: normalizedSource,
           date_from: dateFrom || undefined,
           date_to: dateTo || undefined,
           limit_count: limit,
@@ -274,7 +302,7 @@ export class TaskService {
       // Apply filters for count
       if (status) query = query.eq('status', status);
       if (priority) query = query.eq('priority', priority);
-      if (source) query = query.eq('source', source);
+      if (normalizedSource) query = query.eq('source', normalizedSource);
       if (dateFrom) query = query.gte('created_at', dateFrom);
       if (dateTo) query = query.lte('created_at', dateTo);
       
