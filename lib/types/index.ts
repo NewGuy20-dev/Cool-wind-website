@@ -5,11 +5,6 @@
 
 // Re-export database types
 export * from './database';
-// Import specific types that may have ordering issues
-import type { Task } from './database';
-
-// Import specific types for internal use
-import { Task } from './database';
 
 // Re-export chat types (maintaining backwards compatibility)
 export * from './chat';
@@ -93,14 +88,14 @@ export interface LegacyTaskData {
 // Real-time event types
 export interface TaskCreatedEvent {
   type: 'TASK_CREATED';
-  task: Task;
+  task: any; // Using any to avoid circular dependency
   timestamp: string;
 }
 
 export interface TaskUpdatedEvent {
   type: 'TASK_UPDATED';
-  task: Task;
-  changes: Partial<Task>;
+  task: any; // Using any to avoid circular dependency
+  changes: Partial<any>;
   timestamp: string;
 }
 
