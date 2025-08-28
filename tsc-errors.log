@@ -1,0 +1,67 @@
+lib/supabase/client.ts(270,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "tasks" | "task_comments" | "task_audit_log" | "task_attachments" | "performance_metrics" | "system_alerts"): PostgrestQueryBuilder<{ PostgrestVersion: "12"; }, { Tables: { tasks: { Row: { ...; }; Insert: { ...; }; Update: { ...; }; Relationships: []; }; ... 4 more ...; system_alerts: { ...; }; }; Views: { ...; }; Functions: { ...; }; Enums: { ...; }; CompositeTypes: {}; }, { ...; } | ... 4 more ... | { ...; }, "tasks" | ... 4 more ... | "system_alerts", [] | ... 2 more ... | [...]>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"tasks" | "task_comments" | "task_audit_log" | "task_attachments" | "performance_metrics" | "system_alerts"'.
+  Overload 2 of 2, '(relation: "v_dashboard_overview" | "v_recent_tasks" | "v_urgent_attention" | "v_customer_history"): PostgrestQueryBuilder<{ PostgrestVersion: "12"; }, { Tables: { tasks: { Row: { id: string; task_number: string; ... 22 more ...; chat_context: Json; }; Insert: { ...; }; Update: { ...; }; Relationships: []; }; ... 4 more ...; system_alerts: { ...; }; }; Views: { ...; }; Functions: { ...; }; Enums: { ...; }; CompositeTypes: {}; }, { ...; } | ... 2 more ... | { ...; }, "v_dashboard_overview" | ... 2 more ... | "v_customer_history", []>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"v_dashboard_overview" | "v_recent_tasks" | "v_urgent_attention" | "v_customer_history"'.
+lib/supabase/client.ts(271,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: { id?: string | undefined; task_number?: string | undefined; customer_name: string; phone_number: string; location?: string | null | undefined; title: string; description?: string | null | undefined; ... 17 more ...; chat_context?: Json | undefined; } | ... 4 more ... | { ...; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error.
+    Argument of type 'T[]' is not assignable to parameter of type '{ id?: string | undefined; task_number?: string | undefined; customer_name: string; phone_number: string; location?: string | null | undefined; title: string; description?: string | null | undefined; ... 17 more ...; chat_context?: Json | undefined; } | ... 4 more ... | { ...; }'.
+  Overload 2 of 2, '(values: ({ id?: string | undefined; task_number?: string | undefined; customer_name: string; phone_number: string; location?: string | null | undefined; title: string; description?: string | null | undefined; ... 17 more ...; chat_context?: Json | undefined; } | ... 4 more ... | { ...; })[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error.
+    Argument of type 'T[]' is not assignable to parameter of type '({ id?: string | undefined; task_number?: string | undefined; customer_name: string; phone_number: string; location?: string | null | undefined; title: string; description?: string | null | undefined; ... 17 more ...; chat_context?: Json | undefined; } | ... 4 more ... | { ...; })[]'.
+      Type 'T' is not assignable to type '{ id?: string | undefined; task_number?: string | undefined; customer_name: string; phone_number: string; location?: string | null | undefined; title: string; description?: string | null | undefined; ... 17 more ...; chat_context?: Json | undefined; } | ... 4 more ... | { ...; }'.
+        Type 'T' is not assignable to type '{ id?: string | undefined; alert_type: string; severity: string; title: string; description?: string | null | undefined; metadata?: Json | undefined; is_acknowledged?: boolean | undefined; acknowledged_by?: string | ... 1 more ... | undefined; acknowledged_at?: string | ... 1 more ... | undefined; created_at?: strin...'.
+lib/supabase/client.ts(272,22): error TS2554: Expected 0-1 arguments, but got 2.
+lib/supabase/client.ts(301,12): error TS2345: Argument of type '"get_connection_stats"' is not assignable to parameter of type '"get_dashboard_data" | "search_tasks" | "get_customer_insights" | "get_task_stats" | "check_system_health" | "auto_escalate_priority"'.
+lib/supabase/tasks.ts(91,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(136,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(181,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(222,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(254,11): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+lib/supabase/tasks.ts(255,11): error TS2322: Type 'TaskStatus | null' is not assignable to type 'TaskStatus | undefined'.
+  Type 'null' is not assignable to type 'TaskStatus | undefined'.
+lib/supabase/tasks.ts(256,11): error TS2322: Type 'TaskPriority | null' is not assignable to type 'TaskPriority | undefined'.
+  Type 'null' is not assignable to type 'TaskPriority | undefined'.
+lib/supabase/tasks.ts(257,11): error TS2322: Type 'TaskSource | null' is not assignable to type 'TaskSource | undefined'.
+  Type 'null' is not assignable to type 'TaskSource | undefined'.
+lib/supabase/tasks.ts(258,11): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+lib/supabase/tasks.ts(259,11): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+lib/supabase/tasks.ts(288,9): error TS2322: Type '{ id: string; task_number: string; customer_name: string; phone_number: string; title: string; problem_description: string; status: TaskStatus; priority: TaskPriority; ... 6 more ...; relevance_score: number; }[]' is not assignable to type '{ id: string; task_number: string; customer_name: string; phone_number: string; location: string | null; title: string; description: string | null; problem_description: string; status: TaskStatus; ... 15 more ...; chat_context: Json; }[]'.
+  Type '{ id: string; task_number: string; customer_name: string; phone_number: string; title: string; problem_description: string; status: TaskStatus; priority: TaskPriority; ... 6 more ...; relevance_score: number; }' is missing the following properties from type '{ id: string; task_number: string; customer_name: string; phone_number: string; location: string | null; title: string; description: string | null; problem_description: string; status: TaskStatus; ... 15 more ...; chat_context: Json; }': description, category, estimated_duration, actual_duration, and 9 more.
+lib/supabase/tasks.ts(299,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(347,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(380,9): error TS2739: Type '{ overview: Json; recent_tasks: Json; urgent_tasks: Json; daily_stats: Json; }' is missing the following properties from type 'DashboardData': recentTasks, urgentTasks, dailyStats
+lib/supabase/tasks.ts(385,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(419,9): error TS2739: Type '{ customer_info: Json; task_history: Json; satisfaction_metrics: Json; recommendations: Json; }' is missing the following properties from type 'CustomerInsights': customerInfo, taskHistory, satisfactionMetrics
+lib/supabase/tasks.ts(424,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(451,9): error TS2322: Type '{ id: string | null; task_number: string | null; customer_name: string | null; phone_number: string | null; title: string | null; problem_description: string | null; status: TaskStatus | null; ... 7 more ...; escalation_deadline: string | null; }[]' is not assignable to type '{ id: string; task_number: string; customer_name: string; phone_number: string; location: string | null; title: string; description: string | null; problem_description: string; status: TaskStatus; ... 15 more ...; chat_context: Json; }[]'.
+  Type '{ id: string | null; task_number: string | null; customer_name: string | null; phone_number: string | null; title: string | null; problem_description: string | null; status: TaskStatus | null; ... 7 more ...; escalation_deadline: string | null; }' is missing the following properties from type '{ id: string; task_number: string; customer_name: string; phone_number: string; location: string | null; title: string; description: string | null; problem_description: string; status: TaskStatus; ... 15 more ...; chat_context: Json; }': description, category, estimated_duration, actual_duration, and 9 more.
+lib/supabase/tasks.ts(456,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(484,18): error TS2367: This comparison appears to be unintentional because the types '"pending" | "in_progress" | "cancelled"' and '"completed"' have no overlap.
+lib/supabase/tasks.ts(504,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(522,11): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+lib/supabase/tasks.ts(523,11): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+lib/supabase/tasks.ts(537,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(567,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/supabase/tasks.ts(606,45): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'PostgrestError | Error | null'.
+lib/ticket-service.ts(543,28): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ thiruvalla: string[]; pathanamthitta: string[]; }'.
+  No index signature with a parameter of type 'string' was found on type '{ thiruvalla: string[]; pathanamthitta: string[]; }'.
+lib/ticket-service.ts(591,7): error TS7053: Element implicitly has an 'any' type because expression of type '"in_progress" | "completed" | "cancelled" | "new" | "acknowledged" | "scheduled" | "on_hold"' can't be used to index type '{}'.
+  Property 'in_progress' does not exist on type '{}'.
+lib/ticket-service.ts(591,40): error TS7053: Element implicitly has an 'any' type because expression of type '"in_progress" | "completed" | "cancelled" | "new" | "acknowledged" | "scheduled" | "on_hold"' can't be used to index type '{}'.
+  Property 'in_progress' does not exist on type '{}'.
+lib/ticket-service.ts(594,7): error TS7053: Element implicitly has an 'any' type because expression of type '"low" | "medium" | "high" | "critical"' can't be used to index type '{}'.
+  Property 'low' does not exist on type '{}'.
+lib/ticket-service.ts(594,44): error TS7053: Element implicitly has an 'any' type because expression of type '"low" | "medium" | "high" | "critical"' can't be used to index type '{}'.
+  Property 'low' does not exist on type '{}'.
+lib/ticket-service.ts(597,7): error TS7053: Element implicitly has an 'any' type because expression of type '"emergency" | "maintenance" | "ac_repair" | "refrigerator_repair" | "installation" | "consultation"' can't be used to index type '{}'.
+  Property 'emergency' does not exist on type '{}'.
+lib/ticket-service.ts(597,50): error TS7053: Element implicitly has an 'any' type because expression of type '"emergency" | "maintenance" | "ac_repair" | "refrigerator_repair" | "installation" | "consultation"' can't be used to index type '{}'.
+  Property 'emergency' does not exist on type '{}'.
+lib/types/index.ts(91,9): error TS2304: Cannot find name 'Task'.
+lib/types/index.ts(97,9): error TS2304: Cannot find name 'Task'.
+lib/types/index.ts(98,20): error TS2304: Cannot find name 'Task'.

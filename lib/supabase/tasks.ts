@@ -626,4 +626,58 @@ export class TaskService {
   static clearPerformanceStats() {
     SupabasePerformanceMonitor.clearStats();
   }
+
+  /**
+   * Find task by source and external ID for idempotency
+   */
+  static async findBySourceAndExternalId(source: string, external_id: string): Promise<Task | null> {
+    const timer = SupabasePerformanceMonitor.startTimer('findBySourceAndExternalId');
+    
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('tasks')
+        .select('*')
+        .eq('source', source as TaskSource)
+        .contains('metadata', { external_id })
+        .limit(1);
+
+      timer.end();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data?.[0] || null;
+    } catch (error) {
+      timer.end();
+      console.error('❌ Find by source and external ID error:', error);
+      return null;
+    }
+  }
+
+  /**
+   * List all tasks for admin (no filtering)
+   */
+  static async listAdminTasks(): Promise<Task[]> {
+    const timer = SupabasePerformanceMonitor.startTimer('listAdminTasks');
+    
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      timer.end();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data || [];
+    } catch (error) {
+      timer.end();
+      console.error('❌ List admin tasks error:', error);
+      return [];
+    }
+  }
 }

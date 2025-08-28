@@ -8,6 +8,9 @@ export * from './database';
 // Import specific types that may have ordering issues
 import type { Task } from './database';
 
+// Import specific types for internal use
+import { Task } from './database';
+
 // Re-export chat types (maintaining backwards compatibility)
 export * from './chat';
 
