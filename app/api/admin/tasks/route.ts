@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TaskService } from '@/lib/supabase/tasks';
 import { TaskStatus, TaskPriority, TaskSearchParams, TaskUpdateRequest } from '@/lib/types/database';
+import { mapDbToApi } from '@/src/lib/mappers/tasks';
 
 // Simple admin authentication (in production, use proper auth)
-const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+const ADMIN_KEY = process.env.ADMIN_KEY || 'coolwind2024';
 
 function authenticateAdmin(request: NextRequest): boolean {
   const authHeader = request.headers.get('Authorization');
@@ -81,16 +82,13 @@ export async function GET(request: NextRequest) {
     // Use search function for filtering
     const result = await TaskService.searchTasks(searchParams_);
 
-    // Also get additional analytics data
-    const analyticsResult = await TaskService.getTaskStats();
-    const urgentTasksResult = await TaskService.getUrgentTasks();
+    // Map tasks to camelCase for frontend
+    const apiTasks = result.tasks.map(mapDbToApi);
 
     return NextResponse.json({
       success: true,
-      tasks: result.tasks,
+      data: apiTasks,
       pagination: result.pagination,
-      analytics: analyticsResult.success ? analyticsResult.data : null,
-      urgentTasks: urgentTasksResult.success ? urgentTasksResult.data : [],
       totalTasks: result.pagination.total
     });
 

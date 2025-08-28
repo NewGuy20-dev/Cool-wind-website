@@ -278,6 +278,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Support
 
+## Admin tasks seeding & local dev
+
+1. Set environment variables in `.env.local` (see `.env.local.example`).
+2. Create a branch: `git checkout -b fix/admin-tasks-integration-2025`
+3. Run typescript: `npx tsc --noEmit`
+4. Seed sample failed-call tasks:
+   `npx ts-node scripts/seed-chat-failed-calls.ts`
+5. Start dev: `npm run dev`
+6. Test admin API: `curl -H "Authorization: Bearer coolwind2024" http://localhost:3000/api/admin/tasks`
+7. Run integration tests: `./scripts/test-integration.sh`
+
+### Environment Variables
+
+```bash
+# .env.local (development)
+ADMIN_KEY=coolwind2024
+NEXT_PUBLIC_SUPABASE_URL=https://your.supabase.url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=anon-key-xxx
+SUPABASE_SERVICE_ROLE_KEY=service-role-key-xxx   # local-only, DO NOT SHARE
+```
+
 For support, email info@coolwindservices.com or call +91 85472 29991.
 
 ---

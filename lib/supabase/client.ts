@@ -65,6 +65,16 @@ export const supabaseAdmin: SupabaseClient<Database> = createClient<Database>(
   }
 );
 
+// Helper functions
+export function supabaseClient() {
+  return supabase;
+}
+
+export function supabaseAdminClient() {
+  // Service-role key (sensitive) — use only in dev/admin scripts
+  return supabaseAdmin;
+}
+
 // Connection health check
 export async function checkSupabaseConnection(): Promise<{
   connected: boolean;
