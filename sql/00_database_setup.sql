@@ -15,7 +15,7 @@
 -- UUID generation for primary keys
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Full-text search capabilities
+-- Full-text search capabilitiesa
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- Advanced indexing (if available)

@@ -122,7 +122,7 @@ export default async function LocaleLayout({
 	params: Promise<{ locale: string }>
 }) {
 	const { locale } = await params
-	const messages = (locale === 'ml' ? (mlMessages as any) : (enMessages as any))
+	const messages = locale === 'ml' ? mlMessages : enMessages
 	const ld = {
 		"@context": "https://schema.org",
 		"@type": "LocalBusiness",

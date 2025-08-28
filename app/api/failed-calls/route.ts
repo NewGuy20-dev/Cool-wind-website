@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TaskService } from '@/lib/supabase/tasks';
-import { mapApiToDb, mapDbToApi } from '@/src/lib/mappers/tasks';
 
 /**
  * Failed Calls API Route
@@ -84,34 +83,30 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    // Expect body in camelCase (from upstream webhooks)
-    const { source, externalId } = body;
-    if (!source) {
-      return new NextResponse('Bad Request: missing source', { status: 400 });
-    }
-
-    // idempotency / loop protection: dedupe by source + external_id
-    if (externalId) {
-      const existing = await TaskService.findBySourceAndExternalId(source, externalId);
-      if (existing) {
-        return NextResponse.json({ data: mapDbToApi(existing) }, { status: 200 });
-      }
-    }
-
-    // Create task with failed call source using the existing TaskService API
+    
+    // Create task with failed call source
     const taskData = {
-      customer_name: body.customerName || 'Unknown Customer',
-      phone_number: body.phoneNumber || '0000000000',
-      title: body.title ?? `Failed call: ${source}`,
+      // Required snake_case fields expected by TaskService.createTask
+      customer_name: body.customer_name || body.customerName,
+      phone_number: body.phone_number || body.phoneNumber,
+      problem_description: body.problem_description || body.problemDescription || body.originalMessage,
+      // Optional fields
+      location: body.location ?? null,
+      title: body.title,
       description: body.description ?? null,
-      problem_description: body.originalMessage || body.description || `Failed call from ${source}`,
-      status: 'pending' as const,
-      priority: 'medium' as const,
+      priority: body.priority,
+      status: body.status,
+      // Force failed-calls source
       source: 'chat-failed-call' as const,
+      ai_priority_reason: body.aiPriorityReason || body.ai_priority_reason || null,
+      urgency_keywords: body.urgencyKeywords || body.urgency_keywords || null,
+      chat_context: body.chatContext || body.chat_context || null,
       metadata: {
-        external_id: externalId,
+        ...body.metadata,
         triggerPhrase: body.triggerPhrase,
+        callbackRequested: body.callbackRequested ?? true,
         originalMessage: body.originalMessage,
+        urgencyLevel: body.urgencyLevel,
         created_by: 'failed-calls-api'
       }
     };
@@ -119,17 +114,51 @@ export async function POST(request: NextRequest) {
     const result = await TaskService.createTask(taskData);
     
     if (!result.success) {
-      return NextResponse.json({ 
-        success: false,
-        error: result.error 
-      }, { status: 500 });
+      return NextResponse.json(
+        { 
+          success: false,
+          error: result.error 
+        },
+        { status: 500 }
+      );
     }
 
-    const apiOut = result.data ? mapDbToApi(result.data) : null;
-    return NextResponse.json({ data: apiOut }, { status: 201 });
-  } catch (err) {
-    console.error('failed-calls POST error', err);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    // Map back to failed call format
+    const task = result.data!;
+    const failedCall = {
+      id: task.id,
+      taskNumber: task.task_number,
+      customerName: task.customer_name,
+      phoneNumber: task.phone_number,
+      problemDescription: task.problem_description,
+      status: task.status,
+      priority: task.priority,
+      location: task.location,
+      source: task.source,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
+      triggerPhrase: body.triggerPhrase,
+      callbackRequested: true,
+      originalMessage: body.originalMessage || task.problem_description,
+      urgencyLevel: mapPriorityToUrgency(task.priority),
+      urgencyKeywords: task.urgency_keywords || []
+    };
+
+    return NextResponse.json({
+      success: true,
+      data: failedCall,
+      message: 'Failed call record created successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Failed call creation error:', error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'Failed to create failed call record' 
+      },
+      { status: 500 }
+    );
   }
 }
 

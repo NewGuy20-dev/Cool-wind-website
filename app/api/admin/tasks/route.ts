@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TaskService } from '@/lib/supabase/tasks';
 import { TaskStatus, TaskPriority, TaskSearchParams, TaskUpdateRequest } from '@/lib/types/database';
-import { mapDbToApi } from '@/src/lib/mappers/tasks';
 
 // Simple admin authentication (in production, use proper auth)
-const ADMIN_KEY = process.env.ADMIN_KEY || 'coolwind2024';
+const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
 
 function authenticateAdmin(request: NextRequest): boolean {
   const authHeader = request.headers.get('Authorization');
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
     // Check if requesting dashboard data
     const dashboard = searchParams.get('dashboard');
     if (dashboard === 'true') {
-      const result = await TaskService.getDashboardData();
+      const result = await TaskService.getDashboardData({ admin: true });
       
       if (!result.success) {
         return NextResponse.json(
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
       const startDate = searchParams.get('startDate') || undefined;
       const endDate = searchParams.get('endDate') || undefined;
       
-      const result = await TaskService.getTaskStats(startDate, endDate);
+      const result = await TaskService.getTaskStats(startDate, endDate, { admin: true });
       
       if (!result.success) {
         return NextResponse.json(
@@ -80,16 +79,70 @@ export async function GET(request: NextRequest) {
     };
     
     // Use search function for filtering
-    const result = await TaskService.searchTasks(searchParams_);
+    const result = await TaskService.searchTasks(searchParams_, { admin: true });
 
-    // Map tasks to camelCase for frontend
-    const apiTasks = result.tasks.map(mapDbToApi);
+    // Also get additional analytics data
+    const analyticsResult = await TaskService.getTaskStats(undefined, undefined, { admin: true });
+    const urgentTasksResult = await TaskService.getUrgentTasks({ admin: true });
+    const dashboardResult = await TaskService.getDashboardData({ admin: true });
+
+    // Map tasks to frontend camelCase format
+    const tasks = (result.tasks || []).map((t: any) => ({
+      id: t.id,
+      customerName: t.customer_name,
+      phoneNumber: t.phone_number,
+      problemDescription: t.problem_description,
+      priority: (t.priority === 'urgent' ? 'high' : t.priority) as 'high' | 'medium' | 'low',
+      status: (t.status === 'pending' ? 'new' : t.status) as 'new' | 'in_progress' | 'completed' | 'cancelled',
+      source: t.source,
+      location: t.location || undefined,
+      aiPriorityReason: t.ai_priority_reason || undefined,
+      createdAt: t.created_at,
+      updatedAt: t.updated_at,
+    }));
+
+    // Build analytics in expected shape
+    const overview: any = (dashboardResult.success && (dashboardResult.data as any)?.overview) 
+      ? (dashboardResult.data as any).overview 
+      : null;
+
+    const analytics = overview ? {
+      totalTasks: overview.total_tasks ?? result.pagination.total ?? 0,
+      tasksByPriority: {
+        high: (overview.high_count ?? 0) + (overview.urgent_count ?? 0),
+        medium: overview.medium_count ?? 0,
+        low: overview.low_count ?? 0,
+      },
+      tasksByStatus: {
+        new: overview.pending_count ?? 0,
+        in_progress: overview.in_progress_count ?? 0,
+        completed: overview.completed_count ?? 0,
+        cancelled: overview.cancelled_count ?? 0,
+      },
+      recentTasks: [],
+    } : (analyticsResult.success ? {
+      totalTasks: (analyticsResult.data as any)?.total_tasks ?? result.pagination.total ?? 0,
+      tasksByPriority: {
+        high: ((analyticsResult.data as any)?.high_priority_count ?? 0) + ((analyticsResult.data as any)?.urgent_priority_count ?? 0),
+        medium: 0,
+        low: 0,
+      },
+      tasksByStatus: {
+        new: (analyticsResult.data as any)?.pending_tasks ?? 0,
+        in_progress: (analyticsResult.data as any)?.in_progress_tasks ?? 0,
+        completed: (analyticsResult.data as any)?.completed_tasks ?? 0,
+        cancelled: (analyticsResult.data as any)?.cancelled_tasks ?? 0,
+      },
+      recentTasks: [],
+    } : null);
 
     return NextResponse.json({
       success: true,
-      data: apiTasks,
+      tasks,
       pagination: result.pagination,
-      totalTasks: result.pagination.total
+      analytics,
+      urgentTasks: urgentTasksResult.success ? urgentTasksResult.data : [],
+      totalTasks: (overview?.total_tasks ?? (analyticsResult.data as any)?.total_tasks ?? result.pagination.total) || 0,
     });
 
   } catch (error) {

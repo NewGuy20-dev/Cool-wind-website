@@ -100,12 +100,13 @@ export class TaskService {
   /**
    * Get task by ID
    */
-  static async getTaskById(taskId: string): Promise<ApiResponse<Task>> {
+  static async getTaskById(taskId: string, options?: { admin?: boolean }): Promise<ApiResponse<Task>> {
     const timer = SupabasePerformanceMonitor.startTimer('getTaskById');
     
     try {
+      const client = options?.admin ? supabaseAdmin : supabase;
       const result = await withRetry(async () => {
-        const { data, error } = await supabase
+        const { data, error } = await client
           .from('tasks')
           .select(`
             *,
@@ -231,10 +232,11 @@ export class TaskService {
   /**
    * Search and filter tasks
    */
-  static async searchTasks(params: TaskSearchParams = {}): Promise<TaskSearchResult> {
+  static async searchTasks(params: TaskSearchParams = {}, options?: { admin?: boolean }): Promise<TaskSearchResult> {
     const timer = SupabasePerformanceMonitor.startTimer('searchTasks');
     
     try {
+      const client = options?.admin ? supabaseAdmin : supabase;
       const {
         search,
         status,
@@ -249,7 +251,7 @@ export class TaskService {
       const offset = (page - 1) * limit;
       
       // Use the database search function for complex queries
-      const { data: tasks, error } = await supabase
+      const { data: tasks, error } = await client
         .rpc('search_tasks', {
           search_term: search || undefined,
           filter_status: status || undefined,
@@ -264,7 +266,7 @@ export class TaskService {
       if (error) throw error;
       
       // Get total count for pagination
-      let query = supabase
+      let query = client
         .from('tasks')
         .select('*', { count: 'exact', head: true })
         .is('deleted_at', null);
@@ -316,12 +318,14 @@ export class TaskService {
   static async getAllTasks(
     status?: TaskStatus,
     priority?: TaskPriority,
-    limit: number = 100
+    limit: number = 100,
+    options?: { admin?: boolean }
   ): Promise<ApiResponse<Task[]>> {
     const timer = SupabasePerformanceMonitor.startTimer('getAllTasks');
     
     try {
-      let query = supabase
+      const client = options?.admin ? supabaseAdmin : supabase;
+      let query = client
         .from('tasks')
         .select('*')
         .is('deleted_at', null)
@@ -357,11 +361,12 @@ export class TaskService {
   /**
    * Get dashboard data
    */
-  static async getDashboardData(): Promise<ApiResponse<DashboardData>> {
+  static async getDashboardData(options?: { admin?: boolean }): Promise<ApiResponse<DashboardData>> {
     const timer = SupabasePerformanceMonitor.startTimer('getDashboardData');
     
     try {
-      const { data, error } = await supabase
+      const client = options?.admin ? supabaseAdmin : supabase;
+      const { data, error } = await client
         .rpc('get_dashboard_data');
       
       if (error) throw error;
@@ -394,11 +399,12 @@ export class TaskService {
   /**
    * Get customer insights
    */
-  static async getCustomerInsights(phoneNumber: string): Promise<ApiResponse<CustomerInsights>> {
+  static async getCustomerInsights(phoneNumber: string, options?: { admin?: boolean }): Promise<ApiResponse<CustomerInsights>> {
     const timer = SupabasePerformanceMonitor.startTimer('getCustomerInsights');
     
     try {
-      const { data, error } = await supabase
+      const client = options?.admin ? supabaseAdmin : supabase;
+      const { data, error } = await client
         .rpc('get_customer_insights', {
           customer_phone: phoneNumber,
         });
@@ -433,11 +439,12 @@ export class TaskService {
   /**
    * Get urgent tasks requiring attention
    */
-  static async getUrgentTasks(): Promise<ApiResponse<Task[]>> {
+  static async getUrgentTasks(options?: { admin?: boolean }): Promise<ApiResponse<Task[]>> {
     const timer = SupabasePerformanceMonitor.startTimer('getUrgentTasks');
     
     try {
-      const { data, error } = await supabase
+      const client = options?.admin ? supabaseAdmin : supabase;
+      const { data, error } = await client
         .from('v_urgent_attention')
         .select('*')
         .order('created_at', { ascending: true });
@@ -464,60 +471,14 @@ export class TaskService {
   }
   
   /**
-   * Update task status
-   */
-  static async updateTaskStatus(
-    taskId: string, 
-    status: TaskStatus, 
-    reason?: string
-  ): Promise<ApiResponse<Task>> {
-    const timer = SupabasePerformanceMonitor.startTimer('updateTaskStatus');
-    
-    try {
-      const updates: Partial<TaskUpdate> = {
-        status,
-      };
-      
-      // Auto-set completion timestamp
-      if (status === 'completed') {
-        updates.completed_at = new Date().toISOString();
-      } else {
-        updates.completed_at = null;
-      }
-      
-      // Add reason to metadata
-      if (reason) {
-        updates.metadata = {
-          status_change_reason: reason,
-          status_changed_at: new Date().toISOString(),
-        };
-      }
-      
-      const result = await this.updateTask(taskId, updates);
-      
-      timer.end();
-      
-      return result;
-      
-    } catch (error) {
-      timer.end();
-      const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
-      
-      return {
-        success: false,
-        error: errorInfo.message,
-      };
-    }
-  }
-  
-  /**
    * Get task statistics
    */
-  static async getTaskStats(startDate?: string, endDate?: string): Promise<ApiResponse<any>> {
+  static async getTaskStats(startDate?: string, endDate?: string, options?: { admin?: boolean }): Promise<ApiResponse<any>> {
     const timer = SupabasePerformanceMonitor.startTimer('getTaskStats');
     
     try {
-      const { data, error } = await supabase
+      const client = options?.admin ? supabaseAdmin : supabase;
+      const { data, error } = await client
         .rpc('get_task_stats', {
           start_date: startDate || undefined,
           end_date: endDate || undefined,
@@ -546,11 +507,12 @@ export class TaskService {
   /**
    * Check system health
    */
-  static async checkSystemHealth(): Promise<ApiResponse<any[]>> {
+  static async checkSystemHealth(options?: { admin?: boolean }): Promise<ApiResponse<any[]>> {
     const timer = SupabasePerformanceMonitor.startTimer('checkSystemHealth');
     
     try {
-      const { data, error } = await supabase
+      const client = options?.admin ? supabaseAdmin : supabase;
+      const { data, error } = await client
         .rpc('check_system_health');
       
       if (error) throw error;
