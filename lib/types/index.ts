@@ -5,6 +5,8 @@
 
 // Re-export database types
 export * from './database';
+// Import specific types that may have ordering issues
+import type { Task } from './database';
 
 // Re-export chat types (maintaining backwards compatibility)
 export * from './chat';
