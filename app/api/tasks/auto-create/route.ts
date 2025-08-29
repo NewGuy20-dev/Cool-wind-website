@@ -9,7 +9,7 @@ const TaskCreationSchema = z.object({
   phoneNumber: z.string().min(10, 'Valid 10-digit phone number is required'),
   problemDescription: z.string().min(10, 'Problem description must be at least 10 characters'),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending'),
+  status: z.enum(['open', 'pending', 'in_progress', 'completed', 'cancelled']).default('open'),
   source: z.enum(['chat-failed-call', 'admin-manual', 'api-direct', 'webhook', 'email', 'phone']).default('chat-failed-call'),
   chatContext: z.array(z.any()).optional(),
   aiPriorityReason: z.string().optional(),

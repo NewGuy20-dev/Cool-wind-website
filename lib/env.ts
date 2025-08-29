@@ -38,7 +38,7 @@ function validateEnvironmentLazy(): boolean {
   } catch (error) {
     envValidated = false;
     if (error instanceof z.ZodError) {
-      validationError = `Environment validation failed: ${error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
+      validationError = `Environment validation failed: ${error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
     } else {
       validationError = `Environment validation failed: ${error}`;
     }

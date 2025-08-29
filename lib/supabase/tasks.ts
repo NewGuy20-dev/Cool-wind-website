@@ -56,7 +56,7 @@ export class TaskService {
         problem_description: taskData.problem_description.trim(),
         location: taskData.location?.trim() || null,
         description: taskData.description?.trim() || null,
-        status: taskData.status || 'pending',
+        status: taskData.status || 'open',
         priority: taskData.priority || 'medium',
         source: taskData.source || 'api-direct',
         category: taskData.category || null,
