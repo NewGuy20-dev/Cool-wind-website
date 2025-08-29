@@ -23,14 +23,17 @@ const TaskCreationSchema = z.object({
   metadata: z.record(z.string(), z.any()).optional(),
 });
 
-// AI Priority Assessment (enhanced from original)
-async function assessPriorityWithAI(
+// Enhanced AI Assessment for Priority and Status Detection
+async function assessTaskWithAI(
   problemDescription: string, 
   location?: string,
-  existingPriority?: TaskPriority
+  existingPriority?: TaskPriority,
+  existingStatus?: TaskStatus
 ): Promise<{
   priority: TaskPriority;
-  reason: string;
+  status: TaskStatus;
+  priorityReason: string;
+  statusReason: string;
 }> {
   const lowerProblem = problemDescription.toLowerCase();
   
@@ -45,15 +48,16 @@ async function assessPriorityWithAI(
 
   // High Priority indicators (expanded)
   const highPriorityKeywords = [
-    'not cooling well', 'poor performance', 'strange noise', 'temperature issue',
+    'not cooling well', 'poor performance', 'temperature issue',
     'intermittent problem', 'needs service urgently', 'very hot weather',
-    'important event', 'business establishment', 'restaurant', 'shop'
+    'important event'
   ];
 
   // Medium Priority indicators
   const mediumPriorityKeywords = [
     'maintenance required', 'part replacement', 'warranty issue',
-    'not working properly', 'efficiency problem', 'noise complaint'
+    'not working properly', 'efficiency problem', 'noise complaint',
+    'strange noise', 'odd sound', 'unusual noise'
   ];
 
   // Low Priority indicators
@@ -70,54 +74,101 @@ async function assessPriorityWithAI(
     food: lowerProblem.includes('food') || lowerProblem.includes('medicine') || lowerProblem.includes('spoiling'),
   };
 
-  // Check for urgent priority
-  const urgentMatches = urgentKeywords.filter(keyword => lowerProblem.includes(keyword));
-  if (urgentMatches.length > 0 || (contextFactors.vulnerable && urgentMatches.length > 0)) {
-    return {
-      priority: 'urgent',
-      reason: `Emergency situation detected: ${urgentMatches.join(', ')}${contextFactors.vulnerable ? ' (vulnerable occupants)' : ''}`
-    };
+
+
+  // Status Detection Logic
+  // For AI support agent tasks, we want to intelligently detect status
+  let detectedStatus: TaskStatus = 'open'; // Default for agent-created tasks
+  let statusReason = 'AI Agent created task - set to open for immediate processing';
+
+  // Analyze problem description for status indicators
+  const inProgressKeywords = [
+    'currently working on', 'technician assigned', 'in progress', 'being fixed',
+    'repair in progress', 'service ongoing', 'work started'
+  ];
+
+  const pendingKeywords = [
+    'waiting for', 'pending approval', 'need to schedule', 'awaiting parts',
+    'on hold', 'delayed', 'postponed', 'scheduling required'
+  ];
+
+  const completedKeywords = [
+    'fixed', 'repaired', 'completed', 'resolved', 'working now', 'problem solved',
+    'issue resolved', 'back to normal', 'functioning properly'
+  ];
+
+  // Check for status indicators (only if they're very clear)
+  const inProgressMatches = inProgressKeywords.filter(keyword => lowerProblem.includes(keyword));
+  const pendingMatches = pendingKeywords.filter(keyword => lowerProblem.includes(keyword));
+  const completedMatches = completedKeywords.filter(keyword => lowerProblem.includes(keyword));
+
+  if (completedMatches.length > 0) {
+    detectedStatus = 'completed';
+    statusReason = `Task appears to be completed based on: ${completedMatches.join(', ')}`;
+  } else if (inProgressMatches.length > 0) {
+    detectedStatus = 'in_progress';
+    statusReason = `Work appears to be in progress based on: ${inProgressMatches.join(', ')}`;
+  } else if (pendingMatches.length > 0) {
+    detectedStatus = 'pending';
+    statusReason = `Task requires scheduling/preparation based on: ${pendingMatches.join(', ')}`;
+  } else {
+    // For most AI agent tasks, default to 'open' for immediate action
+    detectedStatus = 'open';
+    statusReason = 'New service request - set to open for immediate technician assignment';
   }
 
-  // Check for high priority with context escalation
+  // Priority Detection (existing logic)
+  let detectedPriority: TaskPriority;
+  let priorityReason: string;
+
+  // Get keyword matches for priority detection
+  const urgentMatches = urgentKeywords.filter(keyword => lowerProblem.includes(keyword));
   const highMatches = highPriorityKeywords.filter(keyword => lowerProblem.includes(keyword));
-  if (highMatches.length > 0 || contextFactors.weather || contextFactors.business || contextFactors.food) {
+  const mediumMatches = mediumPriorityKeywords.filter(keyword => lowerProblem.includes(keyword));
+  const lowMatches = lowPriorityKeywords.filter(keyword => lowerProblem.includes(keyword));
+
+  // Check for urgent priority
+  if (urgentMatches.length > 0 || (contextFactors.vulnerable && urgentMatches.length > 0)) {
+    detectedPriority = 'urgent';
+    priorityReason = `Emergency situation detected: ${urgentMatches.join(', ')}${contextFactors.vulnerable ? ' (vulnerable occupants)' : ''}`;
+  }
+  // Check for high priority with context escalation
+  else if (highMatches.length > 0 || contextFactors.weather || contextFactors.food || 
+           (contextFactors.business && (urgentMatches.length > 0 || highMatches.length > 0))) {
     const escalationReasons = [];
     if (highMatches.length > 0) escalationReasons.push(highMatches.join(', '));
     if (contextFactors.weather) escalationReasons.push('hot weather conditions');
-    if (contextFactors.business) escalationReasons.push('business establishment');
+    if (contextFactors.business && (urgentMatches.length > 0 || highMatches.length > 0)) {
+      escalationReasons.push('business establishment with service issue');
+    }
     if (contextFactors.food) escalationReasons.push('food preservation concern');
     
-    return {
-      priority: 'high',
-      reason: `High priority due to: ${escalationReasons.join(', ')}`
-    };
+    detectedPriority = 'high';
+    priorityReason = `High priority due to: ${escalationReasons.join(', ')}`;
   }
-
   // Check for medium priority
-  const mediumMatches = mediumPriorityKeywords.filter(keyword => lowerProblem.includes(keyword));
-  if (mediumMatches.length > 0) {
-    return {
-      priority: 'medium',
-      reason: `Standard service issue: ${mediumMatches.join(', ')}`
-    };
+  else if (mediumMatches.length > 0) {
+    detectedPriority = 'medium';
+    priorityReason = `Standard service issue: ${mediumMatches.join(', ')}`;
   }
-
   // Check for low priority
-  const lowMatches = lowPriorityKeywords.filter(keyword => lowerProblem.includes(keyword));
-  if (lowMatches.length > 0) {
-    return {
-      priority: 'low',
-      reason: `Routine service request: ${lowMatches.join(', ')}`
-    };
+  else if (lowMatches.length > 0) {
+    detectedPriority = 'low';
+    priorityReason = `Routine service request: ${lowMatches.join(', ')}`;
+  }
+  // Default to existing priority or medium
+  else {
+    detectedPriority = existingPriority || 'medium';
+    priorityReason = existingPriority 
+      ? `Retained existing priority: ${existingPriority}`
+      : 'Standard priority assignment (no clear indicators found)';
   }
 
-  // Default to existing priority or medium
   return {
-    priority: existingPriority || 'medium',
-    reason: existingPriority 
-      ? `Retained existing priority: ${existingPriority}`
-      : 'Standard priority assignment (no clear indicators found)'
+    priority: detectedPriority,
+    status: detectedStatus,
+    priorityReason,
+    statusReason
   };
 }
 
@@ -147,19 +198,25 @@ export async function POST(request: NextRequest) {
 
     const validatedData = validationResult.data;
 
-    // AI Priority Assessment
+    // Enhanced AI Assessment for Priority and Status
     let finalPriority = validatedData.priority;
+    let finalStatus = validatedData.status;
     let priorityReason = validatedData.aiPriorityReason || '';
+    let statusReason = '';
 
-    if (!validatedData.aiPriorityReason) {
-      const aiAssessment = await assessPriorityWithAI(
-        validatedData.problemDescription, 
-        validatedData.location,
-        validatedData.priority
-      );
-      finalPriority = aiAssessment.priority;
-      priorityReason = aiAssessment.reason;
-    }
+    // Always run AI assessment for agent-created tasks to ensure proper prioritization and status
+    const aiAssessment = await assessTaskWithAI(
+      validatedData.problemDescription, 
+      validatedData.location,
+      validatedData.priority,
+      validatedData.status
+    );
+    
+    // Use AI-detected values unless explicitly overridden
+    finalPriority = aiAssessment.priority;
+    finalStatus = aiAssessment.status;
+    priorityReason = aiAssessment.priorityReason;
+    statusReason = aiAssessment.statusReason;
 
     // Prepare task creation request
     const taskCreateRequest: TaskCreateRequest = {
@@ -169,7 +226,7 @@ export async function POST(request: NextRequest) {
       title: validatedData.title || `Service request: ${validatedData.problemDescription.substring(0, 50)}...`,
       description: validatedData.description || null,
       priority: finalPriority,
-      status: validatedData.status,
+      status: finalStatus,
       source: validatedData.source,
       location: validatedData.location || null,
       category: validatedData.category || null,
@@ -204,6 +261,7 @@ export async function POST(request: NextRequest) {
       Phone: ${task.phone_number}
       Problem: ${task.problem_description}
       Priority: ${task.priority} (${priorityReason})
+      Status: ${task.status} (${statusReason})
       Location: ${task.location || 'Not specified'}
       Source: ${task.source}
       Created: ${task.created_at}`);
@@ -215,7 +273,9 @@ export async function POST(request: NextRequest) {
       taskId: task.id,
       taskNumber: task.task_number,
       priority: task.priority,
+      status: task.status,
       priorityReason: priorityReason,
+      statusReason: statusReason,
       data: {
         id: task.id,
         taskNumber: task.task_number,
