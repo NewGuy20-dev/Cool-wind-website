@@ -5,11 +5,12 @@
 
 import { createClient, SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 import { Database } from '@/lib/types/database';
+import { env } from '../env';
+import { supabaseAdmin } from './server';
 
 // Environment validation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = env.SUPABASE_URL;
+const supabaseAnonKey = env.SUPABASE_ANON_KEY;
 
 if (!supabaseUrl) {
   throw new Error('Missing environment variable: NEXT_PUBLIC_SUPABASE_URL');
@@ -40,26 +41,6 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(
     realtime: {
       params: {
         eventsPerSecond: 10,
-      },
-    },
-  }
-);
-
-// Server-side Supabase client (service role for API routes)
-export const supabaseAdmin: SupabaseClient<Database> = createClient<Database>(
-  supabaseUrl,
-  supabaseServiceKey || supabaseAnonKey, // Fallback to anon key for development
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-    db: {
-      schema: 'public',
-    },
-    global: {
-      headers: {
-        'X-Client-Info': 'task-management-system-admin',
       },
     },
   }
