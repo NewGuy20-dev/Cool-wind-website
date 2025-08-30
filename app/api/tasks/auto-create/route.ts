@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   console.log("[DEBUG] === API Route Start ===");
   console.log("[DEBUG] Method:", req.method);
   // For some reason req.headers is a Headers object, not a plain object
-  const headersObject = {};
+  const headersObject: Record<string, string> = {};
   req.headers.forEach((value, key) => {
     headersObject[key] = value;
   });
@@ -39,14 +39,22 @@ export async function POST(req: NextRequest) {
     console.log("[DEBUG] About to call createTaskRaw...");
     const created = await createTaskRaw(body || {});
     console.log("[DEBUG] Task created successfully:", JSON.stringify(created, null, 2));
-    return NextResponse.json({ data: created, source: "db" }, { status: 201 });
+    
+    // Return format expected by failed call detector
+    return NextResponse.json({ 
+      success: true,
+      taskId: created.id,
+      taskNumber: created.task_number,
+      data: created,
+      source: "db" 
+    }, { status: 201 });
   } catch (err: any) {
     console.error("[ERROR] === Full Error Details ===");
     console.error("[ERROR] Error name:", err.name);
     console.error("[ERROR] Error message:", err.message);
     console.error("[ERROR] Error stack:", err.stack);
     console.error("[ERROR] Error details:", JSON.stringify(err.details, null, 2));
-    const errorObject = {};
+    const errorObject: Record<string, any> = {};
     for (const key of Object.getOwnPropertyNames(err)) {
         errorObject[key] = err[key];
     }

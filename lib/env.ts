@@ -37,6 +37,14 @@ export function envPresence() {
   return presence;
 }
 
+// Alias for envPresence (for backward compatibility)
+export const getEnvPresence = envPresence;
+
+// Environment validation function
+export function validateEnvironment() {
+  return parsed;
+}
+
 // Validate critical env vars on startup
 export function validateCriticalEnv() {
   const missing = [];

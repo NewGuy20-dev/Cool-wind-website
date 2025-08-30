@@ -41,3 +41,42 @@ export async function testSupabaseConnection() {
     return { success: false, error: err };
   }
 }
+
+// Alias for testSupabaseConnection (for backward compatibility)
+export const testDatabaseConnection = testSupabaseConnection;
+
+// Get database health status
+export async function getDatabaseHealthStatus() {
+  try {
+    const startTime = Date.now();
+    const { data, error } = await supabaseAdmin.from("tasks").select("count", { count: 'exact', head: true }).limit(1);
+    const latency = Date.now() - startTime;
+    
+    if (error) {
+      return {
+        connected: false,
+        latency,
+        error,
+        status: 'unhealthy'
+      };
+    }
+    
+    return {
+      connected: true,
+      latency,
+      status: 'healthy',
+      testQuery: { success: true, data }
+    };
+  } catch (err) {
+    return {
+      connected: false,
+      error: err,
+      status: 'error'
+    };
+  }
+}
+
+// Log database operations (for debugging)
+export function logDatabaseOperation(operation: string, details: any) {
+  console.log(`[SUPABASE] ${operation}:`, details);
+}

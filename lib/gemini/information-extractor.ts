@@ -143,8 +143,8 @@ RESPOND WITH ONLY THIS JSON FORMAT (no other text):
     // Clean phone number: remove spaces, dashes, parentheses
     const cleaned = phone.replace(/[\s\-\(\)]/g, '');
     
-    // Remove +91 prefix if present
-    const withoutCountryCode = cleaned.replace(/^\+?91/, '');
+    // Remove +91 prefix if present (but not if it's part of a 10-digit number starting with 91)
+    const withoutCountryCode = cleaned.replace(/^(\+91|91)(?=\d{10}$)/, '');
     
     // Validate Indian mobile number (10 digits starting with 6-9)
     if (/^[6-9]\d{9}$/.test(withoutCountryCode)) {

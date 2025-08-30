@@ -24,12 +24,18 @@ export function normalizeTaskPayload(raw: Record<string, any>) {
     task_name: 'title',
     task_title: 'title',
     desc: 'description',
-    details: 'description'
+    details: 'description',
+    chatContext: 'chat_context',  // Fix camelCase to snake_case mismatch
+    phoneNumber: 'phone_number',  // Also fix phone number field
+    customerName: 'customer_name', // And customer name field
+    problemDescription: 'problem_description' // And problem description field
   };
 
   Object.entries(fieldMappings).forEach(([oldKey, newKey]) => {
     if (raw[oldKey] && !raw[newKey]) {
       normalized[newKey] = raw[oldKey];
+      // Remove the old camelCase field to avoid database column conflicts
+      delete normalized[oldKey];
     }
   });
 

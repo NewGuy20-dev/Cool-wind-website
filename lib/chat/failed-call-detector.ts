@@ -51,6 +51,10 @@ export class FailedCallDetector {
 
     const missingFields = this.identifyMissingFields(customerData, extractedInfo.problem);
 
+    // Map critical urgency to high to maintain compatibility
+    const mappedUrgency: 'high' | 'medium' | 'low' = 
+      extractedInfo.urgency === 'critical' ? 'high' : extractedInfo.urgency;
+
     return {
       detected: true,
       triggerPhrase: 'AI-detected failed call',
@@ -58,7 +62,7 @@ export class FailedCallDetector {
       missingFields,
       problemDescription: extractedInfo.problem,
       location: customerData.location,
-      urgencyLevel: extractedInfo.urgency,
+      urgencyLevel: mappedUrgency,
     };
   }
 

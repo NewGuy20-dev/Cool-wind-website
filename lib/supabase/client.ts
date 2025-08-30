@@ -363,4 +363,5 @@ export class SupabasePerformanceMonitor {
 }
 
 // Export singleton instances
+export { supabaseAdmin };
 export default supabase;

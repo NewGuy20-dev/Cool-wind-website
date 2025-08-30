@@ -12,7 +12,7 @@ export type Json =
   | Json[]
 
 // Custom enums matching database enums
-export type TaskStatus = 'open' | 'pending' | 'in_progress' | 'completed' | 'cancelled'
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type TaskSource = 'chat-failed-call' | 'admin-manual' | 'api-direct' | 'webhook' | 'email' | 'phone'
 

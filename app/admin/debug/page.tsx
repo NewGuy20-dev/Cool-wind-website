@@ -3,6 +3,8 @@
  * Comprehensive debugging page for database connectivity and API health
  */
 
+import Link from "next/link";
+
 interface Task {
   id: string;
   task_number: string;
@@ -500,7 +502,7 @@ export default async function DebugPage() {
           >
             📋 View Tasks API
           </a>
-          <a 
+          <Link 
             href="/admin/debug"
             style={{ 
               backgroundColor: '#6b7280', 
@@ -514,7 +516,7 @@ export default async function DebugPage() {
             }}
           >
             🔄 Refresh Page
-          </a>
+          </Link>
         </div>
       </div>
 

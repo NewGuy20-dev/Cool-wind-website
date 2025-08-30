@@ -13,7 +13,7 @@ export async function GET() {
     const envStatus = getEnvPresence();
     
     // If environment validation failed, return early
-    if (!envValidation.valid) {
+    if (!envValidation.success) {
       return NextResponse.json({
         timestamp: new Date().toISOString(),
         service: {
@@ -40,8 +40,8 @@ export async function GET() {
     const healthStatus = await getDatabaseHealthStatus();
     
     // Determine overall status
-    const overallStatus = connectionTest.connected ? "healthy" : "unhealthy";
-    const statusCode = connectionTest.connected ? 200 : 500;
+    const overallStatus = healthStatus.connected ? "healthy" : "unhealthy";
+    const statusCode = healthStatus.connected ? 200 : 500;
     
     return NextResponse.json({
       timestamp: new Date().toISOString(),
@@ -52,16 +52,16 @@ export async function GET() {
       },
       environment: envStatus,
       database: {
-        connected: connectionTest.connected,
-        latency: connectionTest.latency,
-        error: connectionTest.error || null,
-        testQuery: connectionTest.testQuery,
+        connected: healthStatus.connected,
+        latency: healthStatus.latency,
+        error: healthStatus.error || null,
+        testQuery: healthStatus.testQuery,
       },
       connectivity: {
         supabaseAdmin: {
           configured: Boolean(envStatus.SUPABASE_URL && envStatus.SUPABASE_SERVICE_ROLE_KEY),
           tested: true,
-          result: connectionTest.connected ? "success" : "failure",
+          result: healthStatus.connected ? "success" : "failure",
         },
       },
       recommendations: overallStatus === "unhealthy" ? [
