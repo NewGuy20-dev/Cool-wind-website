@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TaskService } from '@/lib/supabase/tasks';
-import { env, getEnvPresence } from '@/lib/env';
+import { getEnvPresence } from '@/lib/env';
 import { logDatabaseOperation } from '@/lib/supabase/server';
 
 /**
@@ -16,38 +16,6 @@ export async function GET(request: NextRequest) {
   try {
     // Log environment status (no secrets)
     console.log(`[${route}] ENV status:`, getEnvPresence());
-    
-    // Handle explicit mock mode
-    if (env.USE_MOCK_DATA) {
-      const mockData = [
-        {
-          id: 'mock-1',
-          task_number: 'MOCK-001',
-          customer_name: 'Mock Customer',
-          phone_number: '9999999999',
-          title: 'Mock Task',
-          problem_description: 'This is mock data',
-          status: 'pending',
-          priority: 'medium',
-          source: 'mock',
-          created_at: new Date().toISOString(),
-        }
-      ];
-      
-      console.warn(`[${route}] USE_MOCK_DATA=true, returning mock data`);
-      logDatabaseOperation('getMockTasks', {
-        success: true,
-        duration: Date.now() - startTime,
-        metadata: { source: 'mock', count: mockData.length }
-      });
-      
-      return NextResponse.json({
-        success: true,
-        data: mockData,
-        source: 'mock',
-        count: mockData.length
-      });
-    }
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');

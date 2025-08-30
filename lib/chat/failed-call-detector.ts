@@ -26,7 +26,7 @@ export interface TaskCreationRequest {
 export class FailedCallDetector {
   // Comprehensive failed call trigger phrases
   private static readonly FAILED_CALL_TRIGGERS = [
-    // Direct phrases from the issue
+    // Phone call related triggers
     "called number in this website but it didnt respond",
     "called number in this website but it didn't respond",
     "called but no response",
@@ -43,7 +43,7 @@ export class FailedCallDetector {
     "couldnt reach you",
     "tried to call but no response",
     
-    // Additional variations
+    // Additional phone variations
     "called your number but",
     "tried calling your number",
     "phone call didn't go through",
@@ -67,7 +67,30 @@ export class FailedCallDetector {
     "phone went straight to voicemail",
     "voicemail when i called",
     "couldn't connect the call",
-    "couldnt connect the call"
+    "couldnt connect the call",
+    
+    // Service appointment no-show triggers
+    "technician never showed up",
+    "technician didn't show up",
+    "technician didnt show up",
+    "no one came for the service",
+    "missed my appointment",
+    "missed the appointment",
+    "nobody came for the service",
+    "was scheduled but no one came",
+    "had an appointment but no one came",
+    "was supposed to have service but",
+    "service was scheduled but",
+    "appointment was missed",
+    "service call was missed",
+    "technician failed to arrive",
+    "technician didn't arrive",
+    "technician was a no-show",
+    "technician never arrived",
+    "service was not provided as scheduled",
+    "service appointment was not kept",
+    "technician didn't come as promised",
+    "technician was supposed to come but"
   ];
 
   // Keywords that indicate urgency
@@ -93,12 +116,190 @@ export class FailedCallDetector {
   static async detectFailedCall(message: string, context: ConversationContextData): Promise<FailedCallData> {
     const lowerMessage = message.toLowerCase();
     
-    // Check for trigger phrases
-    const triggerPhrase = this.FAILED_CALL_TRIGGERS.find(trigger => 
-      lowerMessage.includes(trigger.toLowerCase())
-    );
+    // Enhanced logging for debugging
+    console.log('🔍 Checking for failed call triggers in message:', message);
+    
+    // Check for trigger phrases with more flexible matching
+    let triggerPhrase: string | undefined;
+    
+    // First check for service appointment no-shows
+    if (!triggerPhrase) {
+      const noShowPhrases = [
+        'technician never showed',
+        'technician did not show',
+        'technician didnt show',
+        'missed my appointment',
+        'missed the appointment',
+        'no one came',
+        'nobody came',
+        'was scheduled but no one came',
+        'had an appointment but no one came',
+        'was supposed to have service but',
+        'service was scheduled but',
+        'appointment was missed',
+        'service call was missed',
+        'technician failed to arrive',
+        'technician was a no-show',
+        'technician never arrived',
+        'service was not provided',
+        'service appointment was not kept',
+        'technician did not come',
+        'technician was supposed to come but',
+        'waited but no one came',
+        'no one showed up',
+        'technician was late',
+        'missed service',
+        'service was skipped',
+        'forgot about my appointment',
+        'missed the technician',
+        'technician forgot',
+        'service was forgotten',
+        'technician missed',
+        'was stood up by technician'
+      ];
+
+      const hasNoShow = noShowPhrases.some(phrase => lowerMessage.includes(phrase));
+      
+      if (hasNoShow) {
+        triggerPhrase = 'technician no-show';
+        console.log('🚨 [FailedCallDetector] Service appointment no-show detected');
+      }
+    }
+    
+    // Then check other trigger phrases if no no-show detected
+    if (!triggerPhrase) {
+      // Check for failed call patterns
+      const failedCallPatterns = [
+        'failed call',
+        'missed call',
+        'unanswered call',
+        'could not reach',
+        'no one answered',
+        'call dropped',
+        'call disconnected',
+        'call failed',
+        'tried calling',
+        'called but',
+        'no response',
+        'busy signal',
+        'call not going through',
+        'unable to connect',
+        'phone not answered',
+        'called your number',
+        'tried to call',
+        'could not get through',
+        'line was busy',
+        'phone was busy',
+        'no answer when i called',
+        'no answer',
+        'did not answer',
+        'didnt answer',
+        'tried reaching you',
+        'attempted to call',
+        'phone went to voicemail',
+        'voicemail when i called',
+        'could not connect the call',
+        'couldnt connect the call',
+        'phone rang and rang',
+        'no one picked up',
+        'call was not answered',
+        'tried contacting you',
+        'could not contact you',
+        'phone was not answered',
+        'tried your number',
+        'called multiple times',
+        'tried several times',
+        'phone was not reachable',
+        'number was not reachable',
+        'call did not connect',
+        'call would not go through',
+        'unable to reach you',
+        'could not get a hold of you',
+        'tried getting through',
+        'phone kept ringing',
+        'call was unsuccessful',
+        'attempted contact',
+        'tried to reach out',
+        'called earlier but',
+        'tried calling earlier',
+        'phone was off',
+        'phone was switched off',
+        'phone was unavailable',
+        'line was dead',
+        'phone was not working',
+        'call got disconnected',
+        'call was cut off',
+        'call ended unexpectedly',
+        'tried your contact number',
+        'attempted to contact you',
+        'tried your phone',
+        'called your mobile',
+        'tried your mobile',
+        'called your office',
+        'tried your office number',
+        'called the number',
+        'tried the number',
+        'called but no reply',
+        'tried calling but no reply',
+        'called but no answer',
+        'tried calling but no answer',
+        'called but no one picked up',
+        'tried calling but no one picked up',
+        'called but it rang out',
+        'tried calling but it rang out',
+        'called but went to voicemail',
+        'tried calling but went to voicemail',
+        'called but got voicemail',
+        'tried calling but got voicemail',
+        'called but no one was there',
+        'tried calling but no one was there',
+        'called but no response',
+        'tried calling but no response',
+        'called but no luck',
+        'tried calling but no luck',
+        'called but no success',
+        'tried calling but no success',
+        'called but no one was available',
+        'tried calling but no one was available',
+        'called but no one could help',
+        'tried calling but no one could help',
+        'called but no one could assist',
+        'tried calling but no one could assist',
+        'called but no one could take my call',
+        'tried calling but no one could take my call',
+        'called but no one was around',
+        'tried calling but no one was around',
+        'called but no one was in',
+        'tried calling but no one was in',
+        'called but no one was there to answer',
+        'tried calling but no one was there to answer',
+        'called but no one was available to talk',
+        'tried calling but no one was available to talk',
+        'called but no one was available to help',
+        'tried calling but no one was available to help',
+        'called but no one was available to assist',
+        'tried calling but no one was available to assist',
+        'called but no one was available to take my call',
+        'tried calling but no one was available to take my call'
+      ];
+      
+      const hasFailedCallPattern = failedCallPatterns.some(pattern => lowerMessage.includes(pattern));
+      
+      if (hasFailedCallPattern) {
+        triggerPhrase = 'failed call';
+        console.log('🚨 [FailedCallDetector] Failed call pattern detected');
+      }
+    }
+    
+    // Finally, check the original trigger phrases if still no match
+    if (!triggerPhrase) {
+      triggerPhrase = this.FAILED_CALL_TRIGGERS.find(trigger => 
+        lowerMessage.includes(trigger.toLowerCase())
+      );
+    }
 
     if (!triggerPhrase) {
+      console.log('❌ [FailedCallDetector] No failed call triggers found in message');
       return {
         detected: false,
         customerData: {},
@@ -106,7 +307,7 @@ export class FailedCallDetector {
       };
     }
 
-    console.log(`🔍 Failed call trigger detected: "${triggerPhrase}"`);
+    console.log(`🚨 [FailedCallDetector] Failed call trigger detected: "${triggerPhrase}"`);
 
     // Extract customer data using Gemini AI
     const customerData = await this.extractCustomerDataWithGemini(message, context);

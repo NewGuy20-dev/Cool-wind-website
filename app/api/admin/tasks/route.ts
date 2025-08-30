@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TaskService } from '@/lib/supabase/tasks';
-import { TaskStatus, TaskPriority, TaskSearchParams, TaskUpdateRequest, TaskSource } from '@/lib/types/database';
+import { TaskStatus, TaskPriority, TaskSearchParams, TaskUpdateRequest, TaskSource, TaskCreateRequest, Json } from '@/lib/types/database';
+import { z } from 'zod';
 
 // Simple admin authentication (in production, use proper auth)
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
@@ -14,6 +15,30 @@ function authenticateAdmin(request: NextRequest): boolean {
   const token = authHeader.substring(7);
   return token === ADMIN_KEY;
 }
+
+// Strict Zod validation schema for task creation
+const TaskCreateSchema = z.object({
+  customer_name: z.string().trim().min(1, 'Customer name is required'),
+  phone_number: z
+    .string()
+    .transform((v) => v.replace(/\D/g, ''))
+    .refine((v) => /^[6-9]\d{9}$/.test(v), {
+      message: 'Phone number must be a valid 10-digit Indian mobile number',
+    }),
+  problem_description: z.string().trim().min(1, 'Problem description is required'),
+  title: z.string().trim().min(1).optional(),
+  location: z.string().trim().min(1).optional().nullable(),
+  description: z.string().trim().min(1).optional().nullable(),
+  status: z.enum(['open', 'pending', 'in_progress', 'completed', 'cancelled']).optional(),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+  source: z.enum(['chat-failed-call', 'admin-manual', 'api-direct', 'webhook', 'email', 'phone']).optional(),
+  category: z.string().trim().min(1).optional().nullable(),
+  due_date: z.string().optional().nullable(),
+  ai_priority_reason: z.string().optional().nullable(),
+  urgency_keywords: z.array(z.string()).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  chat_context: z.any().optional().nullable(),
+}).strict();
 
 export async function GET(request: NextRequest) {
   // Authenticate admin
@@ -237,7 +262,7 @@ export async function PATCH(request: NextRequest) {
 
     // Validate status if provided
     if (updates.status) {
-      const validStatuses: TaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled'];
+      const validStatuses: TaskStatus[] = ['open', 'pending', 'in_progress', 'completed', 'cancelled'];
       if (!validStatuses.includes(updates.status)) {
         return NextResponse.json(
           { error: 'Invalid status' },
@@ -295,34 +320,63 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    
-    // Create new task with admin source
-    const taskData = {
-      ...body,
-      source: 'admin-manual' as const,
-    };
-    
-    const result = await TaskService.createTask(taskData);
-    
-    if (!result.success) {
+
+    // Validate payload strictly
+    const parsed = TaskCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      const issues = parsed.error.issues.map((i) => ({
+        path: i.path.join('.'),
+        message: i.message,
+        code: i.code,
+      }));
+      console.warn('⚠️ Admin task creation validation failed', { issues });
       return NextResponse.json(
-        { error: result.error },
+        { error: 'VALIDATION_ERROR', issues },
+        { status: 400 }
+      );
+    }
+
+    // Enforce admin source and satisfy TaskCreateRequest types with safe defaults
+    const taskData: TaskCreateRequest = {
+      customer_name: parsed.data.customer_name,
+      phone_number: parsed.data.phone_number,
+      problem_description: parsed.data.problem_description,
+      title: parsed.data.title || `Service request from ${parsed.data.customer_name}`,
+      location: parsed.data.location ?? null,
+      description: parsed.data.description ?? null,
+      status: parsed.data.status ?? 'open',
+      priority: parsed.data.priority ?? 'medium',
+      source: 'admin-manual',
+      category: parsed.data.category ?? null,
+      due_date: parsed.data.due_date ?? null,
+      ai_priority_reason: parsed.data.ai_priority_reason ?? null,
+      urgency_keywords: parsed.data.urgency_keywords ?? null,
+      metadata: (parsed.data.metadata ?? {}) as unknown as Json,
+      chat_context: (parsed.data.chat_context ?? null) as unknown as Json | null,
+    };
+
+    const result = await TaskService.createTask(taskData);
+
+    if (!result.success) {
+      console.error('❌ Admin task creation DB error', { error: result.error });
+      return NextResponse.json(
+        { error: 'DB_ERROR', message: result.error },
         { status: 500 }
       );
     }
 
     console.log(`✅ Admin created new task: ${result.data?.task_number}`);
-    
+
     return NextResponse.json({
       success: true,
       message: 'Task created successfully',
-      task: result.data
-    });
+      task: result.data,
+    }, { status: 201 });
 
   } catch (error) {
-    console.error('❌ Admin task creation error:', error);
+    console.error('❌ Admin task creation unexpected error:', error);
     return NextResponse.json(
-      { error: 'Failed to create task' },
+      { error: 'UNEXPECTED', message: (error as any)?.message || 'Failed to create task' },
       { status: 500 }
     );
   }
