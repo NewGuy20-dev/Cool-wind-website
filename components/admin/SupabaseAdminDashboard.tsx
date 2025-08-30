@@ -1,22 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ComponentType } from 'react';
+
 import { useRouter } from 'next/navigation';
 import { 
   PlusIcon, 
   TicketIcon, 
   ChartBarIcon, 
   ClockIcon, 
-  UserGroupIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XMarkIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
   ArrowPathIcon,
   WifiIcon,
   NoSymbolIcon
 } from '@heroicons/react/24/outline';
+
 import AdminAuth from '@/components/admin/AdminAuth';
 import { 
   useRealtimeDashboard, 
@@ -24,8 +24,7 @@ import {
   useRealtimeTaskSearch,
   useSupabaseConnectionStatus
 } from '@/lib/hooks/useSupabaseRealtimeHooks';
-import { TaskService } from '@/lib/supabase/tasks';
-import { Task, TaskStatus, TaskPriority } from '@/lib/types/database';
+import { TaskStatus, TaskPriority } from '@/lib/types/database';
 
 interface AdminPageState {
   isAuthenticated: boolean;
@@ -107,7 +106,7 @@ export default function SupabaseAdminDashboard() {
             <div className="flex items-center space-x-4">
               {/* Last Updated */}
               <span className="text-xs text-gray-500">
-                Updated: {lastUpdated.toLocaleTimeString()}
+                Updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}
               </span>
               
               <button
@@ -497,7 +496,7 @@ function StatCard({
 }: {
   title: string;
   value: number | string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   color: 'blue' | 'orange' | 'purple' | 'green' | 'red';
   subtitle: string;
 }) {
@@ -556,9 +555,47 @@ function PriorityCard({
   );
 }
 
-// Placeholder components (implement separately)
 function UrgentTasksView({ urgentTasks, loading, error }: any) {
-  return <div>Urgent Tasks View - {urgentTasks.length} urgent tasks</div>;
+  if (loading) return <div className="p-6">Loading urgent tasks...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-gray-900">Urgent Tasks</h2>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {urgentTasks.map((t: any) => (
+              <tr key={t.id}>
+                <td className="px-4 py-3">
+                  <div className="font-medium text-gray-900">{t.title}</div>
+                  <div className="text-xs text-gray-500">{t.task_number}</div>
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">{t.customer_name}</td>
+                <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
+                <td className="px-4 py-3"><PriorityBadge priority={t.priority} /></td>
+                <td className="px-4 py-3 text-right text-sm text-gray-500">{new Date(t.created_at).toLocaleString()}</td>
+              </tr>
+            ))}
+            {urgentTasks.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">No urgent tasks</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
 function CreateTaskView({ onTaskCreated }: any) {
@@ -566,9 +603,118 @@ function CreateTaskView({ onTaskCreated }: any) {
 }
 
 function RecentTasksList({ recentTasks }: any) {
-  return <div>Recent Tasks List - {recentTasks.length} recent tasks</div>;
+  return (
+    <div className="overflow-hidden rounded-lg">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {recentTasks.map((t: any) => (
+            <tr key={t.id}>
+              <td className="px-4 py-3">
+                <div className="font-medium text-gray-900">{t.title}</div>
+                <div className="text-xs text-gray-500">{t.task_number}</div>
+              </td>
+              <td className="px-4 py-3 text-sm text-gray-700">{t.customer_name}</td>
+              <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
+              <td className="px-4 py-3"><PriorityBadge priority={t.priority} /></td>
+              <td className="px-4 py-3 text-right text-sm text-gray-500">{t.created_at ? new Date(t.created_at).toLocaleString() : '-'}</td>
+            </tr>
+          ))}
+          {recentTasks.length === 0 && (
+            <tr>
+              <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">No recent tasks</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function TasksList({ tasks, loading, error, onUpdateTask, onDeleteTask }: any) {
-  return <div>Tasks List - {tasks.length} tasks</div>;
+  if (loading) return <div className="p-6">Loading tasks...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {tasks.map((t: any) => (
+            <tr key={t.id}>
+              <td className="px-4 py-3">
+                <div className="font-medium text-gray-900">{t.title}</div>
+                <div className="text-xs text-gray-500">{t.task_number}</div>
+              </td>
+              <td className="px-4 py-3 text-sm text-gray-700">{t.customer_name}</td>
+              <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
+              <td className="px-4 py-3"><PriorityBadge priority={t.priority} /></td>
+              <td className="px-4 py-3 text-right text-sm text-gray-500">{new Date(t.created_at).toLocaleString()}</td>
+              <td className="px-4 py-3 text-right">
+                <div className="inline-flex space-x-2">
+                  <button
+                    className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700"
+                    onClick={() => onUpdateTask?.(t.id, { status: t.status })}
+                  >
+                    Update
+                  </button>
+                  <button
+                    className="text-xs px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-700"
+                    onClick={() => onDeleteTask?.(t.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+          {tasks.length === 0 && (
+            <tr>
+              <td colSpan={6} className="px-4 py-6 text-center text-sm text-gray-500">No tasks found</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// UI badges
+function StatusBadge({ status }: { status: TaskStatus }) {
+  const map: Record<string, { text: string; cls: string }> = {
+    pending: { text: 'Pending', cls: 'bg-orange-50 text-orange-700 ring-orange-200' },
+    in_progress: { text: 'In Progress', cls: 'bg-purple-50 text-purple-700 ring-purple-200' },
+    completed: { text: 'Completed', cls: 'bg-green-50 text-green-700 ring-green-200' },
+    cancelled: { text: 'Cancelled', cls: 'bg-gray-50 text-gray-700 ring-gray-200' },
+  };
+  const m = map[String(status) as keyof typeof map] || map.pending;
+  return <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ring-1 ${m.cls}`}>{m.text}</span>;
+}
+
+function PriorityBadge({ priority }: { priority: TaskPriority }) {
+  const map: Record<string, { text: string; cls: string }> = {
+    urgent: { text: 'Urgent', cls: 'bg-red-50 text-red-700 ring-red-200' },
+    high: { text: 'High', cls: 'bg-orange-50 text-orange-700 ring-orange-200' },
+    medium: { text: 'Medium', cls: 'bg-yellow-50 text-yellow-700 ring-yellow-200' },
+    low: { text: 'Low', cls: 'bg-gray-50 text-gray-700 ring-gray-200' },
+  };
+  const m = map[String(priority) as keyof typeof map] || map.medium;
+  return <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded ring-1 ${m.cls}`}>{m.text}</span>;
 }
