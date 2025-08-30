@@ -51,7 +51,6 @@ interface DebugResponse {
     SUPABASE_URL: boolean;
     SUPABASE_ANON_KEY: boolean;
     SUPABASE_SERVICE_ROLE_KEY: boolean;
-    USE_MOCK_DATA: string;
     NODE_ENV: string;
     validationStatus: string;
     validationError?: string;
@@ -214,12 +213,6 @@ export default async function DebugPage() {
                   <span>{getStatusIcon(debugData?.environment?.SUPABASE_SERVICE_ROLE_KEY)} {debugData?.environment?.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>USE_MOCK_DATA:</span>
-                  <span style={{ color: debugData?.environment?.USE_MOCK_DATA === 'true' ? '#f59e0b' : '#22c55e' }}>
-                    {debugData?.environment?.USE_MOCK_DATA === 'true' ? '⚠️ Enabled' : '✅ Disabled'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>NODE_ENV:</span>
                   <span>{debugData?.environment?.NODE_ENV || 'Unknown'}</span>
                 </div>
@@ -360,10 +353,10 @@ export default async function DebugPage() {
                   <div>
                     <strong>Data Source:</strong> 
                     <span style={{ 
-                      color: tasksData.source === 'database' ? '#22c55e' : tasksData.source === 'mock' ? '#f59e0b' : '#6b7280',
+                      color: tasksData.source === 'database' ? '#22c55e' : '#6b7280',
                       marginLeft: '8px'
                     }}>
-                      {tasksData.source === 'database' ? '🗃️ Database' : tasksData.source === 'mock' ? '🧪 Mock' : '❓ Unknown'}
+                      {tasksData.source === 'database' ? '🗃️ Database' : '❓ Unknown'}
                     </span>
                   </div>
                   <div>

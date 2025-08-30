@@ -1,135 +1,49 @@
-/**
- * Strict Environment Variable Validation
- * Provides type-safe access to environment variables with validation
- */
-
 import { z } from "zod";
 
-// Environment schema with strict validation
 const EnvSchema = z.object({
-  SUPABASE_URL: z.string().url("Must be a valid URL"),
-  SUPABASE_ANON_KEY: z.string().min(1, "Anon key required"),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "Service role key required"),
-  USE_MOCK_DATA: z.string().optional().default("false"),
-  NODE_ENV: z.string().optional().default("development"),
-  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+  SUPABASE_URL: z.string().url("SUPABASE_URL must be a valid URL"),
+  SUPABASE_ANON_KEY: z.string().min(1, "SUPABASE_ANON_KEY is required"),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
+  NODE_ENV: z.string().optional(),
+  NEXT_PUBLIC_SITE_URL: z.string().optional(),
 });
 
-// Lazy validation - only validate when accessed
-let envValidated: boolean | null = null;
-let validationError: string | null = null;
-
-function validateEnvironmentLazy(): boolean {
-  if (envValidated !== null) {
-    return envValidated;
-  }
-
-  try {
-    EnvSchema.parse({
-      SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      USE_MOCK_DATA: process.env.USE_MOCK_DATA,
-      NODE_ENV: process.env.NODE_ENV,
-      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-    });
-    envValidated = true;
-    return true;
-  } catch (error) {
-    envValidated = false;
-    if (error instanceof z.ZodError) {
-      validationError = `Environment validation failed: ${error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')}`;
-    } else {
-      validationError = `Environment validation failed: ${error}`;
-    }
-    return false;
-  }
+const parsed = EnvSchema.safeParse(process.env);
+if (!parsed.success) {
+  console.error("[ENV] CRITICAL: Environment validation failed:", parsed.error.flatten().fieldErrors);
+  // Don't throw here, let individual services handle missing env vars
 }
 
-/**
- * Type-safe environment variable getters
- * These will throw if environment validation failed
- */
 export const env = {
-  get SUPABASE_URL(): string {
-    if (!validateEnvironmentLazy()) {
-      throw new Error(validationError || "Environment not validated");
-    }
-    return process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  },
-
-  get SUPABASE_ANON_KEY(): string {
-    if (!validateEnvironmentLazy()) {
-      throw new Error(validationError || "Environment not validated");
-    }
-    return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  },
-
-  get SUPABASE_SERVICE_ROLE_KEY(): string {
-    if (!validateEnvironmentLazy()) {
-      throw new Error(validationError || "Environment not validated");
-    }
-    return process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  },
-
-  get USE_MOCK_DATA(): boolean {
-    return process.env.USE_MOCK_DATA === "true";
-  },
-
-  get NODE_ENV(): string {
-    return process.env.NODE_ENV || "development";
-  },
-
-  get NEXT_PUBLIC_SITE_URL(): string | undefined {
-    return process.env.NEXT_PUBLIC_SITE_URL;
-  },
-
-  get IS_PRODUCTION(): boolean {
-    return this.NODE_ENV === "production";
-  },
-
-  get IS_DEVELOPMENT(): boolean {
-    return this.NODE_ENV === "development";
-  },
+  get SUPABASE_URL() { return process.env.SUPABASE_URL; },
+  get SUPABASE_ANON_KEY() { return process.env.SUPABASE_ANON_KEY; },
+  get SUPABASE_SERVICE_ROLE_KEY() { return process.env.SUPABASE_SERVICE_ROLE_KEY; },
+  get NODE_ENV() { return process.env.NODE_ENV; },
+  get NEXT_PUBLIC_SITE_URL() { return process.env.NEXT_PUBLIC_SITE_URL; },
 };
 
-/**
- * Get environment variable presence (for debugging without exposing secrets)
- */
-export function getEnvPresence() {
-  return {
-    SUPABASE_URL: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
-    SUPABASE_ANON_KEY: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+export function envPresence() {
+  const presence = {
+    SUPABASE_URL: Boolean(process.env.SUPABASE_URL),
+    SUPABASE_ANON_KEY: Boolean(process.env.SUPABASE_ANON_KEY),
     SUPABASE_SERVICE_ROLE_KEY: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-    USE_MOCK_DATA: process.env.USE_MOCK_DATA || "false",
-    NODE_ENV: process.env.NODE_ENV || "development",
+    NODE_ENV: process.env.NODE_ENV ?? null,
     NEXT_PUBLIC_SITE_URL: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
-    validationStatus: envValidated ? "valid" : "invalid",
-    validationError: validationError,
+    validationStatus: parsed.success ? "valid" : "invalid",
+    validationError: parsed.success ? null : parsed.error.flatten().fieldErrors,
   };
+
+  console.log("[ENV] Environment presence check:", presence);
+  return presence;
 }
 
-/**
- * Validate environment for health checks
- */
-export function validateEnvironment(): { valid: boolean; error?: string } {
-  const isValid = validateEnvironmentLazy();
-  if (!isValid) {
-    return { valid: false, error: validationError || "Unknown validation error" };
-  }
-  return { valid: true };
-}
+// Validate critical env vars on startup
+export function validateCriticalEnv() {
+  const missing = [];
+  if (!process.env.SUPABASE_URL) missing.push("SUPABASE_URL");
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push("SUPABASE_SERVICE_ROLE_KEY");
 
-/**
- * Development helper to display environment status
- */
-export function logEnvironmentStatus() {
-  if (!env.IS_PRODUCTION) {
-    const status = getEnvPresence();
-    console.log("🔧 Environment Status:", {
-      ...status,
-      // Don't log actual values in production
-      timestamp: new Date().toISOString(),
-    });
+  if (missing.length > 0) {
+    throw new Error(`CRITICAL_ENV_MISSING: ${missing.join(", ")}`);
   }
 }

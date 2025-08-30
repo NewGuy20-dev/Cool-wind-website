@@ -5,6 +5,8 @@ const apiKey = process.env.GOOGLE_AI_API_KEY;
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export interface ExtractedCustomerInfo {
+  isFailedCall: boolean;
+  urgency: "low" | "medium" | "high" | "critical";
   name?: string;
   phone?: string;
   location?: string;
@@ -31,21 +33,27 @@ export class GeminiInformationExtractor {
    */
   static async extractCustomerInfo(message: string): Promise<ExtractedCustomerInfo> {
     const prompt = `
-You are an expert information extraction system. Extract customer information from the following message and return ONLY a valid JSON object.
-
-EXTRACTION RULES:
-1. NAME: Extract the customer's name (first name or full name). Stop at conjunctions like "and", "but", "phone", etc.
-2. PHONE: Extract Indian phone numbers (10 digits, may have +91 prefix). Clean format: remove spaces/dashes.
-3. LOCATION: Extract location/city names. Prioritize known Kerala locations like Thiruvalla, Pathanamthitta.
-4. PROBLEM: Extract the main issue/problem described (AC, refrigerator, etc.).
-5. CONFIDENCE: Rate extraction confidence 0.0-1.0 for each field.
+You are an expert information extraction system for a customer service chat. Your task is to analyze the user's message and extract key information.
 
 MESSAGE TO ANALYZE: "${message}"
 
+Please extract the following information and respond with ONLY a valid JSON object in the specified format.
+
+EXTRACTION RULES:
+1.  **isFailedCall**: Set to \`true\` if the user mentions a previously missed appointment, that a technician did not show up, or that they tried to call but got no answer. Otherwise, set to \`false\`.
+2.  **urgency**: Assess the urgency of the request. Possible values are "low", "medium", "high", "critical". Base this on keywords like "as soon as possible", "completely broken", "not cooling at all", etc.
+3.  **name**: Extract the customer's full name.
+4.  **phone**: Extract the 10-digit phone number.
+5.  **location**: Extract the physical address or location.
+6.  **problem**: Provide a concise summary of the user's issue (e.g., "AC unit is broken and not cooling").
+7.  **confidence**: For each of the fields above (except \`isFailedCall\` and \`urgency\`), provide a confidence score from 0.0 to 1.0.
+
 RESPOND WITH ONLY THIS JSON FORMAT (no other text):
 {
+  "isFailedCall": boolean,
+  "urgency": "low" | "medium" | "high" | "critical",
   "name": "extracted_name_or_null",
-  "phone": "cleaned_phone_or_null", 
+  "phone": "cleaned_phone_or_null",
   "location": "location_or_null",
   "problem": "problem_description_or_null",
   "confidence": {
@@ -81,6 +89,8 @@ RESPOND WITH ONLY THIS JSON FORMAT (no other text):
       
       // Validate and clean the extracted data
       const cleaned: ExtractedCustomerInfo = {
+        isFailedCall: extractedData.isFailedCall || false,
+        urgency: ["low", "medium", "high", "critical"].includes(extractedData.urgency) ? extractedData.urgency : "medium",
         name: this.validateName(extractedData.name),
         phone: this.validatePhone(extractedData.phone),
         location: this.validateLocation(extractedData.location),
@@ -200,12 +210,16 @@ RESPOND WITH ONLY THIS JSON FORMAT (no other text):
   private static getFallbackExtraction(message: string): ExtractedCustomerInfo {
     console.log('🔄 Using fallback regex extraction...');
     
+    const lowerMessage = message.toLowerCase();
+
     const extracted: ExtractedCustomerInfo = {
+      isFailedCall: /technician.*(show|came)|called.*(no|answer|response)/.test(lowerMessage),
+      urgency: /urgent|emergency|asap|completely broken|not cooling at all/.test(lowerMessage) ? 'high' : 'medium',
       confidence: { name: 0, phone: 0, location: 0, problem: 0 }
     };
     
     // Extract name with improved pattern
-    const nameMatch = message.match(/(?:my name is|i am|i'm|call me)\s+([a-zA-Z]+)(?:\s|$|,|and)/i);
+    const nameMatch = message.match(/(?:my name is|i am|i'm|call me)\s+([a-zA-Z\s]+)(?:\s|$|,|and)/i);
     if (nameMatch && nameMatch[1]) {
       extracted.name = nameMatch[1].trim();
       extracted.confidence.name = 0.7;
@@ -219,7 +233,6 @@ RESPOND WITH ONLY THIS JSON FORMAT (no other text):
     }
     
     // Extract location (known locations first)
-    const lowerMessage = message.toLowerCase();
     const knownLocations = ['thiruvalla', 'pathanamthitta', 'kerala'];
     for (const location of knownLocations) {
       if (lowerMessage.includes(location)) {
@@ -246,7 +259,7 @@ RESPOND WITH ONLY THIS JSON FORMAT (no other text):
    */
   static async extractFromConversation(messages: string[]): Promise<ExtractedCustomerInfo> {
     if (messages.length === 0) {
-      return { confidence: { name: 0, phone: 0, location: 0, problem: 0 } };
+      return { isFailedCall: false, urgency: 'medium', confidence: { name: 0, phone: 0, location: 0, problem: 0 } };
     }
     
     if (messages.length === 1) {
