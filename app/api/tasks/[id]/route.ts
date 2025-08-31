@@ -171,13 +171,14 @@ export async function GET(
       );
     }
 
-    const result = await TaskService.getTaskById(id);
+    const result = await TaskService.getTaskById(id, { admin: true });
 
     if (!result.success) {
+      console.error('TaskService.getTaskById error:', result.error);
       return NextResponse.json(
         { 
           success: false,
-          error: result.error 
+          error: result.error || 'Task not found'
         },
         { status: toHttpStatus(result.error) }
       );
@@ -189,11 +190,11 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error(' Get task error:', error);
+    console.error('Get task API error:', error);
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to fetch task' 
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       },
       { status: 500 }
     );

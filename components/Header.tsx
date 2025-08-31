@@ -120,7 +120,7 @@ export default function Header() {
 							{navigation.map((item) => (
 								<Link
 									key={item.name}
-									href={item.href}
+									href={withLocale(item.href)}
 									className="block px-3 py-2 rounded-lg text-neutral-600 hover:text-primary-600 hover:bg-neutral-50 font-medium transition-colors duration-200"
 									onClick={() => setMobileMenuOpen(false)}
 								>

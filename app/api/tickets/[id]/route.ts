@@ -169,9 +169,10 @@ export async function GET(
       );
     }
 
-    const result = await TaskService.getTaskById(ticketId);
+    const result = await TaskService.getTaskById(ticketId, { admin: true });
     
     if (!result.success || !result.data) {
+      console.error('TaskService.getTaskById error for ticket:', result.error);
       return NextResponse.json(
         { success: false, error: result.error || 'Ticket not found' },
         { status: toHttpStatus(result.error) }

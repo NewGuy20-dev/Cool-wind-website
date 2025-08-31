@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 import AdminAuth from '@/components/admin/AdminAuth';
+import ContactSubmissions from '@/components/admin/ContactSubmissions';
 import { 
   useRealtimeDashboard, 
   useRealtimeUrgentTasks,
@@ -29,7 +30,7 @@ import { TaskStatus, TaskPriority } from '@/lib/types/database';
 
 interface AdminPageState {
   isAuthenticated: boolean;
-  activeTab: 'dashboard' | 'tasks' | 'urgent' | 'create-task';
+  activeTab: 'dashboard' | 'tasks' | 'urgent' | 'create-task' | 'contact-submissions';
 }
 
 export default function SupabaseAdminDashboard() {
@@ -137,6 +138,7 @@ export default function SupabaseAdminDashboard() {
               { key: 'dashboard', label: 'Dashboard', icon: ChartBarIcon },
               { key: 'tasks', label: 'All Tasks', icon: TicketIcon },
               { key: 'urgent', label: 'Urgent Tasks', icon: ExclamationTriangleIcon, count: urgentTasks.length },
+              { key: 'contact-submissions', label: 'Contact Forms', icon: MagnifyingGlassIcon },
               { key: 'create-task', label: 'Create Task', icon: PlusIcon }
             ].map(({ key, label, icon: Icon, count }) => (
               <button
@@ -182,6 +184,10 @@ export default function SupabaseAdminDashboard() {
             loading={urgentLoading}
             error={urgentError}
           />
+        )}
+        
+        {state.activeTab === 'contact-submissions' && (
+          <ContactSubmissions />
         )}
         
         {state.activeTab === 'create-task' && (

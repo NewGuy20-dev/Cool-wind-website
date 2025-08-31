@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { createClient } from '@supabase/supabase-js'
 
 const ContactFormSchema = z.object({
 	name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -25,14 +26,44 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: 'Invalid submission' }, { status: 400 })
 		}
 
-		// Here you would typically:
-		// 1. Send WhatsApp notification to business owner
-		// 2. Save to database
-		// 3. Send SMS confirmation to customer
-		// 4. Integrate with CRM
-		
-		// For now, we'll just log the submission
-		console.log('Contact form submission:', {
+		// Initialize Supabase client
+		const supabase = createClient(
+			process.env.NEXT_PUBLIC_SUPABASE_URL!,
+			process.env.SUPABASE_SERVICE_ROLE_KEY!
+		)
+
+		// Get client IP and user agent for tracking
+		const clientIP = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+		const userAgent = request.headers.get('user-agent') || 'unknown'
+
+		// Save to Supabase
+		const { data: submission, error: dbError } = await supabase
+			.from('contact_submissions')
+			.insert({
+				name: validatedData.name,
+				phone: validatedData.phone,
+				service: validatedData.service,
+				service_details: validatedData.serviceDetails || null,
+				is_urgent: validatedData.isUrgent || false,
+				preferred_time: validatedData.preferredTime || null,
+				ip_address: clientIP,
+				user_agent: userAgent,
+				status: 'pending'
+			})
+			.select()
+			.single()
+
+		if (dbError) {
+			console.error('Database error:', dbError)
+			return NextResponse.json(
+				{ error: 'Failed to save submission. Please try again.' },
+				{ status: 500 }
+			)
+		}
+
+		// Log the submission for immediate tracking
+		console.log('Contact form submission saved:', {
+			id: submission.id,
 			name: validatedData.name,
 			phone: validatedData.phone,
 			service: validatedData.service,
@@ -40,15 +71,14 @@ export async function POST(request: NextRequest) {
 			timestamp: new Date().toISOString(),
 		})
 
-		// In a real implementation, you might want to:
-		// - Send WhatsApp message using WhatsApp Business API
-		// - Save to database (PostgreSQL, MongoDB, etc.)
-		// - Send SMS notifications to business owner
-		// - Integrate with CRM system
+		// TODO: Add WhatsApp notification to business owner
+		// TODO: Send SMS confirmation to customer
+		// TODO: Integrate with CRM system
 		
 		return NextResponse.json({ 
 			success: true, 
-			message: 'Thank you! We will contact you within 2 hours.' 
+			message: 'Thank you! We will contact you within 2 hours.',
+			submissionId: submission.id
 		})
 
 	} catch (error) {
