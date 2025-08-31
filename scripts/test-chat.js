@@ -14,22 +14,22 @@ async function testChatAPI() {
     {
       name: 'Basic Chat Flow',
       message: 'Hello, I need help with my AC',
-      expectedIntent: ['SERVICE_REQUEST', 'SPARE_PARTS_INQUIRY']
+      expectedKeywords: ['thermostat', 'filter', 'vents']
     },
     {
       name: 'Emergency Request',
       message: 'My refrigerator is not working and I need emergency repair',
-      expectedIntent: ['EMERGENCY', 'SERVICE_REQUEST']
+      expectedKeywords: ['technician', 'schedule', 'service']
     },
     {
       name: 'Parts Inquiry',
       message: 'I need a compressor for my Samsung AC',
-      expectedIntent: ['SPARE_PARTS_INQUIRY']
+      expectedKeywords: ['compressor', 'parts', 'AC']
     },
     {
       name: 'Business Info',
       message: 'What are your contact details?',
-      expectedIntent: ['BUSINESS_INFO']
+      expectedKeywords: ['Cool Wind Services', 'phone', 'location']
     }
   ];
 
@@ -65,19 +65,18 @@ async function testChatAPI() {
       }
 
       // Validate response
-      const hasValidResponse = data.response && data.response.text;
-      const hasIntent = data.intent && data.intent.name;
-      const intentMatches = testCase.expectedIntent.includes(data.intent?.name);
+      const responseText = data.response?.text?.toLowerCase() || '';
+      const hasValidResponse = responseText.length > 0;
+      const keywordsMatch = testCase.expectedKeywords.every(kw => responseText.includes(kw));
 
-      if (hasValidResponse && hasIntent && intentMatches) {
+      if (hasValidResponse && keywordsMatch) {
         console.log(`✅ PASSED`);
-        console.log(`   Intent: ${data.intent.name} (confidence: ${Math.round(data.intent.confidence * 100)}%)`);
         console.log(`   Response: ${data.response.text.substring(0, 100)}...`);
         passedTests++;
       } else {
         console.log(`❌ FAILED`);
-        console.log(`   Expected intent: ${testCase.expectedIntent.join(' or ')}`);
-        console.log(`   Actual intent: ${data.intent?.name || 'None'}`);
+        console.log(`   Expected keywords: ${testCase.expectedKeywords.join(', ')}`);
+        console.log(`   Actual response: ${data.response?.text || 'None'}`);
       }
 
       console.log('');
