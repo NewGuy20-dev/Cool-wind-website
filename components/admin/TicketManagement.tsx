@@ -105,27 +105,35 @@ export default function TicketManagement({ tickets, onUpdate }: TicketManagement
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
+      {/* Enhanced Filters */}
+      <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Search & Filter</h3>
+          <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <span>{filteredTickets.length} results</span>
+            <FunnelIcon className="h-4 w-4" />
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div className="md:col-span-6">
             <div className="relative">
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search tickets..."
+                placeholder="Search by customer, ticket number, or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
           
-          <div className="flex gap-4">
+          <div className="md:col-span-3">
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -133,11 +141,13 @@ export default function TicketManagement({ tickets, onUpdate }: TicketManagement
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
-            
+          </div>
+          
+          <div className="md:col-span-3">
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             >
               <option value="all">All Priority</option>
               <option value="low">Low</option>
@@ -147,6 +157,28 @@ export default function TicketManagement({ tickets, onUpdate }: TicketManagement
             </select>
           </div>
         </div>
+        
+        {/* Active Filters */}
+        {(searchTerm || filterStatus !== 'all' || filterPriority !== 'all') && (
+          <div className="mt-4 flex items-center space-x-2">
+            <span className="text-sm text-gray-500">Active filters:</span>
+            {searchTerm && (
+              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                Search: {searchTerm}
+              </span>
+            )}
+            {filterStatus !== 'all' && (
+              <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                Status: {filterStatus}
+              </span>
+            )}
+            {filterPriority !== 'all' && (
+              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                Priority: {filterPriority}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tickets Table */}

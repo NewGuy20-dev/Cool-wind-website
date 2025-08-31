@@ -24,6 +24,7 @@ import {
   useRealtimeTaskSearch,
   useSupabaseConnectionStatus
 } from '@/lib/hooks/useSupabaseRealtimeHooks';
+import { Spinner } from '@/components/ui/spinner';
 import { TaskStatus, TaskPriority } from '@/lib/types/database';
 
 interface AdminPageState {
@@ -206,7 +207,7 @@ function DashboardView({
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <Spinner variant="circle" size={48} className="text-blue-600" />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Phone, MessageCircle, Wrench, Snowflake, ShoppingCart, Recycle, Star, MapPin, Clock, CheckCircle } from 'lucide-react'
 import { analytics } from '@/lib/analytics'
 import dynamic from 'next/dynamic'
+import { useTranslations, useLocale } from 'next-intl'
 // Avoid SSR for highly interactive components that can be mutated by extensions (e.g., fdprocessedid attributes)
 const ContactForm = dynamic(() => import('@/components/ContactForm'), { ssr: false })
 const TestimonialCarousel = dynamic(() => import('@/components/TestimonialCarousel'), { ssr: false })
@@ -15,34 +16,37 @@ const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
 
 export default function HomePage() {
+  const t = useTranslations('home')
+  const locale = useLocale()
+  
   const services = [
     {
       icon: <Wrench className="h-8 w-8" />,
-      title: 'AC Repair & Installation',
-      description: 'Expert AC service for all brands. No cooling, strange noises, high bills - we fix it all.',
+      title: t('services.ac_repair.title'),
+      description: t('services.ac_repair.desc'),
       link: '/services#ac-repair',
-      cta: 'Book AC Service'
+      cta: t('services.ac_repair.cta')
     },
     {
       icon: <Snowflake className="h-8 w-8" />,
-      title: 'Refrigerator Service',
-      description: 'Complete fridge repair service. Not cooling, water leaking, compressor issues solved.',
+      title: t('services.refrigerator.title'),
+      description: t('services.refrigerator.desc'),
       link: '/services#refrigerator-repair',
-      cta: 'Fix My Fridge'
+      cta: t('services.refrigerator.cta')
     },
     {
       icon: <ShoppingCart className="h-8 w-8" />,
-      title: 'Spare Parts Supply',
-      description: 'Genuine parts for all major brands. Fast delivery in Thiruvalla & Pathanamthitta.',
+      title: t('services.parts.title'),
+      description: t('services.parts.desc'),
       link: '/services#spare-parts',
-      cta: 'Find Parts'
+      cta: t('services.parts.cta')
     },
     {
       icon: <Recycle className="h-8 w-8" />,
-      title: 'Second-hand Electronics',
-      description: 'Quality tested appliances with warranty. Great value for money.',
+      title: t('services.electronics.title'),
+      description: t('services.electronics.desc'),
       link: '/services#electronics',
-      cta: 'Browse Items'
+      cta: t('services.electronics.cta')
     }
   ]
 
@@ -74,10 +78,10 @@ export default function HomePage() {
   ]
 
   const features = [
-    { icon: <CheckCircle className="h-5 w-5" />, text: '15+ Years Experience' },
-    { icon: <CheckCircle className="h-5 w-5" />, text: 'Genuine Parts Only' },
-    { icon: <CheckCircle className="h-5 w-5" />, text: 'Same Day Service' },
-    { icon: <CheckCircle className="h-5 w-5" />, text: '6 Month Warranty' }
+    { icon: <CheckCircle className="h-5 w-5" />, text: t('hero.features.experience') },
+    { icon: <CheckCircle className="h-5 w-5" />, text: t('hero.features.parts') },
+    { icon: <CheckCircle className="h-5 w-5" />, text: t('hero.features.service') },
+    { icon: <CheckCircle className="h-5 w-5" />, text: t('hero.features.warranty') }
   ]
 
   const containerVariants = {
@@ -100,12 +104,11 @@ export default function HomePage() {
           <div className="grid gap-12 lg:grid-cols-2 items-center">
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.4 }} transition={{ duration: 0.4 }}>
               <motion.h1 initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }} className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-800 leading-tight">
-                Reliable AC & Refrigerator Services in 
-                <span className="text-primary-600"> Thiruvalla</span>
+                {t('hero.headline')} 
+                <span className="text-primary-600"> {t('hero.location')}</span>
               </motion.h1>
               <motion.p initial={{ opacity: 0, y: 6 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.3 }} className="mt-6 text-lg md:text-xl text-neutral-600 leading-relaxed">
-                Expert repair, quality sales, trusted by locals since 2009. 
-                Serving Thiruvalla & Pathanamthitta with genuine parts and professional service.
+                {t('hero.sub')}
               </motion.p>
               
               {/* Features */}
@@ -126,7 +129,7 @@ export default function HomePage() {
                   className="btn-primary inline-flex items-center gap-2"
                 >
                   <Phone size={20} />
-                  Call Now
+                  {t('cta.call_now')}
                 </motion.a>
                 <motion.a variants={itemVariants}
                   href={`https://wa.me/${WHATSAPP}?text=Hi, I need help with my appliance`}
@@ -136,11 +139,11 @@ export default function HomePage() {
                   rel="noopener noreferrer"
                 >
                   <MessageCircle size={20} />
-                  WhatsApp Us
+                  {t('cta.whatsapp')}
                 </motion.a>
                 <motion.div variants={itemVariants}>
                   <Link href="#contact" className="btn-secondary inline-flex items-center gap-2">
-                  Get Quote
+                  {t('cta.get_quote')}
                   </Link>
                 </motion.div>
               </motion.div>
@@ -149,11 +152,11 @@ export default function HomePage() {
               <div className="mt-8 flex flex-wrap gap-6 text-sm text-neutral-600">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary-600" />
-                  Serving Thiruvalla & Pathanamthitta
+                  {t('footer.location')}
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary-600" />
-                  Mon-Sat 10AM-6PM
+                  {t('footer.hours')}
                 </div>
               </div>
             </motion.div>
@@ -185,8 +188,8 @@ export default function HomePage() {
       <section className="py-16 bg-neutral-50">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">Our Services</h2>
-            <p className="mt-4 text-lg text-neutral-600">Professional AC & Refrigerator solutions</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">{t('services.heading')}</h2>
+            <p className="mt-4 text-lg text-neutral-600">{t('services.sub')}</p>
           </div>
           
           <motion.div variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -210,8 +213,8 @@ export default function HomePage() {
       <section className="py-16 bg-neutral-50">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">Recent Projects</h2>
-            <p className="mt-4 text-lg text-neutral-600">See our latest work and installations</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">{t('projects.heading')}</h2>
+            <p className="mt-4 text-lg text-neutral-600">{t('projects.sub')}</p>
           </div>
           
           <motion.div variants={containerVariants} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} className="grid gap-6 md:grid-cols-3">
@@ -232,8 +235,8 @@ export default function HomePage() {
           </motion.div>
           
           <div className="text-center mt-8">
-            <Link href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/portfolio' : '/portfolio'} className="btn-secondary">
-              View All Projects
+            <Link href={`/${locale}/portfolio`} className="btn-secondary">
+              {t('projects.view_all')}
             </Link>
           </div>
         </div>
@@ -243,8 +246,8 @@ export default function HomePage() {
       <section className="py-16 bg-neutral-50">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">What Our Customers Say</h2>
-            <p className="mt-4 text-lg text-neutral-600">Trusted by families and businesses across Kerala</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">{t('testimonials.heading')}</h2>
+            <p className="mt-4 text-lg text-neutral-600">{t('testimonials.sub')}</p>
           </div>
           
           {/* Testimonial Carousel */}
@@ -257,7 +260,7 @@ export default function HomePage() {
           
           <div className="text-center mt-8">
             <Link href={typeof window !== 'undefined' && window.location.pathname.startsWith('/ml') ? '/ml/testimonials' : '/testimonials'} className="btn-secondary">
-              Read More Reviews
+              {t('testimonials.read_more')}
             </Link>
           </div>
         </div>
@@ -267,9 +270,9 @@ export default function HomePage() {
       <section className="py-16 bg-primary-50" id="contact">
         <div className="mx-auto max-w-4xl px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">Get Quick Quote</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800">{t('contact.heading')}</h2>
             <p className="mt-4 text-lg text-neutral-600">
-              Tell us about your appliance issue and we'll get back to you within 2 hours
+              {t('contact.sub')}
             </p>
           </div>
           
@@ -280,11 +283,11 @@ export default function HomePage() {
           <div className="text-center mt-8 space-y-2">
             <p className="text-neutral-600">
               <MapPin className="inline h-4 w-4 mr-1" />
-              Serving Thiruvalla & Pathanamthitta
+              {t('footer.location')}
             </p>
             <p className="text-neutral-600">
               <Clock className="inline h-4 w-4 mr-1" />
-              Mon-Sat 10:00 AM - 6:00 PM
+              {t('footer.hours')}
             </p>
             <div className="flex justify-center gap-4 mt-4">
               <a 
@@ -301,7 +304,7 @@ export default function HomePage() {
                 rel="noopener noreferrer"
               >
                 <MessageCircle size={18} />
-                WhatsApp
+                {t('cta.whatsapp')}
               </a>
             </div>
           </div>

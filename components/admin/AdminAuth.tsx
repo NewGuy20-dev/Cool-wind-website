@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { EyeIcon, EyeSlashIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/ui/spinner';
 
 interface AdminAuthProps {
   onAuthSuccess: () => void;
@@ -108,7 +109,7 @@ export default function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
             >
               {isLoading ? (
                 <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <Spinner variant="circle" size={16} className="text-white mr-2" />
                   Authenticating...
                 </div>
               ) : (

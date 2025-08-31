@@ -3,8 +3,10 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
-import { CheckCircle, AlertCircle, Send, Loader2, Phone, MessageCircle } from 'lucide-react'
+import { useState } from 'react';
+import { MapPinIcon, PhoneIcon, EnvelopeIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { CheckCircle, AlertCircle, Send, MessageCircle, Phone } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { analytics } from '@/lib/analytics'
 import { AnimatePresence, motion } from 'framer-motion'
 
@@ -272,7 +274,7 @@ export default function ContactForm({ compact = false, title, description }: Con
 				>
 					{isSubmitting ? (
 						<>
-							<Loader2 className="h-5 w-5 animate-spin" />
+							<Spinner variant="circle" size={20} className="text-white" />
 							Submitting...
 						</>
 					) : (

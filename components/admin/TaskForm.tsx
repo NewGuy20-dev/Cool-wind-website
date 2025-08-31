@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  PlusIcon, 
   UserIcon, 
   PhoneIcon, 
-  MapPinIcon,
-  WrenchScrewdriverIcon,
+  ClockIcon, 
   ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XMarkIcon,
   CalendarIcon,
-  ClockIcon,
-  CheckCircleIcon
+  PlusIcon
 } from '@heroicons/react/24/outline';
+import { Spinner } from '@/components/ui/spinner';
 
 interface TaskFormData {
   // Customer Information
@@ -275,7 +275,7 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center">
-            <PlusIcon className="h-6 w-6 text-blue-600 mr-2" />
+            <UserIcon className="h-6 w-6 text-blue-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">Create New Service Request</h3>
           </div>
           <p className="text-sm text-gray-600 mt-1">
@@ -384,7 +384,7 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
           {/* Service Details */}
           <div>
             <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center">
-              <WrenchScrewdriverIcon className="h-5 w-5 text-gray-600 mr-2" />
+              <ClockIcon className="h-5 w-5 text-gray-600 mr-2" />
               Service Details
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -624,7 +624,7 @@ export default function TaskForm({ onTaskCreated }: TaskFormProps) {
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <Spinner variant="circle" size={16} className="text-white mr-2" />
                   Creating...
                 </>
               ) : (

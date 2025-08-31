@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate') || undefined;
     const endDate = searchParams.get('endDate') || undefined;
 
-    // Get task statistics from Supabase
-    const result = await TaskService.getTaskStats(startDate, endDate);
+    // Get task statistics from Supabase with admin privileges
+    const result = await TaskService.getTaskStats(startDate, endDate, { admin: true });
 
     if (!result.success) {
       return NextResponse.json(

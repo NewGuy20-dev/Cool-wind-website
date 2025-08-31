@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Spinner } from '@/components/ui/spinner';
 import { 
   PlusIcon, 
   TicketIcon, 
@@ -13,7 +14,13 @@ import {
   XMarkIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  BellIcon,
+  Cog6ToothIcon,
+  HomeIcon,
+  ChartPieIcon,
+  CalendarDaysIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import AdminAuth from '@/components/admin/AdminAuth';
 import FailedCallsKanban from '@/components/admin/FailedCallsKanban';
@@ -28,6 +35,11 @@ interface AdminPageState {
   stats: any;
   tickets: any[];
   failedCalls: any[];
+  notifications: {
+    hasUnread: boolean;
+    count: number;
+    lastChecked: string;
+  };
 }
 
 export default function AdminPage() {
@@ -38,7 +50,12 @@ export default function AdminPage() {
     loading: true,
     stats: null,
     tickets: [],
-    failedCalls: []
+    failedCalls: [],
+    notifications: {
+      hasUnread: false,
+      count: 0,
+      lastChecked: new Date().toISOString()
+    }
   });
 
   const checkAuthStatus = () => {
@@ -56,15 +73,65 @@ export default function AdminPage() {
     router.push('/');
   };
 
-  const loadTaskStats = async () => {
+  const handleNotificationClick = () => {
+    // Mark all notifications as read
+    setState(prev => ({
+      ...prev,
+      notifications: {
+        ...prev.notifications,
+        hasUnread: false,
+        count: 0,
+        lastChecked: new Date().toISOString()
+      }
+    }));
+    
+    // Store the last checked time in localStorage to persist across sessions
+    localStorage.setItem('admin_notifications_last_checked', new Date().toISOString());
+  };
+
+  const checkForNewNotifications = useCallback(async () => {
     try {
-      const response = await fetch('/api/tasks/stats');
+      // Get last checked time from localStorage
+      const lastChecked = localStorage.getItem('admin_notifications_last_checked') || 
+                         new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Default to 24h ago
+      
+      // Check for new tickets created since last check (not by admin)
+      const response = await fetch(`/api/notifications/check?since=${lastChecked}`);
       if (response.ok) {
-        const result = await response.json();
-        setState(prev => ({ ...prev, stats: result.data }));
+        const data = await response.json();
+        
+        setState(prev => ({
+          ...prev,
+          notifications: {
+            hasUnread: data.hasNew,
+            count: data.count,
+            lastChecked: prev.notifications.lastChecked
+          }
+        }));
       }
     } catch (error) {
-      console.error('Error loading task stats:', error);
+      console.error('Error checking notifications:', error);
+    }
+  }, []);
+
+  const loadTaskStats = async () => {
+    try {
+      console.log('🔄 Loading task stats...');
+      const response = await fetch('/api/tasks/stats');
+      console.log('📊 Task stats response status:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('📈 Task stats result:', result);
+        console.log('📋 Task stats data:', result.data);
+        setState(prev => ({ ...prev, stats: result.data }));
+      } else {
+        console.error('❌ Task stats API error:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ Error loading task stats:', error);
     }
   };
 
@@ -120,18 +187,39 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (state.isAuthenticated) {
+      // Load initial data
+      loadDashboardData();
+      
+      // Check for notifications immediately
+      checkForNewNotifications();
+      
+      // Set up interval to check for notifications every 30 seconds
+      const notificationInterval = setInterval(() => {
+        checkForNewNotifications();
+      }, 30000);
+      
+      return () => {
+        clearInterval(notificationInterval);
+      };
+    }
+  }, [state.isAuthenticated, checkForNewNotifications, loadDashboardData]);
+
+  useEffect(() => {
+    if (state.isAuthenticated && state.activeTab) {
       loadDashboardData();
     }
-  }, [state.isAuthenticated, state.activeTab, loadDashboardData]);
+  }, [state.activeTab, loadDashboardData]);
 
   const refreshData = () => {
     loadDashboardData();
+    // Also check for notifications when refreshing
+    checkForNewNotifications();
   };
 
   if (state.loading && !state.isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <Spinner variant="circle" size={48} className="text-blue-600" />
       </div>
     );
   }
@@ -141,30 +229,68 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white shadow-lg border-b border-gray-200 backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Cool Wind Services</h1>
-              <span className="ml-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg overflow-hidden">
+                  <img 
+                    src="/logo.png" 
+                    alt="Cool Wind Services" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">Cool Wind Services</h1>
+                  <span className="text-xs text-gray-500">Administrative Dashboard</span>
+                </div>
+              </div>
+              <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-medium rounded-full shadow-sm">
                 Admin Panel
               </span>
             </div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
+              <div className="hidden md:flex items-center space-x-2 px-3 py-1 bg-gray-50 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-gray-600">Live Updates</span>
+              </div>
+              
+              <button 
+                onClick={handleNotificationClick}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors relative"
+                title={`${state.notifications.count} unread notifications`}
+              >
+                <BellIcon className="h-5 w-5" />
+                {state.notifications.hasUnread && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs animate-pulse">
+                    {state.notifications.count > 0 && state.notifications.count < 10 && (
+                      <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">
+                        {state.notifications.count}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </button>
+              
               <button
                 onClick={refreshData}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 transition-all hover:rotate-180 duration-300"
                 title="Refresh Data"
               >
                 <ArrowPathIcon className="h-5 w-5" />
               </button>
               
+              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                <Cog6ToothIcon className="h-5 w-5" />
+              </button>
+              
               <button
                 onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 shadow-md"
               >
                 Logout
               </button>
@@ -174,26 +300,35 @@ export default function AdminPage() {
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="bg-white shadow-sm">
+      <nav className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+          <div className="flex space-x-1 overflow-x-auto">
             {[
-              { key: 'dashboard', label: 'Dashboard', icon: ChartBarIcon },
-              { key: 'failed-calls', label: 'Failed Calls', icon: ExclamationTriangleIcon },
-              { key: 'tickets', label: 'Service Tickets', icon: TicketIcon },
-              { key: 'create-task', label: 'Create Task', icon: PlusIcon }
-            ].map(({ key, label, icon: Icon }) => (
+              { key: 'dashboard', label: 'Dashboard', icon: ChartPieIcon, count: null },
+              { key: 'failed-calls', label: 'Failed Calls', icon: ExclamationTriangleIcon, count: state.failedCalls.length },
+              { key: 'tickets', label: 'Service Tickets', icon: TicketIcon, count: state.tickets.length },
+              { key: 'create-task', label: 'Create Task', icon: PlusIcon, count: null }
+            ].map(({ key, label, icon: Icon, count }) => (
               <button
                 key={key}
                 onClick={() => setState(prev => ({ ...prev, activeTab: key as any }))}
-                className={`flex items-center px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex items-center px-4 py-3 mx-1 text-sm font-medium rounded-t-lg transition-all duration-200 ${
                   state.activeTab === key
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md transform -translate-y-0.5'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                } whitespace-nowrap`}
               >
-                <Icon className="h-5 w-5 mr-2" />
+                <Icon className="h-4 w-4 mr-2" />
                 {label}
+                {count !== null && count > 0 && (
+                  <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+                    state.activeTab === key 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-red-100 text-red-600'
+                  }`}>
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -204,7 +339,7 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {state.loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <Spinner variant="circle" size={48} className="text-blue-600" />
           </div>
         ) : (
           <>
