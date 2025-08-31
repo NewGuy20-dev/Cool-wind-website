@@ -29,7 +29,7 @@ const TaskCreateSchema = z.object({
   title: z.string().trim().min(1).optional(),
   location: z.string().trim().min(1).optional().nullable(),
   description: z.string().trim().min(1).optional().nullable(),
-  status: z.enum(['open', 'pending', 'in_progress', 'completed', 'cancelled']).optional(),
+  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
   source: z.enum(['chat-failed-call', 'admin-manual', 'api-direct', 'webhook', 'email', 'phone']).optional(),
   category: z.string().trim().min(1).optional().nullable(),
@@ -262,7 +262,7 @@ export async function PATCH(request: NextRequest) {
 
     // Validate status if provided
     if (updates.status) {
-      const validStatuses: TaskStatus[] = ['open', 'pending', 'in_progress', 'completed', 'cancelled'];
+      const validStatuses: TaskStatus[] = ['pending', 'in_progress', 'completed', 'cancelled'];
       if (!validStatuses.includes(updates.status)) {
         return NextResponse.json(
           { error: 'Invalid status' },
@@ -344,7 +344,7 @@ export async function POST(request: NextRequest) {
       title: parsed.data.title || `Service request from ${parsed.data.customer_name}`,
       location: parsed.data.location ?? null,
       description: parsed.data.description ?? null,
-      status: parsed.data.status ?? 'open',
+      status: parsed.data.status ?? 'pending',
       priority: parsed.data.priority ?? 'medium',
       source: 'admin-manual',
       category: parsed.data.category ?? null,

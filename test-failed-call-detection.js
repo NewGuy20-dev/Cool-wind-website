@@ -6,7 +6,7 @@ async function testFailedCallDetection() {
   const testMessages = [
     "The technician never showed up for my scheduled appointment today. This is the second time this has happened. My name is John Doe and I need someone to come fix my AC unit as soon as possible.",
     "I tried calling your number but no one answered. I need service for my broken AC.",
-    "Your technician was a no-show for my appointment yesterday. When can someone come fix this?
+    "Your technician was a no-show for my appointment yesterday. When can someone come fix this?"
   ];
 
   const detector = new FailedCallDetector();

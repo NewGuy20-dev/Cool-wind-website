@@ -275,45 +275,39 @@ export class TaskService {
       };
       const normalizedSource = normalizeSource(source);
       if (source && !normalizedSource) {
-        console.warn('searchTasks: invalid source provided, ignoring filter', { source });
+        // console.warn('searchTasks: invalid source provided, ignoring filter', { source });
       }
       
-      // Use the database search function for complex queries
-      const { data: tasks, error } = await client
-        .rpc('search_tasks', {
-          search_term: search || undefined,
-          filter_status: status || undefined,
-          filter_priority: priority || undefined,
-          filter_source: normalizedSource,
-          date_from: dateFrom || undefined,
-          date_to: dateTo || undefined,
-          limit_count: limit,
-          offset_count: offset,
-        });
-      
-      if (error) throw error;
-      
-      // Get total count for pagination
+      // Bypassing the RPC function and building the query directly
       let query = client
         .from('tasks')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
         .is('deleted_at', null);
-      
-      // Apply filters for count
+
       if (status) query = query.eq('status', status);
       if (priority) query = query.eq('priority', priority);
       if (normalizedSource) query = query.eq('source', normalizedSource);
       if (dateFrom) query = query.gte('created_at', dateFrom);
       if (dateTo) query = query.lte('created_at', dateTo);
-      
-      const { count, error: countError } = await query;
-      
-      if (countError) throw countError;
-      
+
+      if (search) {
+        query = query.or(`title.ilike.%${search}%,problem_description.ilike.%${search}%,customer_name.ilike.%${search}%`);
+      }
+
+      // Pagination
+      query = query.range(offset, offset + limit - 1);
+
+      // Ordering
+      query = query.order('created_at', { ascending: false });
+
+      const { data: tasks, error, count } = await query;
+
+      if (error) throw error;
+
       timer.end();
-      
+
       const totalPages = Math.ceil((count || 0) / limit);
-      
+
       return {
         tasks: (tasks || []) as unknown as Task[],
         pagination: {
@@ -640,7 +634,7 @@ export class TaskService {
       return data?.[0] || null;
     } catch (error) {
       timer.end();
-      console.error('❌ Find by source and external ID error:', error);
+      // console.error('❌ Find by source and external ID error:', error);
       return null;
     }
   }
@@ -666,7 +660,7 @@ export class TaskService {
       return data || [];
     } catch (error) {
       timer.end();
-      console.error('❌ List admin tasks error:', error);
+      // console.error('❌ List admin tasks error:', error);
       return [];
     }
   }

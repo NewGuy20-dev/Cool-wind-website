@@ -220,14 +220,16 @@ export function useRealtimeTaskSearch(searchParams: {
     setError(null);
     
     try {
-      const result = await TaskService.searchTasks({
+      const searchPayload = {
         search: params.search,
         status: params.status as TaskStatus,
         priority: params.priority as TaskPriority,
         source: params.source as TaskSource,
         page: pagination.page,
         limit: pagination.limit,
-      });
+      };
+
+      const result = await TaskService.searchTasks(searchPayload);
       
       setSearchResults(result.tasks);
       setPagination(result.pagination);
