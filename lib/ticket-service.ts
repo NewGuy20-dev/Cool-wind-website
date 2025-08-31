@@ -534,7 +534,7 @@ export class TicketService {
    */
   private static attemptAutoAssignment(ticket: ServiceTicket): void {
     // Simple auto-assignment logic based on service type and location
-    const technicians = {
+    const technicians: Record<string, string[]> = {
       'thiruvalla': ['Ravi Kumar', 'Suresh Nair'],
       'pathanamthitta': ['Anil Joseph', 'Priya Menon']
     };
@@ -579,9 +579,9 @@ export class TicketService {
     
     const stats = {
       total: tickets.length,
-      byStatus: {},
-      byPriority: {},
-      byServiceType: {},
+      byStatus: {} as Record<string, number>,
+      byPriority: {} as Record<string, number>,
+      byServiceType: {} as Record<string, number>,
       averageResponseTime: 0,
       completionRate: 0
     };

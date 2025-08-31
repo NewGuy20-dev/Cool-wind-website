@@ -190,6 +190,7 @@ export async function POST(request: NextRequest) {
               { text: "More Services", value: "our_services" }
             ]
           };
+<<<<<<< HEAD
           isFailedCallResponse = true;
         } else {
           console.error('❌ Failed to create task:', taskResult.error);
@@ -201,6 +202,9 @@ export async function POST(request: NextRequest) {
             ]
           };
           isFailedCallResponse = true;
+=======
+          isEnhancedResponse = true;
+>>>>>>> 9b3bd8a362e9b2188934108a15cb499a73c33ec1
         }
       } else {
         // Still missing information
@@ -224,6 +228,7 @@ export async function POST(request: NextRequest) {
         console.log('🚨 Failed call detected!', failedCallData.triggerPhrase);
         
         if (failedCallData.missingFields.length === 0) {
+<<<<<<< HEAD
           // All information available, create task immediately
           console.log('✅ All information available, creating task immediately...');
           
@@ -245,6 +250,17 @@ export async function POST(request: NextRequest) {
               error: `Validation error: ${validationError.message}`
             };
           }
+=======
+          const taskRequest = FailedCallDetector.createTaskRequest(
+            failedCallData.customerData as any,
+            failedCallData.problemDescription!,
+            failedCallData.urgencyLevel!,
+            failedCallData.location || 'Not specified',
+            session.messages.slice(-3)
+          );
+          
+          const taskResult = await FailedCallDetector.createTask(taskRequest);
+>>>>>>> 9b3bd8a362e9b2188934108a15cb499a73c33ec1
           
           if (taskResult.success) {
             console.log('🎉 Task created immediately:', taskResult.taskId);
@@ -259,6 +275,7 @@ export async function POST(request: NextRequest) {
                 { text: "More Services", value: "our_services" }
               ]
             };
+<<<<<<< HEAD
             isFailedCallResponse = true;
           } else {
             console.error('❌ Failed to create task:', taskResult.error);

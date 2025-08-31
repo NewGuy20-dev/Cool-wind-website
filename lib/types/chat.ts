@@ -8,6 +8,13 @@ export interface ChatMessage {
     category?: 'parts' | 'service' | 'sales' | 'general' | 'spare_parts_inquiry' | 'service_request' | 'sales_inquiry' | 'emergency' | 'business_info' | 'error_handling' | 'validation_error' | 'session_limit' | 'timeout_error' | 'rate_limit';
     confidence?: number;
     escalated?: boolean;
+    aiAnalysis?: {
+      isFailedCall?: boolean;
+      needsTaskManagement?: boolean;
+      urgencyLevel?: string;
+      customerFrustration?: number;
+      responseStrategy?: string;
+    };
   };
 }
 
