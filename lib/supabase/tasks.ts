@@ -144,36 +144,69 @@ export class TaskService {
   }
   
   /**
-   * Update task
+   * Update task (optimized for performance)
    */
   static async updateTask(taskId: string, updates: Partial<TaskUpdate>): Promise<ApiResponse<Task>> {
     const timer = SupabasePerformanceMonitor.startTimer('updateTask');
     
     try {
-      // Remove read-only fields
+      // Validate taskId format (UUID)
+      if (!taskId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(taskId)) {
+        return { success: false, error: 'Invalid task ID format' };
+      }
+      
+      // Remove read-only fields and validate updates
       const { id, task_number, created_at, ...safeUpdates } = updates;
       
-      // Auto-set updated_at (this is handled by trigger, but good to be explicit)
-      safeUpdates.updated_at = new Date().toISOString();
+      // Don't set updated_at manually - let the DB trigger handle it
+      delete safeUpdates.updated_at;
       
-      const result = await withRetry(async () => {
-        const { data, error } = await supabaseAdmin
-          .from('tasks')
-          .update(safeUpdates)
-          .eq('id', taskId)
-          .is('deleted_at', null)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
-      });
+      // Early return if no updates provided
+      if (Object.keys(safeUpdates).length === 0) {
+        return { success: false, error: 'No valid updates provided' };
+      }
+      
+      // Validate enum values
+      if (safeUpdates.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(safeUpdates.status)) {
+        return { success: false, error: 'Invalid status value' };
+      }
+      if (safeUpdates.priority && !['low', 'medium', 'high', 'urgent'].includes(safeUpdates.priority)) {
+        return { success: false, error: 'Invalid priority value' };
+      }
+      
+      // First, do a fast update without SELECT (much faster)
+      const { error: updateError } = await supabaseAdmin
+        .from('tasks')
+        .update(safeUpdates)
+        .eq('id', taskId)
+        .is('deleted_at', null);
+      
+      if (updateError) {
+        timer.end();
+        const errorInfo = handleSupabaseError(updateError);
+        return {
+          success: false,
+          error: errorInfo.message,
+        };
+      }
+      
+      // Then do a separate, optimized SELECT to get the updated data
+      const { data, error: selectError } = await supabaseAdmin
+        .from('tasks')
+        .select('*')
+        .eq('id', taskId)
+        .is('deleted_at', null)
+        .single();
       
       timer.end();
       
+      if (selectError || !data) {
+        return { success: false, error: 'Task not found after update' };
+      }
+      
       return {
         success: true,
-        data: result,
+        data: data,
         message: 'Task updated successfully',
       };
       
