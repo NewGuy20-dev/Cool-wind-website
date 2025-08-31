@@ -144,36 +144,69 @@ export class TaskService {
   }
   
   /**
-   * Update task
+   * Update task (optimized for performance)
    */
   static async updateTask(taskId: string, updates: Partial<TaskUpdate>): Promise<ApiResponse<Task>> {
     const timer = SupabasePerformanceMonitor.startTimer('updateTask');
     
     try {
-      // Remove read-only fields
+      // Validate taskId format (UUID)
+      if (!taskId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(taskId)) {
+        return { success: false, error: 'Invalid task ID format' };
+      }
+      
+      // Remove read-only fields and validate updates
       const { id, task_number, created_at, ...safeUpdates } = updates;
       
-      // Auto-set updated_at (this is handled by trigger, but good to be explicit)
-      safeUpdates.updated_at = new Date().toISOString();
+      // Don't set updated_at manually - let the DB trigger handle it
+      delete safeUpdates.updated_at;
       
-      const result = await withRetry(async () => {
-        const { data, error } = await supabaseAdmin
-          .from('tasks')
-          .update(safeUpdates)
-          .eq('id', taskId)
-          .is('deleted_at', null)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        return data;
-      });
+      // Early return if no updates provided
+      if (Object.keys(safeUpdates).length === 0) {
+        return { success: false, error: 'No valid updates provided' };
+      }
+      
+      // Validate enum values
+      if (safeUpdates.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(safeUpdates.status)) {
+        return { success: false, error: 'Invalid status value' };
+      }
+      if (safeUpdates.priority && !['low', 'medium', 'high', 'urgent'].includes(safeUpdates.priority)) {
+        return { success: false, error: 'Invalid priority value' };
+      }
+      
+      // First, do a fast update without SELECT (much faster)
+      const { error: updateError } = await supabaseAdmin
+        .from('tasks')
+        .update(safeUpdates)
+        .eq('id', taskId)
+        .is('deleted_at', null);
+      
+      if (updateError) {
+        timer.end();
+        const errorInfo = handleSupabaseError(updateError);
+        return {
+          success: false,
+          error: errorInfo.message,
+        };
+      }
+      
+      // Then do a separate, optimized SELECT to get the updated data
+      const { data, error: selectError } = await supabaseAdmin
+        .from('tasks')
+        .select('*')
+        .eq('id', taskId)
+        .is('deleted_at', null)
+        .single();
       
       timer.end();
       
+      if (selectError || !data) {
+        return { success: false, error: 'Task not found after update' };
+      }
+      
       return {
         success: true,
-        data: result,
+        data: data,
         message: 'Task updated successfully',
       };
       
@@ -275,45 +308,39 @@ export class TaskService {
       };
       const normalizedSource = normalizeSource(source);
       if (source && !normalizedSource) {
-        console.warn('searchTasks: invalid source provided, ignoring filter', { source });
+        // console.warn('searchTasks: invalid source provided, ignoring filter', { source });
       }
       
-      // Use the database search function for complex queries
-      const { data: tasks, error } = await client
-        .rpc('search_tasks', {
-          search_term: search || undefined,
-          filter_status: status || undefined,
-          filter_priority: priority || undefined,
-          filter_source: normalizedSource,
-          date_from: dateFrom || undefined,
-          date_to: dateTo || undefined,
-          limit_count: limit,
-          offset_count: offset,
-        });
-      
-      if (error) throw error;
-      
-      // Get total count for pagination
+      // Bypassing the RPC function and building the query directly
       let query = client
         .from('tasks')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
         .is('deleted_at', null);
-      
-      // Apply filters for count
+
       if (status) query = query.eq('status', status);
       if (priority) query = query.eq('priority', priority);
       if (normalizedSource) query = query.eq('source', normalizedSource);
       if (dateFrom) query = query.gte('created_at', dateFrom);
       if (dateTo) query = query.lte('created_at', dateTo);
-      
-      const { count, error: countError } = await query;
-      
-      if (countError) throw countError;
-      
+
+      if (search) {
+        query = query.or(`title.ilike.%${search}%,problem_description.ilike.%${search}%,customer_name.ilike.%${search}%`);
+      }
+
+      // Pagination
+      query = query.range(offset, offset + limit - 1);
+
+      // Ordering
+      query = query.order('created_at', { ascending: false });
+
+      const { data: tasks, error, count } = await query;
+
+      if (error) throw error;
+
       timer.end();
-      
+
       const totalPages = Math.ceil((count || 0) / limit);
-      
+
       return {
         tasks: (tasks || []) as unknown as Task[],
         pagination: {
@@ -640,7 +667,7 @@ export class TaskService {
       return data?.[0] || null;
     } catch (error) {
       timer.end();
-      console.error('❌ Find by source and external ID error:', error);
+      // console.error('❌ Find by source and external ID error:', error);
       return null;
     }
   }
@@ -666,7 +693,7 @@ export class TaskService {
       return data || [];
     } catch (error) {
       timer.end();
-      console.error('❌ List admin tasks error:', error);
+      // console.error('❌ List admin tasks error:', error);
       return [];
     }
   }

@@ -7,6 +7,12 @@ export async function GET(
 ) {
   const { id } = await params;
   try {
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Task ID is required' },
+        { status: 400 }
+      );
+    }
     const task = getTaskById(id);
     
     if (!task) {
@@ -32,7 +38,21 @@ export async function PUT(
 ) {
   const { id } = await params;
   try {
-    const body = await request.json();
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Task ID is required' },
+        { status: 400 }
+      );
+    }
+    let body: any;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON payload' },
+        { status: 400 }
+      );
+    }
     const updates = body;
 
     // Validate priority if provided
@@ -82,6 +102,12 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Task ID is required' },
+        { status: 400 }
+      );
+    }
     const success = deleteTask(id);
     
     if (!success) {
