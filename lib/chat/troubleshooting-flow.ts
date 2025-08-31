@@ -136,7 +136,7 @@ export class TroubleshootingFlow {
       currentStep: 0,
       active: true,
     };
-    const kb = TROUBLESHOOTING_KB[appliance][issue as any];
+    const kb = (TROUBLESHOOTING_KB as any)[appliance]?.[issue];
     return {
       text: `I understand you're having an issue with your ${appliance.toUpperCase()}: ${
         kb.title
@@ -156,7 +156,7 @@ export class TroubleshootingFlow {
     }
 
     this.state.currentStep++;
-    const kb = TROUBLESHOOTING_KB[this.state.appliance][this.state.issue as any];
+    const kb = (TROUBLESHOOTING_KB as any)[this.state.appliance]?.[this.state.issue];
 
     if (this.state.currentStep < kb.steps.length) {
       return {
@@ -218,7 +218,7 @@ export class TroubleshootingFlow {
     if (!this.state.active || !this.state.appliance || !this.state.issue) {
       return this.getEscalationResponse();
     }
-    const kb = TROUBLESHOOTING_KB[this.state.appliance][this.state.issue as any];
+    const kb = (TROUBLESHOOTING_KB as any)[this.state.appliance]?.[this.state.issue];
     return {
         text: kb.steps[this.state.currentStep],
     }
@@ -234,7 +234,7 @@ export class TroubleshootingFlow {
             ],
         }
     }
-    const kb = TROUBLESHOOTING_KB[this.state.appliance][this.state.issue as any];
+    const kb = (TROUBLESHOOTING_KB as any)[this.state.appliance]?.[this.state.issue];
     return {
       text: kb.escalation,
       quickReplies: [

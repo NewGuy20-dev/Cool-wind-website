@@ -503,7 +503,7 @@ export default async function DebugPage() {
             📋 View Tasks API
           </a>
           <Link 
-            href="/admin/debug"
+            href="/dashboard-wind-ops/debug"
             style={{ 
               backgroundColor: '#6b7280', 
               color: 'white', 

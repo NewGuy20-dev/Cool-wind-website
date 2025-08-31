@@ -95,22 +95,44 @@ export default function AdminPage() {
       const lastChecked = localStorage.getItem('admin_notifications_last_checked') || 
                          new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Default to 24h ago
       
+      // Get base URL from environment or fallback to current origin
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+      
       // Check for new tickets created since last check (not by admin)
-      const response = await fetch(`/api/notifications/check?since=${lastChecked}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`${baseUrl}/api/notifications/check?since=${encodeURIComponent(lastChecked)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const data = await response.json();
         
         setState(prev => ({
           ...prev,
           notifications: {
-            hasUnread: data.hasNew,
-            count: data.count,
+            hasUnread: data.hasNew || false,
+            count: data.count || 0,
             lastChecked: prev.notifications.lastChecked
           }
         }));
+      } else {
+        console.warn(`Notifications API returned ${response.status}: ${response.statusText}`);
       }
-    } catch (error) {
-      console.error('Error checking notifications:', error);
+    } catch (error: any) {
+      // Only log non-abort errors to avoid spam when component unmounts
+      if (error.name !== 'AbortError') {
+        console.warn('Error checking notifications (will retry):', error.message);
+      }
     }
   }, []);
 
@@ -186,6 +208,8 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
+    let notificationInterval: NodeJS.Timeout | null = null;
+    
     if (state.isAuthenticated) {
       // Load initial data
       loadDashboardData();
@@ -194,14 +218,16 @@ export default function AdminPage() {
       checkForNewNotifications();
       
       // Set up interval to check for notifications every 30 seconds
-      const notificationInterval = setInterval(() => {
+      notificationInterval = setInterval(() => {
         checkForNewNotifications();
       }, 30000);
-      
-      return () => {
-        clearInterval(notificationInterval);
-      };
     }
+    
+    return () => {
+      if (notificationInterval) {
+        clearInterval(notificationInterval);
+      }
+    };
   }, [state.isAuthenticated, checkForNewNotifications, loadDashboardData]);
 
   useEffect(() => {

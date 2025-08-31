@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "customerName": "Alice Smith",
+    "phoneNumber": "9876543210",
+    "problemDescription": "I tried calling multiple times but no one picked up. My refrigerator is not working and all my food is spoiling. This is an emergency!",
+    "priority": "high",
+    "status": "new",
+    "attemptCount": 0,
+    "notes": "Auto-created from chat agent. AI Reasoning: The customer explicitly states it's an emergency, the refrigerator is not working, and food is spoiling. This poses a risk of food spoilage and potential health hazards, requiring immediate attention.",
+    "aiPriorityScore": 1,
+    "aiReasoning": "The customer explicitly states it's an emergency, the refrigerator is not working, and food is spoiling. This poses a risk of food spoilage and potential health hazards, requiring immediate attention.",
+    "aiTags": [
+      "emergency",
+      "refrigerator-failure",
+      "food-spoilage"
+    ],
+    "estimatedResponseTime": "2-4 hours",
+    "id": "d9e003df-d73b-4923-88f3-2e7044200777",
+    "createdAt": "2025-08-31T18:25:51.835Z",
+    "updatedAt": "2025-08-31T18:25:51.835Z"
+  }
+]

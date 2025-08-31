@@ -4,17 +4,20 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import FloatingCtas from '@/components/FloatingCtas'
+import CookieConsent from '@/components/CookieConsent'
+import Providers from '@/components/Providers'
+import PageTransition from '@/components/PageTransition'
+import ConditionalLayout from '@/components/ConditionalLayout'
 
 export const metadata: Metadata = {
 	title: 'Cool Wind Services | AC & Refrigerator Spare Parts, Repairs in Thiruvalla, Kerala',
 	description:
 		'Best AC repair Thiruvalla & refrigerator service Kerala since 2009. Genuine spare parts, same-day service. Expert appliance repair Pathanamthitta. Call +91-8547229991.',
 	metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-	alternates: { 
-		languages: { 
-			en: '/', 
-			ml: '/ml' 
-		},
+	alternates: {
 		canonical: '/'
 	},
 	openGraph: {
@@ -235,7 +238,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				"query-input": "required name=search_term_string"
 			}
 		],
-		inLanguage: ["en-IN", "ml-IN"]
+		inLanguage: ["en-IN"]
 	}
 
 	return (
@@ -294,7 +297,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				<meta name="business:contact_data:phone_number" content="+91-8547229991" />
 			</head>
 			<body className={`${inter.className} min-h-screen antialiased`}>
-				{children}
+				<Providers>
+					<ConditionalLayout>
+						<PageTransition>
+							{children}
+						</PageTransition>
+					</ConditionalLayout>
+				</Providers>
 				<Analytics />
 				<SpeedInsights />
 			</body>

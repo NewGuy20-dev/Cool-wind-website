@@ -156,7 +156,7 @@ export default function ContactSubmissions() {
 
   const getUrgencyIcon = (isUrgent: boolean) => {
     return isUrgent ? (
-      <AlertCircle className="h-4 w-4 text-red-500" title="Urgent" />
+      <AlertCircle className="h-4 w-4 text-red-500" />
     ) : (
       <Clock className="h-4 w-4 text-gray-400" />
     )

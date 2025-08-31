@@ -25,7 +25,7 @@ export default function robots(): MetadataRoute.Robots {
 				],
 				disallow: [
 					'/api/',
-					'/admin/',
+					'/dashboard-wind-ops/',
 					'/_next/',
 					'/private/',
 					'/temp/',
@@ -39,7 +39,7 @@ export default function robots(): MetadataRoute.Robots {
 				allow: '/',
 				disallow: [
 					'/api/',
-					'/admin/',
+					'/dashboard-wind-ops/',
 					'/private/'
 				]
 			},
@@ -48,7 +48,7 @@ export default function robots(): MetadataRoute.Robots {
 				allow: '/',
 				disallow: [
 					'/api/',
-					'/admin/',
+					'/dashboard-wind-ops/',
 					'/private/'
 				],
 				crawlDelay: 2
