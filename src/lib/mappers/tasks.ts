@@ -16,13 +16,13 @@ export function mapDbToApi(db: TaskDbRow): TaskApi {
     category: db.category,
     source: db.source,
     estimatedDuration: db.estimated_duration,
-    actualDuration: db.actual_duration,
     dueDate: db.due_date,
     completedAt: db.completed_at,
     assignedTo: db.assigned_to,
     assignedAt: db.assigned_at,
     aiPriorityReason: db.ai_priority_reason,
     urgencyKeywords: db.urgency_keywords,
+    archived: db.archived ?? false,
     createdAt: db.created_at,
     updatedAt: db.updated_at,
     deletedAt: db.deleted_at,
@@ -58,19 +58,21 @@ export function mapApiToDb(api: Partial<TaskApi>): Partial<TaskDbRow> {
   return out;
 }
 
-function mapDbStatusToApiStatus(s: string): TaskApi['status'] {
-  // Map DB status to normalized frontend status
-  if (s === 'urgent') return 'high';
-  if (s === 'pending') return 'new';
-  return (s as TaskApi['status']);
+function mapDbStatusToApiStatus(status: string): TaskApi['status'] {
+  // Direct mapping - no transformation needed
+  switch (status) {
+    case 'pending':
+    case 'open':
+    case 'in_progress':
+    case 'completed':
+    case 'cancelled':
+      return status;
+    default:
+      return 'pending';
+  }
 }
 
-function mapApiStatusToDbStatus(s: string): 'pending' | 'in_progress' | 'completed' | 'cancelled' {
-  // Map frontend status to DB status
-  if (s === 'high') return 'pending'; // treat 'high' as 'pending' for status
-  if (s === 'new') return 'pending';
-  if (s === 'in_progress') return 'in_progress';
-  if (s === 'completed') return 'completed';
-  if (s === 'cancelled') return 'cancelled';
-  return 'pending'; // default
+function mapApiStatusToDbStatus(status: TaskApi['status']): 'pending' | 'open' | 'in_progress' | 'completed' | 'cancelled' {
+  // Direct mapping - pass through
+  return status;
 }

@@ -8,10 +8,11 @@ interface Task {
   phoneNumber: string;
   problemDescription: string;
   priority: 'high' | 'medium' | 'low';
-  status: 'new' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'open';
   source: string;
   location?: string;
   aiPriorityReason?: string;
+  archived?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,7 +25,8 @@ interface Analytics {
     low: number;
   };
   tasksByStatus: {
-    new: number;
+    pending: number;
+    open: number;
     in_progress: number;
     completed: number;
     cancelled: number;
@@ -39,6 +41,8 @@ export default function AdminTasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [adminKey, setAdminKey] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
+  const [archivedTasks, setArchivedTasks] = useState<Task[]>([]);
 
   const fetchTasks = async () => {
     try {
@@ -59,7 +63,10 @@ export default function AdminTasksPage() {
       }
 
       const data = await response.json();
-      setTasks(data.tasks);
+      console.log('Received tasks data:', data.tasks);
+      console.log('Completed tasks:', data.tasks.filter((task: Task) => task.status === 'completed'));
+      setTasks(data.tasks.filter((task: Task) => !task.archived));
+      setArchivedTasks(data.tasks.filter((task: Task) => task.archived));
       setAnalytics(data.analytics);
       setIsAuthenticated(true);
       setError(null);
@@ -96,6 +103,58 @@ export default function AdminTasksPage() {
     }
   };
 
+  const archiveTask = async (taskId: string) => {
+    try {
+      const response = await fetch('/api/admin/tasks', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminKey}`
+        },
+        body: JSON.stringify({ taskId, action: 'archive' })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Task archived successfully:', result.message);
+        // Refresh tasks
+        fetchTasks();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to archive task: ${errorData.error}`);
+      }
+    } catch (err) {
+      console.error('Failed to archive task:', err);
+      alert('Failed to archive task. Please try again.');
+    }
+  };
+
+  const unarchiveTask = async (taskId: string) => {
+    try {
+      const response = await fetch('/api/admin/tasks', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminKey}`
+        },
+        body: JSON.stringify({ taskId, action: 'unarchive' })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Task unarchived successfully:', result.message);
+        // Refresh tasks
+        fetchTasks();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to unarchive task: ${errorData.error}`);
+      }
+    } catch (err) {
+      console.error('Failed to unarchive task:', err);
+      alert('Failed to unarchive task. Please try again.');
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'text-red-600 bg-red-100';
@@ -107,7 +166,8 @@ export default function AdminTasksPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'new': return 'text-blue-600 bg-blue-100';
+      case 'pending': return 'text-blue-600 bg-blue-100';
+      case 'open': return 'text-cyan-600 bg-cyan-100';
       case 'in_progress': return 'text-orange-600 bg-orange-100';
       case 'completed': return 'text-green-600 bg-green-100';
       case 'cancelled': return 'text-gray-600 bg-gray-100';
@@ -187,8 +247,8 @@ export default function AdminTasksPage() {
                 <p className="text-2xl font-bold text-yellow-600">{analytics.tasksByPriority.medium}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-green-800">New Tasks</h3>
-                <p className="text-2xl font-bold text-green-600">{analytics.tasksByStatus.new}</p>
+                <h3 className="text-lg font-semibold text-green-800">Pending Tasks</h3>
+                <p className="text-2xl font-bold text-green-600">{analytics.tasksByStatus.pending}</p>
               </div>
             </div>
           )}
@@ -196,12 +256,41 @@ export default function AdminTasksPage() {
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 bg-gray-50 border-b">
-            <h2 className="text-xl font-semibold text-gray-800">All Tasks</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {activeTab === 'active' ? 'Active Tasks' : 'Archived Tasks'}
+              </h2>
+              <div className="flex space-x-1">
+                <button
+                  onClick={() => setActiveTab('active')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    activeTab === 'active'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Active ({tasks.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('archived')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    activeTab === 'archived'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Archived ({archivedTasks.length})
+                </button>
+              </div>
+            </div>
           </div>
           
-          {tasks.length === 0 ? (
+          {(activeTab === 'active' ? tasks : archivedTasks).length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              No tasks found. The failed call detection system is ready and waiting for customer reports.
+              {activeTab === 'active' 
+                ? 'No active tasks found. The failed call detection system is ready and waiting for customer reports.'
+                : 'No archived tasks found.'
+              }
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -221,7 +310,7 @@ export default function AdminTasksPage() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created
+                      {activeTab === 'active' ? 'Created' : 'Archived'}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -229,7 +318,7 @@ export default function AdminTasksPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {tasks.map((task) => (
+                  {(activeTab === 'active' ? tasks : archivedTasks).map((task) => (
                     <tr key={task.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
@@ -263,29 +352,62 @@ export default function AdminTasksPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(task.createdAt).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        {task.status === 'new' && (
-                          <button
-                            onClick={() => updateTaskStatus(task.id, 'in_progress')}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            Start
-                          </button>
-                        )}
-                        {task.status === 'in_progress' && (
-                          <button
-                            onClick={() => updateTaskStatus(task.id, 'completed')}
-                            className="text-green-600 hover:text-green-900"
-                          >
-                            Complete
-                          </button>
-                        )}
-                        <a
-                          href={`tel:${task.phoneNumber}`}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Call
-                        </a>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex flex-wrap gap-2">
+                          {activeTab === 'active' && (
+                            <>
+                              {(task.status === 'pending' || task.status === 'open') && (
+                                <button
+                                  onClick={() => updateTaskStatus(task.id, 'in_progress')}
+                                  className="text-blue-600 hover:text-blue-900"
+                                >
+                                  Start
+                                </button>
+                              )}
+                              {task.status === 'in_progress' && (
+                                <button
+                                  onClick={() => updateTaskStatus(task.id, 'completed')}
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Complete
+                                </button>
+                              )}
+                              <a
+                                href={`tel:${task.phoneNumber}`}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                Call
+                              </a>
+                              {(task.status === 'completed' || task.status === 'cancelled') && (
+                                <button
+                                  onClick={() => archiveTask(task.id)}
+                                  className="text-gray-600 hover:text-gray-900"
+                                  title="Archive task"
+                                >
+                                  Archive
+                                </button>
+                              )}
+                              {console.log('Task status check:', task.status, 'Should show archive:', task.status === 'completed' || task.status === 'cancelled', 'for task:', task.id)}
+                            </>
+                          )}
+                          {activeTab === 'archived' && (
+                            <>
+                              <button
+                                onClick={() => unarchiveTask(task.id)}
+                                className="text-blue-600 hover:text-blue-900"
+                                title="Restore task to active list"
+                              >
+                                Unarchive
+                              </button>
+                              <a
+                                href={`tel:${task.phoneNumber}`}
+                                className="text-gray-600 hover:text-gray-900"
+                              >
+                                Call
+                              </a>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

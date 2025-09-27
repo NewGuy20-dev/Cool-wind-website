@@ -9,7 +9,7 @@ export type TaskApi = {
   title: string;
   description?: string | null;
   problemDescription: string;
-  status: 'new' | 'in_progress' | 'completed' | 'cancelled' | 'high' | 'low'; // normalized frontend enum
+  status: 'pending' | 'open' | 'in_progress' | 'completed' | 'cancelled';
   priority?: 'high' | 'medium' | 'low' | 'urgent' | null;
   category?: string | null;
   source?: string | null;
@@ -21,6 +21,7 @@ export type TaskApi = {
   assignedAt?: string | null;
   aiPriorityReason?: string | null;
   urgencyKeywords?: string[] | null;
+  archived?: boolean; // Archive status
   createdAt: string; // ISO
   updatedAt: string;
   deletedAt?: string | null;

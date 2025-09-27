@@ -34,6 +34,7 @@ export default function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
 
       if (response.ok) {
         sessionStorage.setItem('admin_authenticated', 'true');
+        sessionStorage.setItem('admin_key', password); // Store the actual password they entered
         onAuthSuccess();
       } else {
         setError('Invalid password. Please try again.');
@@ -119,10 +120,6 @@ export default function AdminAuth({ onAuthSuccess }: AdminAuthProps) {
           </div>
         </form>
 
-        <div className="mt-6 text-center text-xs text-gray-500">
-          <p>Default password: coolwind2024</p>
-          <p className="mt-1">For security, change this in production</p>
-        </div>
       </div>
     </div>
   );

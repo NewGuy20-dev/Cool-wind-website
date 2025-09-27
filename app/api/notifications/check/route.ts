@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Create Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 interface Ticket {
   id: string;
@@ -17,40 +12,88 @@ interface Ticket {
   updated_by?: string;
 }
 
+function formatError(error: unknown) {
+  const get = (key: 'message' | 'details' | 'hint' | 'code') => {
+    if (error && typeof error === 'object' && key in error) {
+      return (error as Record<string, unknown>)[key];
+    }
+    return undefined;
+  };
+
+  const message =
+    error instanceof Error
+      ? error.message
+      : (get('message') as string) || String(error);
+
+  if (process.env.NODE_ENV === 'production') {
+    return { message };
+  }
+
+  return {
+    message,
+    details: get('details'),
+    hint: get('hint'),
+    code: get('code'),
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const since = searchParams.get('since');
-    
+
     if (!since) {
       return NextResponse.json({ error: 'Since parameter is required' }, { status: 400 });
     }
 
+    const sinceDate = new Date(since);
+    if (Number.isNaN(sinceDate.getTime())) {
+      return NextResponse.json({ error: 'Since parameter must be a valid ISO date string' }, { status: 400 });
+    }
+
+    const sinceIso = sinceDate.toISOString();
+
+    // DEBUG: Log the Supabase URL being used
+    console.log('[DEBUG] Supabase URL:', process.env.SUPABASE_URL);
+    console.log('[DEBUG] Supabase Client URL:', (supabaseAdmin as any).supabaseUrl);
+    
     // Check for new tasks created since the last check
     // Exclude tasks created via admin panel by checking source field
-    const { data: newTickets, error } = await supabase
+    const { data: newTickets, error } = await supabaseAdmin
       .from('tasks')
       .select('id, created_at, customer_name, problem_description, source')
-      .gte('created_at', since)
+      .gte('created_at', sinceIso)
       .neq('source', 'admin-manual') // Exclude admin-created tasks
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error checking notifications:', error);
-      return NextResponse.json({ error: 'Failed to check notifications' }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'Failed to check notifications',
+          info: formatError(error),
+        },
+        { status: 500 }
+      );
     }
 
     // Check for task status updates that weren't made by admin
-    const { data: updatedTickets, error: updateError } = await supabase
+    const { data: updatedTickets, error: updateError } = await supabaseAdmin
       .from('tasks')
       .select('id, updated_at, customer_name, status')
-      .gte('updated_at', since)
+      .gte('updated_at', sinceIso)
       .neq('source', 'admin-manual') // Exclude admin updates
       .order('updated_at', { ascending: false });
 
     if (updateError) {
-      console.error('Error checking ticket updates:', error);
-      return NextResponse.json({ error: 'Failed to check ticket updates' }, { status: 500 });
+      console.error('Error checking ticket updates:', updateError);
+      return NextResponse.json(
+        {
+          error: 'Failed to check ticket updates',
+          info: formatError(updateError),
+        },
+        { status: 500 }
+      );
     }
 
     // Combine and deduplicate notifications
@@ -84,8 +127,14 @@ export async function GET(request: NextRequest) {
       notifications: uniqueNotifications.slice(0, 10) // Return max 10 recent notifications
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in notifications check:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        info: formatError(error),
+      },
+      { status: 500 }
+    );
   }
 }

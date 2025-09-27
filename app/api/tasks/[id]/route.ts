@@ -275,7 +275,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/tasks/[id] - Delete a specific task (soft delete)
+// DELETE /api/tasks/[id] - Delete a specific task
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -293,7 +293,7 @@ export async function DELETE(
       );
     }
 
-    // Proper soft delete via TaskService
+    // Delete task via TaskService
     const result = await TaskService.deleteTask(id, 'Task deleted via API');
 
     if (!result.success) {
@@ -308,7 +308,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Task deleted successfully'
+      message: 'Task permanently deleted from database'
     });
 
   } catch (error) {
@@ -316,7 +316,7 @@ export async function DELETE(
     return NextResponse.json(
       { 
         success: false,
-        error: 'Failed to cancel task' 
+        error: 'Failed to delete task' 
       },
       { status: 500 }
     );

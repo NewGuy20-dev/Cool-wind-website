@@ -10,9 +10,8 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
-
 // Custom enums matching database enums
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
+export type TaskStatus = 'pending' | 'open' | 'in_progress' | 'completed' | 'cancelled'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 export type TaskSource = 'chat-failed-call' | 'admin-manual' | 'api-direct' | 'webhook' | 'email' | 'phone'
 
@@ -31,6 +30,7 @@ export interface Database {
           problem_description: string
           status: TaskStatus
           priority: TaskPriority
+          archived: boolean
           category: string | null
           source: TaskSource
           estimated_duration: string | null
@@ -58,6 +58,7 @@ export interface Database {
           problem_description: string
           status?: TaskStatus
           priority?: TaskPriority
+          archived?: boolean
           category?: string | null
           source?: TaskSource
           estimated_duration?: string | null
@@ -544,7 +545,6 @@ export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
 export interface TaskCreateRequest extends Omit<TaskInsert, 'id' | 'task_number' | 'created_at' | 'updated_at'> {
   // Additional validation or computed fields can be added here
 }
-
 export interface TaskUpdateRequest extends TaskUpdate {
   id: string // Make ID required for updates
 }
@@ -558,6 +558,8 @@ export interface TaskSearchParams {
   dateTo?: string
   page?: number
   limit?: number
+  archived?: boolean
+  assignedTo?: string
 }
 
 export interface TaskSearchResult {

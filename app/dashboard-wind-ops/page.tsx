@@ -62,13 +62,14 @@ export default function AdminPage() {
     const isAuthenticated = sessionStorage.getItem('admin_authenticated') === 'true';
     setState(prev => ({ ...prev, isAuthenticated, loading: false }));
   };
-
+  
   const handleAuthSuccess = () => {
     setState(prev => ({ ...prev, isAuthenticated: true }));
   };
 
   const handleLogout = () => {
     sessionStorage.removeItem('admin_authenticated');
+    sessionStorage.removeItem('admin_key');
     setState(prev => ({ ...prev, isAuthenticated: false }));
     router.push('/');
   };

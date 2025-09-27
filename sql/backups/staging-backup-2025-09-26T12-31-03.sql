@@ -1,0 +1,16 @@
+-- STAGING Database Backup
+-- Created: 2025-09-26T12:31:03.435Z
+-- Environment: staging
+-- 
+-- INSTRUCTIONS:
+-- To create actual backup, use Supabase CLI:
+-- For staging branch: supabase db dump --db-url <STAGING_DB_URL> --file C:\Users\Renjini Das\Downloads\Vibe- Coding projects\Cool Wind comapny Website\sql\backups\staging-backup-2025-09-26T12-31-03.sql
+-- For production: supabase db dump --file C:\Users\Renjini Das\Downloads\Vibe- Coding projects\Cool Wind comapny Website\sql\backups\staging-backup-2025-09-26T12-31-03.sql
+--
+-- To restore from backup:
+-- psql <DATABASE_URL> < C:\Users\Renjini Das\Downloads\Vibe- Coding projects\Cool Wind comapny Website\sql\backups\staging-backup-2025-09-26T12-31-03.sql
+
+-- Schema snapshot at backup time:
+-- Tables: contact_submissions, performance_metrics, task_attachments, 
+--         task_audit_log, task_comments, tasks
+-- Note: Replace this with actual pg_dump output in production

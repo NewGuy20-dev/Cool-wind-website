@@ -161,13 +161,12 @@ export class TaskService {
       // Don't set updated_at manually - let the DB trigger handle it
       delete safeUpdates.updated_at;
       
-      // Early return if no updates provided
       if (Object.keys(safeUpdates).length === 0) {
         return { success: false, error: 'No valid updates provided' };
       }
       
       // Validate enum values
-      if (safeUpdates.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(safeUpdates.status)) {
+      if (safeUpdates.status && !['pending', 'open', 'in_progress', 'completed', 'cancelled'].includes(safeUpdates.status)) {
         return { success: false, error: 'Invalid status value' };
       }
       if (safeUpdates.priority && !['low', 'medium', 'high', 'urgent'].includes(safeUpdates.priority)) {
@@ -222,37 +221,34 @@ export class TaskService {
   }
   
   /**
-   * Soft delete task
+   * Hard delete task (permanently removes from database)
+   * Uses database function for atomic deletion
    */
   static async deleteTask(taskId: string, reason?: string): Promise<ApiResponse<void>> {
     const timer = SupabasePerformanceMonitor.startTimer('deleteTask');
     
     try {
-      const result = await withRetry(async () => {
-        const { error } = await supabaseAdmin
-          .from('tasks')
-          .update({
-            deleted_at: new Date().toISOString(),
-            metadata: {
-              deleted_reason: reason || 'Deleted by admin',
-              deleted_at: new Date().toISOString(),
-            }
-          })
-          .eq('id', taskId)
-          .is('deleted_at', null);
-        
-        if (error) throw error;
+      // Simply call our database function that handles everything atomically
+      const { error } = await supabaseAdmin.rpc('hard_delete_task', {
+        target_task_id: taskId
       });
+      
+      if (error) {
+        console.error('RPC hard_delete_task failed:', error);
+        throw error;
+      }
       
       timer.end();
       
       return {
         success: true,
-        message: 'Task deleted successfully',
+        message: 'Task permanently deleted from database',
       };
       
     } catch (error) {
       timer.end();
+      console.error('Hard delete error:', error);
+      
       const errorInfo = handleSupabaseError(error instanceof Error ? error : null);
       
       return {
@@ -270,15 +266,17 @@ export class TaskService {
     
     try {
       const client = options?.admin ? supabaseAdmin : supabase;
-      const {
-        search,
-        status,
-        priority,
-        source,
-        dateFrom,
-        dateTo,
-        page = 1,
-        limit = 50
+      const { 
+        search, 
+        status, 
+        priority, 
+        source, 
+        dateFrom, 
+        dateTo, 
+        page = 1, 
+        limit = 50,
+        archived = false,
+        assignedTo = null
       } = params;
       
       const offset = (page - 1) * limit;
@@ -320,8 +318,12 @@ export class TaskService {
       if (status) query = query.eq('status', status);
       if (priority) query = query.eq('priority', priority);
       if (normalizedSource) query = query.eq('source', normalizedSource);
+      if (assignedTo) query = query.eq('assigned_to', assignedTo);
       if (dateFrom) query = query.gte('created_at', dateFrom);
       if (dateTo) query = query.lte('created_at', dateTo);
+      
+      // Filter by archived status
+      query = query.eq('archived', archived);
 
       if (search) {
         query = query.or(`title.ilike.%${search}%,problem_description.ilike.%${search}%,customer_name.ilike.%${search}%`);
@@ -384,6 +386,7 @@ export class TaskService {
         .from('tasks')
         .select('*')
         .is('deleted_at', null)
+        .eq('archived', false)
         .order('created_at', { ascending: false })
         .limit(limit);
       
@@ -673,28 +676,39 @@ export class TaskService {
   }
 
   /**
-   * List all tasks for admin (no filtering)
+   * Fetch archived tasks from archived_tasks view with optional filters
    */
-  static async listAdminTasks(): Promise<Task[]> {
-    const timer = SupabasePerformanceMonitor.startTimer('listAdminTasks');
-    
+  static async getArchivedTasks(params: TaskSearchParams = {}): Promise<Task[]> {
     try {
-      const { data, error } = await supabaseAdmin
-        .from('tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      timer.end();
-      
-      if (error) {
-        throw error;
+      if (!supabaseAdmin) {
+        throw new Error('SUPABASE_CLIENT_NOT_INITIALIZED');
       }
-      
+
+      let query = supabaseAdmin
+        .from('archived_tasks')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (params.status) query = query.eq('status', params.status);
+      if (params.priority) query = query.eq('priority', params.priority);
+      if (params.source) query = query.eq('source', params.source);
+      if (params.search) {
+        query = query.or(`title.ilike.%${params.search}%,problem_description.ilike.%${params.search}%,customer_name.ilike.%${params.search}%`);
+      }
+      if (params.limit) query = query.limit(params.limit);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('[TaskService] Error fetching archived tasks:', error);
+        throw Object.assign(new Error('FETCH_ARCHIVED_TASKS_FAILED'), { details: error });
+      }
+
       return data || [];
-    } catch (error) {
-      timer.end();
-      // console.error('❌ List admin tasks error:', error);
-      return [];
+
+    } catch (err: any) {
+      console.error('[TaskService] Get archived tasks error:', err);
+      throw err;
     }
   }
 }

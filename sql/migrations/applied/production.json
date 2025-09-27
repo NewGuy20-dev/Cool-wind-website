@@ -1,0 +1,64 @@
+{
+  "environment": "production",
+  "last_updated": "2025-01-26T17:34:52+05:30",
+  "applied_migrations": [
+    {
+      "filename": "00_database_setup.sql",
+      "applied_at": "2025-01-20T00:00:00+05:30",
+      "author": "System",
+      "notes": "Initial database setup - existing schema"
+    },
+    {
+      "filename": "01_core_schema.sql", 
+      "applied_at": "2025-01-20T00:00:00+05:30",
+      "author": "System",
+      "notes": "Core tables: tasks, contact_submissions, etc."
+    },
+    {
+      "filename": "02_indexes_constraints.sql",
+      "applied_at": "2025-01-20T00:00:00+05:30", 
+      "author": "System",
+      "notes": "Database indexes and constraints"
+    },
+    {
+      "filename": "03_rls_policies.sql",
+      "applied_at": "2025-01-20T00:00:00+05:30",
+      "author": "System", 
+      "notes": "Row Level Security policies"
+    },
+    {
+      "filename": "04_contact_submissions.sql",
+      "applied_at": "2025-01-20T00:00:00+05:30",
+      "author": "System",
+      "notes": "Contact submissions table enhancements"
+    },
+    {
+      "filename": "04_triggers_functions.sql",
+      "applied_at": "2025-01-20T00:00:00+05:30",
+      "author": "System",
+      "notes": "Database triggers and functions"
+    },
+    {
+      "filename": "05_views_procedures.sql", 
+      "applied_at": "2025-01-20T00:00:00+05:30",
+      "author": "System",
+      "notes": "Database views and procedures"
+    },
+    {
+      "filename": "06_seed_data.sql",
+      "applied_at": "2025-01-20T00:00:00+05:30",
+      "author": "System",
+      "notes": "Initial seed data"
+    }
+  ],
+  "current_tables": [
+    "contact_submissions",
+    "performance_metrics", 
+    "task_attachments",
+    "task_audit_log",
+    "task_comments",
+    "tasks"
+  ],
+  "schema_version": "1.8.0",
+  "notes": "Production database - Current state captured from existing Cool Wind Company schema"
+}

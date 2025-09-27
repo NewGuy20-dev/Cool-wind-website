@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 // Simple admin authentication (in production, use proper auth)
 const ADMIN_KEY = process.env.ADMIN_KEY || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 function authenticateAdmin(request: NextRequest): boolean {
   const authHeader = request.headers.get('Authorization');
@@ -13,7 +14,8 @@ function authenticateAdmin(request: NextRequest): boolean {
   }
   
   const token = authHeader.substring(7);
-  return token === ADMIN_KEY;
+  const validTokens = [ADMIN_KEY, ADMIN_PASSWORD].filter((value): value is string => Boolean(value));
+  return validTokens.includes(token);
 }
 
 // Strict Zod validation schema for task creation
@@ -116,26 +118,59 @@ export async function GET(request: NextRequest) {
       normalizedSource = map[v] || map[hyphened] || map[collapsed] || ((validList as string[]).includes(hyphened) ? (hyphened as TaskSource) : undefined);
       if (!normalizedSource) {
         return NextResponse.json(
-          { error: `Invalid source value: ${rawSource}. Valid values: ${validList.join(', ')}` },
           { status: 400 }
         );
       }
     }
 
+    const archivedOnly = searchParams.get('archived') === 'true';
     const searchParams_: TaskSearchParams = {
       search: searchParams.get('search') || undefined,
-      status: (searchParams.get('status') as TaskStatus) || undefined,
-      priority: (searchParams.get('priority') as TaskPriority) || undefined,
-      source: normalizedSource,
+      status: searchParams.get('status') as TaskStatus || undefined,
+      priority: searchParams.get('priority') as TaskPriority || undefined,
+      source: searchParams.get('source') as TaskSource || undefined,
+      assignedTo: searchParams.get('assignedTo') || undefined,
       dateFrom: searchParams.get('dateFrom') || undefined,
       dateTo: searchParams.get('dateTo') || undefined,
       page: parseInt(searchParams.get('page') || '1'),
       limit: parseInt(searchParams.get('limit') || '50'),
+      archived: archivedOnly ? true : undefined,
     };
-    
+
+    if (archivedOnly) {
+      try {
+        const archived = await TaskService.getArchivedTasks(searchParams_);
+
+        const tasks = (archived || []).map((t: any) => ({
+          ...t,
+          archived: true,
+        }));
+
+        return NextResponse.json({
+          success: true,
+          tasks,
+          pagination: {
+            page: 1,
+            limit: tasks.length,
+            total: tasks.length,
+            totalPages: 1,
+          },
+          analytics: null,
+          urgentTasks: [],
+          totalTasks: tasks.length,
+          archived: true,
+        });
+      } catch (error) {
+        console.error('❌ Admin archived tasks fetch error:', error);
+        return NextResponse.json(
+          { error: 'Failed to fetch archived tasks' },
+          { status: 500 }
+        );
+      }
+    }
+
     // Use search function for filtering
     const result = await TaskService.searchTasks(searchParams_, { admin: true });
-
     // Also get additional analytics data
     const analyticsResult = await TaskService.getTaskStats(undefined, undefined, { admin: true });
     const urgentTasksResult = await TaskService.getUrgentTasks({ admin: true });
@@ -148,10 +183,11 @@ export async function GET(request: NextRequest) {
       phoneNumber: t.phone_number,
       problemDescription: t.problem_description,
       priority: (t.priority === 'urgent' ? 'high' : t.priority) as 'high' | 'medium' | 'low',
-      status: (t.status === 'pending' ? 'new' : t.status) as 'new' | 'in_progress' | 'completed' | 'cancelled',
+      status: t.status as 'pending' | 'open' | 'in_progress' | 'completed' | 'cancelled',
       source: t.source,
       location: t.location || undefined,
       aiPriorityReason: t.ai_priority_reason || undefined,
+      archived: t.archived || false,
       createdAt: t.created_at,
       updatedAt: t.updated_at,
     }));
@@ -169,7 +205,8 @@ export async function GET(request: NextRequest) {
         low: overview.low_count ?? 0,
       },
       tasksByStatus: {
-        new: overview.pending_count ?? 0,
+        pending: overview.pending_count ?? 0,
+        open: overview.open_count ?? 0,
         in_progress: overview.in_progress_count ?? 0,
         completed: overview.completed_count ?? 0,
         cancelled: overview.cancelled_count ?? 0,
@@ -183,7 +220,8 @@ export async function GET(request: NextRequest) {
         low: 0,
       },
       tasksByStatus: {
-        new: (analyticsResult.data as any)?.pending_tasks ?? 0,
+        pending: (analyticsResult.data as any)?.pending_tasks ?? 0,
+        open: (analyticsResult.data as any)?.open_tasks ?? 0,
         in_progress: (analyticsResult.data as any)?.in_progress_tasks ?? 0,
         completed: (analyticsResult.data as any)?.completed_tasks ?? 0,
         cancelled: (analyticsResult.data as any)?.cancelled_tasks ?? 0,
@@ -220,40 +258,86 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    
-    // Handle bulk updates
-    if (body.bulk && Array.isArray(body.taskIds)) {
-      const { taskIds, updates } = body;
-      
-      if (!taskIds.length) {
+    const { taskId, status, action } = body;
+    console.log('🔐 Admin PATCH payload:', { taskId, status, action });
+
+    // Handle archive/unarchive actions
+    if (action === 'archive') {
+      const { archiveTask } = await import('@/services/taskService');
+      if (!taskId) {
         return NextResponse.json(
-          { error: 'No task IDs provided' },
+          { error: 'Task ID is required for archive' },
           { status: 400 }
         );
       }
-      
-      const result = await TaskService.bulkUpdateTasks(taskIds, updates);
-      
-      if (!result.success) {
+      try {
+        const result = await archiveTask(taskId);
+        console.log(`✅ Admin archived task: ${taskId}`);
+        return NextResponse.json({
+          success: true,
+          message: 'Task archived successfully',
+          result
+        });
+      } catch (error: any) {
+        console.error('❌ Admin task archive error:', error);
+        let errorMessage = 'Failed to archive task';
+        let statusCode = 500;
+        
+        if (error.message === 'TASK_NOT_FOUND') {
+          errorMessage = 'Task not found';
+          statusCode = 404;
+        } else if (error.message === 'CANNOT_ARCHIVE_ACTIVE_TASK') {
+          errorMessage = 'Cannot archive task that is new or in progress. Complete or cancel the task first.';
+          statusCode = 400;
+        } else if (error.message === 'TASK_ALREADY_ARCHIVED') {
+          errorMessage = 'Task is already archived';
+          statusCode = 400;
+        }
+        
         return NextResponse.json(
-          { error: result.error },
-          { status: 500 }
+          { error: errorMessage },
+          { status: statusCode }
         );
       }
-      
-      console.log(`✅ Admin bulk updated ${result.data?.length || 0} tasks`);
-      
-      return NextResponse.json({
-        success: true,
-        message: `${result.data?.length || 0} tasks updated successfully`,
-        updatedTasks: result.data
-      });
     }
+
+    if (action === 'unarchive') {
+      const { unarchiveTask } = await import('@/services/taskService');
+      if (!taskId) {
+        return NextResponse.json(
+          { error: 'Task ID is required for unarchive' },
+          { status: 400 }
+        );
+      }
+      try {
+        const result = await unarchiveTask(taskId);
+        console.log(`✅ Admin unarchived task: ${taskId}`);
+        return NextResponse.json({
+          success: true,
+          message: 'Task unarchived successfully',
+          result
+        });
+      } catch (error: any) {
+        console.error('❌ Admin task unarchive error:', error);
+        let errorMessage = 'Failed to unarchive task';
+        let statusCode = 500;
+        
+        if (error.message === 'TASK_NOT_FOUND') {
+          errorMessage = 'Archived task not found';
+          statusCode = 404;
+        }
+        
+        return NextResponse.json(
+          { error: errorMessage },
+          { status: statusCode }
+        );
+      }
+    }
+
+    // Handle regular status updates
+    const { taskId: id, ...updates } = body;
     
-    // Handle single task update
-    const { taskId, ...updates } = body;
-    
-    if (!taskId) {
+    if (!id) {
       return NextResponse.json(
         { error: 'Task ID is required' },
         { status: 400 }
@@ -283,7 +367,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update task using Supabase service
-    const result = await TaskService.updateTask(taskId, updates);
+    const result = await TaskService.updateTask(id, updates);
     
     if (!result.success) {
       return NextResponse.json(
@@ -292,7 +376,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Admin updated task ${taskId}:`, updates);
+    console.log(`✅ Admin updated task ${id}:`, updates);
     
     return NextResponse.json({
       success: true,
