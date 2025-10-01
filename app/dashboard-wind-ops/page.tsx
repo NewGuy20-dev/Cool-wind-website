@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/ui/spinner';
+import { motion, useAnimation } from 'framer-motion';
 import { 
   PlusIcon, 
   TicketIcon, 
@@ -57,6 +58,17 @@ export default function AdminPage() {
       lastChecked: new Date().toISOString()
     }
   });
+
+  // Logo spin animation controls
+  const logoControls = useAnimation();
+  const triggerLogoSpin = async () => {
+    await logoControls.start({
+      rotate: 360,
+      transition: { duration: 0.5, ease: [0.42, 0, 0.58, 1] },
+    });
+    // Reset rotation instantly after completing the spin
+    logoControls.set({ rotate: 0 });
+  };
 
   const checkAuthStatus = () => {
     const isAuthenticated = sessionStorage.getItem('admin_authenticated') === 'true';
@@ -263,13 +275,20 @@ export default function AdminPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <motion.div
+                  animate={logoControls}
+                  onMouseEnter={triggerLogoSpin}
+                  onClick={triggerLogoSpin}
+                  onTouchStart={triggerLogoSpin}
+                  className="w-8 h-8 rounded-lg overflow-hidden cursor-pointer"
+                  style={{ display: 'inline-block' }}
+                >
                   <img 
                     src="/logo.png" 
                     alt="Cool Wind Services" 
                     className="w-full h-full object-contain"
                   />
-                </div>
+                </motion.div>
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">Cool Wind Services</h1>
                   <span className="text-xs text-gray-500">Administrative Dashboard</span>

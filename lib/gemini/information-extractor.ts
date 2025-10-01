@@ -146,8 +146,13 @@ RESPOND WITH ONLY THIS JSON FORMAT (no other text):
     // Remove +91 prefix if present (but not if it's part of a 10-digit number starting with 91)
     const withoutCountryCode = cleaned.replace(/^(\+91|91)(?=\d{10}$)/, '');
     
-    // Validate Indian mobile number (10 digits starting with 6-9)
+    // First check for valid Indian mobile number (10 digits starting with 6-9)
     if (/^[6-9]\d{9}$/.test(withoutCountryCode)) {
+      return withoutCountryCode;
+    }
+    
+    // For non-Indian format, accept any 10-digit number
+    if (/^\d{10}$/.test(withoutCountryCode)) {
       return withoutCountryCode;
     }
     

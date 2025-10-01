@@ -27,6 +27,7 @@ import {
 } from '@/lib/hooks/useSupabaseRealtimeHooks';
 import { Spinner } from '@/components/ui/spinner';
 import { TaskStatus, TaskPriority } from '@/lib/types/database';
+import DashboardStats from './DashboardStats';
 
 interface AdminPageState {
   isAuthenticated: boolean;
@@ -236,6 +237,9 @@ function DashboardView({
 
   return (
     <div className="space-y-8">
+      {/* Enhanced Dashboard Stats with Charts */}
+      <DashboardStats stats={dashboardData} />
+      
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard

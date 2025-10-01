@@ -288,6 +288,31 @@ export class BusinessLogicProcessor {
     };
   }
 
+  private static hasUrgentKeywords(message?: string): boolean {
+    if (!message) {
+      return false;
+    }
+
+    const normalized = message.toLowerCase();
+    const urgentKeywords = [
+      'emergency',
+      'urgent',
+      'asap',
+      'immediately',
+      'right away',
+      'leak',
+      'not cooling',
+      'no cooling',
+      'not working',
+      'stopped working',
+      'breakdown',
+      'broken',
+      'critical'
+    ];
+
+    return urgentKeywords.some(keyword => normalized.includes(keyword));
+  }
+
   static calculateBusinessRelevance(response: string): number {
     const businessKeywords = [
       'cool wind', 'thiruvalla', 'pathanamthitta', 'spare parts', 

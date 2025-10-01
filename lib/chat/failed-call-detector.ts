@@ -128,14 +128,15 @@ export class FailedCallDetector {
       throw new Error('Customer name is required and must be at least 2 characters');
     }
     
-    if (!customerData.phone || !/^[6-9]\d{9}$/.test(customerData.phone.replace(/[\s\-]/g, ''))) {
+    // Validate phone number - prefer Indian format but accept any 10-digit number
+    const cleanedPhone = customerData.phone ? customerData.phone.replace(/[\s\-]/g, '') : '';
+    if (!customerData.phone || !(/^[6-9]\d{9}$/.test(cleanedPhone) || /^\d{10}$/.test(cleanedPhone))) {
       throw new Error('Valid 10-digit phone number is required');
     }
     
     if (!location || location.trim().length < 3) {
       throw new Error('Location is required and must be at least 3 characters');
     }
-    
     if (!problemDescription || problemDescription.trim().length < 5) {
       throw new Error('Problem description is required and must be at least 5 characters');
     }

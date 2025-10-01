@@ -173,6 +173,24 @@ export class TaskService {
         return { success: false, error: 'Invalid priority value' };
       }
       
+      // Handle urgent priority constraint: urgent tasks must have a due_date
+      if (safeUpdates.priority === 'urgent' && !safeUpdates.due_date) {
+        // Check if the task already has a due_date
+        const { data: existingTask } = await supabaseAdmin
+          .from('tasks')
+          .select('due_date')
+          .eq('id', taskId)
+          .single();
+        
+        // Only set due_date if task doesn't already have one
+        if (!existingTask?.due_date) {
+          // Auto-set due_date to 24 hours from now for urgent tasks
+          const urgentDueDate = new Date();
+          urgentDueDate.setHours(urgentDueDate.getHours() + 24);
+          safeUpdates.due_date = urgentDueDate.toISOString();
+        }
+      }
+      
       // First, do a fast update without SELECT (much faster)
       const { error: updateError } = await supabaseAdmin
         .from('tasks')

@@ -181,10 +181,13 @@ export class ChatStateManager {
       /(?:phone|number|no)\s*(?:is)?\s*([6-9]\d{9})/i, // Indian mobile pattern
       /([6-9]\d{9})/g // Direct 10-digit Indian mobile
     ];
-    // Handle short replies that are only a phone number (e.g., "8848850922")
+    // Handle short replies that are only a phone number (e.g., "8848850922" or "1234567890")
     if (!extracted.phone) {
       const onlyDigits = message.replace(/\D/g, '');
       if (/^[6-9]\d{9}$/.test(onlyDigits)) {
+        extracted.phone = onlyDigits;
+      } else if (/^\d{10}$/.test(onlyDigits)) {
+        // Accept any 10-digit number for non-Indian formats
         extracted.phone = onlyDigits;
       }
     }
@@ -285,8 +288,13 @@ export class ChatStateManager {
       // Additional validation based on field type
       switch (field) {
         case 'phone':
-          // Must be 10-digit Indian mobile number
-          return /^[6-9]\d{9}$/.test(value.replace(/[\s\-]/g, ''));
+          // First check for valid Indian mobile number (10 digits starting with 6-9)
+          const cleaned = value.replace(/[\s\-]/g, '');
+          if (/^[6-9]\d{9}$/.test(cleaned)) {
+            return true;
+          }
+          // For non-Indian format, accept any 10-digit number
+          return /^\d{10}$/.test(cleaned);
         
         case 'name':
           // Must be at least 2 characters, only letters and spaces
@@ -323,7 +331,14 @@ export class ChatStateManager {
           // Additional validation based on field type
           switch (field) {
             case 'phone':
-              isValid = /^[6-9]\d{9}$/.test(value.replace(/[\s\-]/g, ''));
+              const cleanedPhone = value.replace(/[\s\-]/g, '');
+              // First check for valid Indian mobile number (10 digits starting with 6-9)
+              if (/^[6-9]\d{9}$/.test(cleanedPhone)) {
+                isValid = true;
+              } else {
+                // For non-Indian format, accept any 10-digit number
+                isValid = /^\d{10}$/.test(cleanedPhone);
+              }
               break;
             case 'name':
               isValid = value.length >= 2 && /^[a-zA-Z\s]+$/.test(value);

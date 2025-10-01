@@ -1,9 +1,11 @@
 'use client';
 
-import { 
-  TicketIcon, 
-  ClockIcon, 
-  CheckCircleIcon, 
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  TicketIcon,
+  ClockIcon,
+  CheckCircleIcon,
   ExclamationTriangleIcon,
   UserGroupIcon,
   ChartBarIcon,
@@ -14,6 +16,8 @@ import {
   BoltIcon,
   StarIcon
 } from '@heroicons/react/24/outline';
+
+import PerformanceChart, { MetricsDisplay } from './PerformanceChart';
 
 interface ActivityItem {
   type: 'completed' | 'created' | 'updated';
@@ -27,6 +31,9 @@ interface DashboardStatsProps {
 }
 
 export default function DashboardStats({ stats }: DashboardStatsProps) {
+  const router = useRouter();
+  
+  
   if (!stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -110,37 +117,121 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
           </div>
           
           {/* Mini Performance Cards */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
-              <div className="text-2xl font-bold text-blue-700">
-                {stats.avgResponseTime ? `${stats.avgResponseTime}h` : '--'}
+          <div className="mb-6">
+            {stats.daily_stats && stats.daily_stats.length > 0 ? (
+              <MetricsDisplay data={stats.daily_stats} />
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+                  <div className="text-2xl font-bold text-blue-700">
+                    {stats.total_tasks || 0}
+                  </div>
+                  <div className="text-xs text-blue-600">Total Tasks</div>
+                </div>
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
+                  <div className="text-2xl font-bold text-green-700">
+                    {stats.completed_tasks || 0}
+                  </div>
+                  <div className="text-xs text-green-600">Completed Tasks</div>
+                </div>
               </div>
-              <div className="text-xs text-blue-600">Avg Response Time</div>
-            </div>
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
-              <div className="text-2xl font-bold text-green-700">
-                {stats.completionRate ? `${stats.completionRate}%` : '--'}
-              </div>
-              <div className="text-xs text-green-600">Completion Rate</div>
-            </div>
+            )}
           </div>
           
-          {stats.chartData ? (
-            <div className="h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 p-4">
-              {/* Real chart would go here when implemented */}
-              <div className="text-center py-8">
-                <ChartBarIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Chart visualization ready</p>
-              </div>
+          {/* Chart Display */}
+          <div className="space-y-4">
+            <div className="bg-white border border-gray-200 rounded-lg p-3">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">📊 Today's Task Metrics</h4>
+              {stats?.daily_stats && stats.daily_stats.length > 0 ? (
+                <PerformanceChart 
+                  data={stats.daily_stats} 
+                  type="line" 
+                  metric="tasks" 
+                />
+              ) : stats ? (
+                <div className="space-y-6">
+                  {/* Charts Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    {/* Task Status Pie Chart */}
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">📊 Task Status Distribution</h5>
+                      <PerformanceChart 
+                        data={[
+                          { name: 'Completed', value: stats.completed_tasks || 0, color: '#10B981' },
+                          { name: 'Pending', value: stats.pending_tasks || 0, color: '#F59E0B' },
+                          { name: 'In Progress', value: stats.in_progress_tasks || 0, color: '#8B5CF6' },
+                          { name: 'Cancelled', value: stats.cancelled_tasks || 0, color: '#6B7280' }
+                        ].filter(item => item.value > 0)}
+                        type="pie" 
+                        metric="priority" 
+                      />
+                    </div>
+
+                    {/* Priority Bar Chart */}
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">🎯 Priority Levels</h5>
+                      <PerformanceChart 
+                        data={[
+                          { 
+                            name: 'Priority Distribution',
+                            urgent: stats.urgent_priority_count || 0,
+                            high: stats.high_priority_count || 0,
+                            medium: (stats.total_tasks || 0) - (stats.urgent_priority_count || 0) - (stats.high_priority_count || 0)
+                          }
+                        ]}
+                        type="bar" 
+                        metric="priority" 
+                      />
+                    </div>
+
+                    {/* Completion Progress */}
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm lg:col-span-2">
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">📈 Performance Overview</h5>
+                      <div className="grid grid-cols-4 gap-4 mb-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">{stats.total_tasks || 0}</div>
+                          <div className="text-xs text-gray-600">Total Tasks</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">{stats.completed_tasks || 0}</div>
+                          <div className="text-xs text-gray-600">Completed</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-red-600">{stats.urgent_priority_count || 0}</div>
+                          <div className="text-xs text-gray-600">Urgent</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-yellow-600">{Math.round(stats.completion_rate || 0)}%</div>
+                          <div className="text-xs text-gray-600">Completion Rate</div>
+                        </div>
+                      </div>
+                      
+                      {/* Progress Bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-4">
+                        <div 
+                          className="bg-gradient-to-r from-green-400 to-green-600 h-4 rounded-full transition-all duration-500 ease-out"
+                          style={{ width: `${Math.min(100, stats.completion_rate || 0)}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-center text-xs text-gray-500 mt-2">
+                        {stats.completed_tasks || 0} of {stats.total_tasks || 0} tasks completed
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              ) : (
+                <div className="h-32 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
+                  <div className="text-center">
+                    <ChartBarIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">No chart data available</p>
+                    <p className="text-xs text-gray-400">Create some tasks to see performance metrics</p>
+                  </div>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="h-32 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-              <div className="text-center">
-                <ChartBarIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No chart data available</p>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Enhanced Activity Feed */}
