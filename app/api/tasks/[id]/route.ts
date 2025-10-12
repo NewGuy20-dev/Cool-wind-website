@@ -31,6 +31,7 @@ const ALLOWED_FIELDS = new Set([
   'urgency_keywords',
   'metadata',
   'chat_context',
+  'archived',
 ]);
 
 const CAMEL_TO_SNAKE: Record<string, string> = {
@@ -66,6 +67,7 @@ function normalizeStatus(raw: any): string | undefined {
   const v = String(raw).trim().toLowerCase().replace(/[\s-]+/g, '_');
   const map: Record<string, string> = {
     pending: 'pending',
+    open: 'open',
     in_progress: 'in_progress',
     inprogress: 'in_progress',
     completed: 'completed',
@@ -243,6 +245,30 @@ export async function PUT(
         },
         { status: 400 }
       );
+    }
+
+    // Business rule: prevent archiving active tasks (pending, open, in_progress)
+    if (safeUpdates.archived === true) {
+      const current = await TaskService.getTaskById(id, { admin: true });
+      if (!current.success || !current.data) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Task not found',
+          },
+          { status: 404 }
+        );
+      }
+      const currentStatus = current.data.status;
+      if (['pending', 'open', 'in_progress'].includes(currentStatus)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Cannot archive active task. Only completed or cancelled tasks can be archived.',
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const result = await TaskService.updateTask(id, safeUpdates);

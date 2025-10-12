@@ -245,17 +245,27 @@ export default function TicketManagement({ tickets, onUpdate }: TicketManagement
     if (!editingTicket) return;
 
     try {
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+      const payload: any = {
+        status: editingTicket.status,
+        priority: editingTicket.priority,
+        description: editingTicket.description,
+      };
+
+      // Include assigned_to only if valid UUID or explicitly cleared
+      if (editingTicket.assigned_to === '' || editingTicket.assigned_to == null) {
+        payload.assigned_to = null;
+      } else if (typeof editingTicket.assigned_to === 'string' && UUID_REGEX.test(editingTicket.assigned_to)) {
+        payload.assigned_to = editingTicket.assigned_to;
+      }
+
       const response = await fetch(`/api/tasks/${editingTicket.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          status: editingTicket.status,
-          priority: editingTicket.priority,
-          assigned_to: editingTicket.assigned_to,
-          description: editingTicket.description,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -620,7 +630,7 @@ export default function TicketManagement({ tickets, onUpdate }: TicketManagement
                   value={editingTicket.assigned_to || ''}
                   onChange={(e) => setEditingTicket({ ...editingTicket, assigned_to: e.target.value })}
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter technician name"
+                  placeholder="Enter technician user ID (UUID) or leave blank to unassign"
                 />
               </div>
               <div>
