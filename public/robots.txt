@@ -1,0 +1,13 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /dashboard-wind-ops/
+
+# Host
+Host: https://coolwind.co.in
+
+# Sitemaps
+Sitemap: https://coolwind.co.in/sitemap.xml
