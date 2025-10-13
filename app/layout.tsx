@@ -149,6 +149,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					itemOffered: {
 						"@type": "Product",
 						name: "AC Spare Parts Thiruvalla",
+						image: [],
 						category: "Appliance Parts",
 						description: "Genuine AC spare parts for all brands in Thiruvalla Kerala",
 						brand: {
@@ -177,7 +178,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					availability: "https://schema.org/InStock",
 					itemOffered: {
 						"@type": "Product",
-						name: "Refrigerator Spare Parts Kerala", 
+						name: "Refrigerator Spare Parts Kerala",
+						image: [],
 						category: "Appliance Parts",
 						description: "Original refrigerator spare parts with warranty in Kerala",
 						brand: {
