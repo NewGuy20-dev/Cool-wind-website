@@ -6,7 +6,7 @@
 export interface ProductSchemaProps {
   name: string
   description: string
-  image?: string
+  image?: string | string[]
   url: string
   brand?: string
   category?: string
