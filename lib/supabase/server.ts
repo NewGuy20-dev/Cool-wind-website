@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { env, validateCriticalEnv } from "../env";
 
 // Validate env on import
@@ -11,7 +11,7 @@ try {
 
 console.log("[SUPABASE] Creating admin client with URL:", env.SUPABASE_URL ? "✓ Present" : "✗ Missing");
 
-export const supabaseAdmin = createClient(
+export const supabaseAdmin = createSupabaseClient(
   env.SUPABASE_URL || "",
   env.SUPABASE_SERVICE_ROLE_KEY || "",
   {
@@ -79,4 +79,9 @@ export async function getDatabaseHealthStatus() {
 // Log database operations (for debugging)
 export function logDatabaseOperation(operation: string, details: any) {
   console.log(`[SUPABASE] ${operation}:`, details);
+}
+
+// Export createClient for API routes
+export async function createClient() {
+  return supabaseAdmin;
 }

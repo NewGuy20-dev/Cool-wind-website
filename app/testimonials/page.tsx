@@ -1,14 +1,42 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Star, MapPin, Calendar, ArrowLeft, Filter } from 'lucide-react'
-import { enhancedTestimonials, ExistingTestimonial } from '@/lib/testimonials'
+import { Star, MapPin, Calendar, ArrowLeft, Filter, Plus } from 'lucide-react'
+
+interface Testimonial {
+  id: string
+  customer_name: string
+  location?: string
+  service_type?: string
+  rating: number
+  service_date?: string
+  review_text: string
+  service_details?: string
+}
 
 export default function TestimonialsPage() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedService, setSelectedService] = useState<string>('all')
   const [selectedRating, setSelectedRating] = useState<number>(0)
+  
+  useEffect(() => {
+    fetchTestimonials()
+  }, [])
+  
+  const fetchTestimonials = async () => {
+    try {
+      const response = await fetch('/api/testimonials?status=approved')
+      const data = await response.json()
+      setTestimonials(data.testimonials || [])
+    } catch (error) {
+      console.error('Error fetching testimonials:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
   
   const services = [
     { id: 'all', label: 'All Services' },
@@ -19,8 +47,8 @@ export default function TestimonialsPage() {
     { id: 'Electronics', label: 'Electronics' }
   ]
 
-  const filteredTestimonials = enhancedTestimonials.filter(testimonial => {
-    const serviceMatch = selectedService === 'all' || testimonial.service === selectedService
+  const filteredTestimonials = testimonials.filter(testimonial => {
+    const serviceMatch = selectedService === 'all' || testimonial.service_type === selectedService
     const ratingMatch = selectedRating === 0 || testimonial.rating >= selectedRating
     return serviceMatch && ratingMatch
   })
@@ -49,9 +77,9 @@ export default function TestimonialsPage() {
     )
   }
 
-  const averageRating = (
-    enhancedTestimonials.reduce((sum, t) => sum + t.rating, 0) / enhancedTestimonials.length
-  ).toFixed(1)
+  const averageRating = testimonials.length > 0 
+    ? (testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length).toFixed(1)
+    : '0.0'
 
   return (
     <main className="min-h-screen bg-neutral-50">
@@ -85,8 +113,12 @@ export default function TestimonialsPage() {
                 <span className="text-neutral-600">out of 5</span>
               </div>
               <div className="text-neutral-600">
-                <span className="font-bold text-neutral-800">{enhancedTestimonials.length}</span> reviews
+                <span className="font-bold text-neutral-800">{testimonials.length}</span> reviews
               </div>
+              <Link href="/testimonials/add" className="btn-primary flex items-center gap-2">
+                <Plus size={20} />
+                Add Your Review
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -155,7 +187,12 @@ export default function TestimonialsPage() {
       {/* Testimonials Grid */}
       <section className="py-16">
         <div className="mx-auto max-w-6xl px-4">
-          {filteredTestimonials.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="inline-block w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
+              <p className="text-neutral-600 mt-4">Loading testimonials...</p>
+            </div>
+          ) : filteredTestimonials.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-neutral-600 text-lg">No testimonials found matching your filters.</p>
               <button
@@ -190,44 +227,50 @@ export default function TestimonialsPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-xl font-bold text-neutral-800">
-                          {testimonial.name}
+                          {testimonial.customer_name}
                         </h3>
-                        <div className="flex items-center gap-2 text-sm text-neutral-500 mt-1">
-                          <MapPin size={14} />
-                          {testimonial.location}
-                        </div>
+                        {testimonial.location && (
+                          <div className="flex items-center gap-2 text-sm text-neutral-500 mt-1">
+                            <MapPin size={14} />
+                            {testimonial.location}
+                          </div>
+                        )}
                       </div>
                       {renderStars(testimonial.rating)}
                     </div>
 
                     {/* Service Badge */}
-                    <div className="mb-4">
-                      <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 text-sm font-medium rounded-full">
-                        {testimonial.service}
-                      </span>
-                    </div>
+                    {testimonial.service_type && (
+                      <div className="mb-4">
+                        <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 text-sm font-medium rounded-full">
+                          {testimonial.service_type}
+                        </span>
+                      </div>
+                    )}
 
                     {/* Review Text */}
                     <p className="text-neutral-700 mb-4 leading-relaxed">
-                      "{testimonial.text}"
+                      "{testimonial.review_text}"
                     </p>
 
                     {/* Service Details */}
-                    {testimonial.serviceDetails && (
+                    {testimonial.service_details && (
                       <p className="text-sm text-neutral-500 italic mb-4">
-                        Service: {testimonial.serviceDetails}
+                        Service: {testimonial.service_details}
                       </p>
                     )}
 
                     {/* Date */}
-                    <div className="flex items-center gap-2 text-sm text-neutral-400">
-                      <Calendar size={14} />
-                      {testimonial.date && new Date(testimonial.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </div>
+                    {testimonial.service_date && (
+                      <div className="flex items-center gap-2 text-sm text-neutral-400">
+                        <Calendar size={14} />
+                        {new Date(testimonial.service_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </motion.div>

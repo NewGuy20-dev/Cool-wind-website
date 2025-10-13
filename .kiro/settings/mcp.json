@@ -1,0 +1,66 @@
+{
+  "mcpServers": {
+    "TestSprite": {
+      "command": "npx",
+      "args": [
+        "@testsprite/testsprite-mcp@latest"
+      ],
+      "env": {
+        "API_KEY": "sk-user-cbjNVaf5bP6FvpisnrfNGggHQRWTK_3XsYLPJ5bm0Pq1Bi2NXrAG-saI_LgAqw6x8xFqALWLK7gbSE4rZA1A5CqXakXDC-Yj155VxT_IJ7xifGCXThBQLFweGiqlmLIuzCk"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "supabase-main": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase",
+        "--project-ref=zrqkykkwdmfoxwiskasr"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_d30e0557fc24b4230db1a409168bfa12e9a96fed"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_tables",
+        "execute_sql",
+        "apply_migration"
+      ]
+    },
+    "supabase-alt": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase",
+        "--project-ref=zrqkykkwdmfoxwiskasr"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_d30e0557fc24b4230db1a409168bfa12e9a96fed"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_tables",
+        "execute_sql",
+        "apply_migration"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "disabled": false,
+      "autoApprove": []
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
