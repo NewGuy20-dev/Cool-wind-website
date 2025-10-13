@@ -149,7 +149,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					itemOffered: {
 						"@type": "Product",
 						name: "AC Spare Parts Thiruvalla",
-						image: [],
+						image: ["https://www.coolwind.co.in/logo.png"],
 						category: "Appliance Parts",
 						description: "Genuine AC spare parts for all brands in Thiruvalla Kerala",
 						brand: {
@@ -179,7 +179,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					itemOffered: {
 						"@type": "Product",
 						name: "Refrigerator Spare Parts Kerala",
-						image: [],
+						image: ["https://www.coolwind.co.in/logo.png"],
 						category: "Appliance Parts",
 						description: "Original refrigerator spare parts with warranty in Kerala",
 						brand: {

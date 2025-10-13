@@ -59,7 +59,7 @@ export function generateProductSchema(props: ProductSchemaProps) {
     '@type': 'Product',
     name: props.name,
     description: props.description,
-    image: props.image || [], // Temporary empty array until client provides photos
+    image: props.image || ['https://www.coolwind.co.in/logo.png'], // Use logo as placeholder until client provides photos
     brand: {
       '@type': 'Brand',
       name: props.brand || 'Cool Wind Services'
