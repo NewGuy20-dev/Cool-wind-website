@@ -31,18 +31,28 @@ module.exports = {
     transform: async (config, path) => {
         // Custom priority based on path
         let priority = config.priority;
+        let changefreq = config.changefreq;
 
         if (path === '/') {
             priority = 1.0;
+            changefreq = 'daily';
         } else if (path.includes('/about') || path.includes('/contact')) {
             priority = 0.8;
-        } else if (path.includes('/blog') || path.includes('/services')) {
+            changefreq = 'weekly';
+        } else if (path.includes('/services')) {
             priority = 0.9;
+            changefreq = 'weekly';
+        } else if (path.includes('/testimonials')) {
+            priority = 0.7;
+            changefreq = 'weekly';
+        } else if (path.includes('/portfolio')) {
+            priority = 0.7;
+            changefreq = 'weekly';
         }
 
         return {
             loc: path,
-            changefreq: config.changefreq,
+            changefreq: changefreq,
             priority: priority,
             lastmod: config.autoLastmod ? new Date().toISOString() : undefined,
         };

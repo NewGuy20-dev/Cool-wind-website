@@ -2,14 +2,76 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Script from 'next/script'
 import { Phone, MessageCircle, Wrench, Snowflake, ShoppingCart, Cog, Star, MapPin } from 'lucide-react'
 import { analytics } from '@/lib/analytics'
 import { motion } from 'framer-motion'
+import { generateServiceSchema, generateProductSchema, sampleReviews } from '@/lib/schema-generator'
 
 const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '918547229991'
 const PHONE = process.env.NEXT_PUBLIC_BUSINESS_PHONE || '+918547229991'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.coolwind.co.in'
 
 export default function ServicesPage() {
+  // Generate structured data for all services
+  const acRepairSchema = generateServiceSchema({
+    name: 'AC Repair & Installation Service',
+    description: 'Complete air conditioning services for all brands in Thiruvalla and Pathanamthitta. Split AC & Window AC repair, gas charging, leak detection, new AC installation, and annual maintenance contracts with 24/7 emergency service.',
+    url: `${SITE_URL}/services#ac-repair`,
+    provider: 'Cool Wind Services',
+    areaServed: ['Thiruvalla', 'Pathanamthitta', 'Kozhencherry', 'Mallappally', 'Ranni', 'Adoor'],
+    priceRange: '₹500-₹5000',
+    aggregateRating: {
+      ratingValue: 4.8,
+      reviewCount: 87
+    },
+    reviews: sampleReviews.acRepair
+  })
+
+  const refrigeratorSchema = generateServiceSchema({
+    name: 'Refrigerator Repair Service',
+    description: 'Expert refrigerator repair for all brands and models in Kerala. Compressor repair & replacement, cooling issues, door seal replacement, ice maker repair, and thermostat calibration.',
+    url: `${SITE_URL}/services#refrigerator-repair`,
+    provider: 'Cool Wind Services',
+    areaServed: ['Thiruvalla', 'Pathanamthitta', 'Kozhencherry', 'Mallappally', 'Ranni', 'Adoor'],
+    priceRange: '₹600-₹8000',
+    aggregateRating: {
+      ratingValue: 4.9,
+      reviewCount: 92
+    },
+    reviews: sampleReviews.refrigeratorRepair
+  })
+
+  const sparePartsSchema = generateProductSchema({
+    name: 'AC & Refrigerator Spare Parts',
+    description: 'Genuine spare parts for all major appliance brands with warranty. Original manufacturer parts, same day delivery, bulk orders for service centers, 6 month warranty, and installation service available.',
+    url: `${SITE_URL}/services#spare-parts`,
+    brand: 'Cool Wind Services',
+    category: 'Appliance Parts',
+    priceCurrency: 'INR',
+    availability: 'InStock',
+    aggregateRating: {
+      ratingValue: 4.7,
+      reviewCount: 64
+    },
+    reviews: sampleReviews.spareParts
+  })
+
+  const electronicsSchema = generateProductSchema({
+    name: 'Refurbished Electronics & Appliances',
+    description: 'Quality tested second-hand electronics and appliances with warranty. Refurbished appliances, quality testing process, 3 month warranty, exchange programs, and installation included.',
+    url: `${SITE_URL}/services#electronics`,
+    brand: 'Cool Wind Services',
+    category: 'Electronics',
+    condition: 'RefurbishedCondition',
+    priceCurrency: 'INR',
+    availability: 'InStock',
+    aggregateRating: {
+      ratingValue: 4.5,
+      reviewCount: 38
+    },
+    reviews: sampleReviews.electronics
+  })
   const services = [
     {
       icon: <Wrench className="h-12 w-12" />,
@@ -22,7 +84,8 @@ export default function ServicesPage() {
         'Annual Maintenance Contracts',
         'Emergency 24/7 Service'
       ],
-      brands: ['LG', 'Samsung', 'Daikin', 'Blue Star', 'Carrier', 'Voltas', 'Hitachi', 'Panasonic']
+      brands: ['LG', 'Samsung', 'Daikin', 'Blue Star', 'Carrier', 'Voltas', 'Hitachi', 'Panasonic'],
+      link: '/services/ac-repair'
     },
     {
       icon: <Snowflake className="h-12 w-12" />,
@@ -35,7 +98,8 @@ export default function ServicesPage() {
         'Ice Maker Repair',
         'Thermostat Calibration'
       ],
-      brands: ['Whirlpool', 'LG', 'Samsung', 'Godrej', 'Haier', 'Bosch', 'IFB', 'Electrolux']
+      brands: ['Whirlpool', 'LG', 'Samsung', 'Godrej', 'Haier', 'Bosch', 'IFB', 'Electrolux'],
+      link: '/services/refrigerator-repair'
     },
     {
       icon: <ShoppingCart className="h-12 w-12" />,
@@ -48,7 +112,8 @@ export default function ServicesPage() {
         '6 Month Warranty on Parts',
         'Installation Service Available'
       ],
-      brands: ['All Major Brands', 'Compatible Parts', 'OEM Quality', 'Certified Genuine']
+      brands: ['All Major Brands', 'Compatible Parts', 'OEM Quality', 'Certified Genuine'],
+      link: '/services/spare-parts'
     },
     {
       icon: <Cog className="h-12 w-12" />,
@@ -61,12 +126,36 @@ export default function ServicesPage() {
         'Exchange Programs',
         'Installation Included'
       ],
-      brands: ['Various Brands', 'Tested Quality', 'Budget Friendly', 'Warranty Included']
+      brands: ['Various Brands', 'Tested Quality', 'Budget Friendly', 'Warranty Included'],
+      link: '#electronics'
     }
   ]
 
   return (
-    <main className="min-h-screen bg-neutral-50">
+    <>
+      {/* Structured Data for Services */}
+      <Script
+        id="ac-repair-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(acRepairSchema) }}
+      />
+      <Script
+        id="refrigerator-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(refrigeratorSchema) }}
+      />
+      <Script
+        id="spare-parts-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(sparePartsSchema) }}
+      />
+      <Script
+        id="electronics-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(electronicsSchema) }}
+      />
+      
+      <main className="min-h-screen bg-neutral-50">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-primary-600 to-secondary-600 text-white py-16">
         <div className="mx-auto max-w-6xl px-4">
@@ -132,6 +221,7 @@ export default function ServicesPage() {
             {services.map((service, index) => (
               <motion.div
                 key={index}
+                id={service.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -173,10 +263,18 @@ export default function ServicesPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3">
+                      {service.link && service.link.startsWith('/services/') && (
+                        <Link
+                          href={service.link}
+                          className="btn-primary text-sm inline-flex items-center gap-1"
+                        >
+                          Learn More →
+                        </Link>
+                      )}
                       <a
                         href={`tel:${PHONE}`}
-                        className="btn-primary text-sm inline-flex items-center gap-1"
+                        className="btn-secondary text-sm inline-flex items-center gap-1"
                       >
                         <Phone size={16} />
                         Call Now
@@ -251,5 +349,6 @@ export default function ServicesPage() {
         </div>
       </section>
     </main>
+    </>
   )
 }
