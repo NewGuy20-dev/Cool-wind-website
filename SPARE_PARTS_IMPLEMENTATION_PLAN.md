@@ -64,13 +64,21 @@ Add new section for spare parts management:
 - Part status (available, out of stock, discontinued)
 
 ### 6. Chat Widget Enhancement
-**Priority**: Low  
+**Priority**: Medium  
 **Effort**: Medium
 
 - Show inline images when users ask about parts
 - Visual part identification: "Is this the part you need?"
 - Link to full catalog from chat
 - Quick part lookup by name or code
+- **Bulk order handling via chat**:
+  - Detect bulk order intent in conversation
+  - Collect: part name/code, quantity, delivery location
+  - Show pricing based on quantity (regular vs bulk)
+  - Confirm order details in chat
+  - Create order task in admin dashboard
+  - Send confirmation via email + WhatsApp notification
+  - Option to continue conversation on WhatsApp if needed
 
 ---
 
@@ -258,10 +266,12 @@ lib/
 - [ ] Add featured parts to homepage
 
 ### Phase 4: Enhancements (Week 3)
-- [ ] Integrate with chat widget
+- [ ] Integrate with chat widget for part inquiries
+- [ ] Add bulk order flow to chat widget
 - [ ] Add to portfolio page
-- [ ] Implement bulk order request form
+- [ ] Implement standalone bulk order request form (backup option)
 - [ ] Add email notifications for inquiries
+- [ ] Add WhatsApp notification integration
 - [ ] SEO optimization (meta tags, structured data)
 
 ### Phase 5: Testing & Launch (Week 3-4)
@@ -359,13 +369,173 @@ Once approved:
 
 ---
 
+## WhatsApp Integration for Bulk Orders
+
+### Approach: Chat Widget First, WhatsApp as Extension
+
+**Primary Flow**: Use existing Gemini-powered chat widget
+- Customer initiates bulk order in chat
+- AI collects all necessary details
+- Creates order task in admin dashboard
+- Sends confirmation email + WhatsApp notification
+
+**WhatsApp Extension** (Optional):
+- After order confirmation in chat, offer WhatsApp option
+- "Continue this conversation on WhatsApp?" button
+- Opens WhatsApp with pre-filled order summary
+- Allows real-time negotiation and updates
+- Personal touch for high-value orders
+
+### Implementation Details
+
+#### Chat Widget Enhancements
+```typescript
+// Bulk order detection in chat
+- Intent: "bulk order", "wholesale", "10+ units", "dealer price"
+- Collect: part details, quantity, delivery location, contact
+- Show: pricing tiers, availability, delivery timeline
+- Action: Create order task + send notifications
+```
+
+#### WhatsApp Integration Options
+
+**Option A: Simple Link (Recommended for Start)**
+```typescript
+// After order confirmation in chat
+const whatsappMessage = encodeURIComponent(`
+Order Confirmation - Cool Wind Services
+
+Order ID: #${orderId}
+Parts Requested:
+${parts.map(p => `- ${p.name} x ${p.quantity}`).join('\n')}
+
+Total Estimate: ₹${totalPrice}
+Delivery: ${location}
+
+I'd like to discuss this order further.
+`);
+
+const whatsappUrl = `https://wa.me/918547229991?text=${whatsappMessage}`;
+```
+
+**Option B: WhatsApp Business API (Future)**
+- Automated responses for order status
+- Payment link sharing
+- Delivery updates
+- Requires Meta approval + monthly cost (₹500-2000)
+
+### Benefits of Chat-First Approach
+
+1. **Unified Experience**: Everything starts in one place
+2. **AI-Powered**: Gemini handles complex queries
+3. **Tracked**: All orders logged in admin dashboard
+4. **Flexible**: Can escalate to WhatsApp when needed
+5. **Cost-Effective**: No additional API costs initially
+6. **Familiar**: Customers already using the chat widget
+
+### User Flow
+
+```
+Customer: "I need 10 AC compressors for LG 1.5 ton"
+    ↓
+Chat AI: Identifies bulk order intent
+    ↓
+Chat AI: "I can help with that! Let me get some details..."
+    ↓
+Collects: Exact model, quantity, delivery location, timeline
+    ↓
+Shows: Pricing (bulk discount applied), availability, delivery estimate
+    ↓
+Customer: Confirms interest
+    ↓
+Chat AI: "Great! I've created your order request."
+    ↓
+Creates task in admin dashboard
+    ↓
+Sends email confirmation to customer
+    ↓
+Sends WhatsApp notification to business number
+    ↓
+Chat AI: "Would you like to continue on WhatsApp for faster updates?"
+    ↓
+[Continue on WhatsApp] button → Opens WhatsApp with order summary
+    ↓
+Business team follows up via WhatsApp or phone
+```
+
+### Database Schema Addition
+
+```sql
+-- Add to spare_parts_orders table
+CREATE TABLE spare_parts_orders (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  order_number VARCHAR(50) UNIQUE NOT NULL,
+  
+  -- Customer info
+  customer_name VARCHAR(255),
+  customer_phone VARCHAR(20),
+  customer_email VARCHAR(255),
+  delivery_location TEXT,
+  
+  -- Order details
+  items JSONB NOT NULL, -- Array of {part_id, quantity, price}
+  total_amount DECIMAL(10,2),
+  bulk_discount_applied BOOLEAN DEFAULT false,
+  
+  -- Status
+  status VARCHAR(50) DEFAULT 'pending', -- pending, confirmed, processing, delivered, cancelled
+  
+  -- Communication
+  chat_conversation_id UUID, -- Link to chat history
+  whatsapp_conversation_started BOOLEAN DEFAULT false,
+  
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### Chat Widget Updates Needed
+
+1. **Intent Detection**: Add bulk order patterns to AI prompts
+2. **Order Collection Flow**: Multi-step conversation for details
+3. **Pricing Display**: Show bulk discounts in chat
+4. **Order Confirmation**: Summary with order number
+5. **WhatsApp Handoff**: Button to continue on WhatsApp
+6. **Admin Notification**: Real-time alert for new bulk orders
+
+### Admin Dashboard Updates
+
+- New "Bulk Orders" section
+- View order details and chat history
+- Update order status
+- Send WhatsApp/email updates to customer
+- Track conversion rate (chat → confirmed order)
+
 ## Notes
 
 - Existing admin dashboard at `/dashboard-wind-ops` will be extended
-- Consider integration with existing task/ticket system for part inquiries
-- May need to add inventory alerts to admin notifications
-- Could integrate with WhatsApp for quick part inquiries
+- Integration with existing task/ticket system for part inquiries
+- Inventory alerts to admin notifications for low stock
+- **Chat widget will be primary interface for bulk orders**
+- WhatsApp serves as optional extension for personal follow-up
 - Future: Consider adding "Request Part" feature for unlisted items
+- Future: WhatsApp Business API for automated order updates
+
+---
+
+---
+
+## Summary
+
+This implementation plan focuses on creating a comprehensive spare parts catalog with:
+- **Customer-facing catalog** with search, filters, and detailed views
+- **Admin management** integrated into existing `/dashboard-wind-ops`
+- **Chat-first bulk ordering** using existing Gemini AI chat widget
+- **WhatsApp integration** as optional extension for personal follow-up
+- **Scalable architecture** that can grow with business needs
+
+The chat widget approach leverages existing infrastructure while providing a seamless experience for bulk orders, with the flexibility to escalate to WhatsApp when customers prefer more personal communication.
 
 ---
 
