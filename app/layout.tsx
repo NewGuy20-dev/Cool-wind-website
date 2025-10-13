@@ -142,24 +142,70 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 			itemListElement: [
 				{
 					"@type": "Offer",
+					url: "https://www.coolwind.co.in/services/spare-parts/ac",
+					priceCurrency: "INR",
+					price: "2500",
+					availability: "https://schema.org/InStock",
 					itemOffered: {
 						"@type": "Product",
 						name: "AC Spare Parts Thiruvalla",
+						image: ["https://www.coolwind.co.in/logo.png"],
 						category: "Appliance Parts",
-						description: "Genuine AC spare parts for all brands in Thiruvalla Kerala"
-					}
-				},
-				{
-					"@type": "Offer", 
-					itemOffered: {
-						"@type": "Product",
-						name: "Refrigerator Spare Parts Kerala", 
-						category: "Appliance Parts",
-						description: "Original refrigerator spare parts with warranty in Kerala"
+						description: "Genuine AC spare parts for all brands in Thiruvalla Kerala",
+						brand: {
+							"@type": "Brand",
+							name: "Cool Wind Services"
+						},
+						offers: {
+							"@type": "Offer",
+							url: "https://www.coolwind.co.in/services/spare-parts/ac",
+							priceCurrency: "INR",
+							price: "2500",
+							availability: "https://schema.org/InStock"
+						},
+						aggregateRating: {
+							"@type": "AggregateRating",
+							ratingValue: "4.8",
+							reviewCount: "200"
+						}
 					}
 				},
 				{
 					"@type": "Offer",
+					url: "https://www.coolwind.co.in/services/spare-parts/refrigerator",
+					priceCurrency: "INR",
+					price: "1500",
+					availability: "https://schema.org/InStock",
+					itemOffered: {
+						"@type": "Product",
+						name: "Refrigerator Spare Parts Kerala",
+						image: ["https://www.coolwind.co.in/logo.png"],
+						category: "Appliance Parts",
+						description: "Original refrigerator spare parts with warranty in Kerala",
+						brand: {
+							"@type": "Brand",
+							name: "Cool Wind Services"
+						},
+						offers: {
+							"@type": "Offer",
+							url: "https://www.coolwind.co.in/services/spare-parts/refrigerator",
+							priceCurrency: "INR",
+							price: "1500",
+							availability: "https://schema.org/InStock"
+						},
+						aggregateRating: {
+							"@type": "AggregateRating",
+							ratingValue: "4.7",
+							reviewCount: "156"
+						}
+					}
+				},
+				{
+					"@type": "Offer",
+					url: "https://www.coolwind.co.in/services/ac-repair",
+					priceCurrency: "INR",
+					priceRange: "₹500-₹5000",
+					availability: "https://schema.org/InStock",
 					itemOffered: {
 						"@type": "Service",
 						name: "AC Repair Service Thiruvalla",
@@ -169,6 +215,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				},
 				{
 					"@type": "Offer",
+					url: "https://www.coolwind.co.in/services/refrigerator-repair",
+					priceCurrency: "INR",
+					priceRange: "₹600-₹8000",
+					availability: "https://schema.org/InStock",
 					itemOffered: {
 						"@type": "Service", 
 						name: "Refrigerator Repair Service Kerala",
