@@ -11,7 +11,7 @@ export default function AddTestimonialPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
-  
+
   const [formData, setFormData] = useState({
     customer_name: '',
     location: '',
@@ -89,7 +89,7 @@ export default function AddTestimonialPage() {
             <ArrowLeft size={20} />
             Back to Testimonials
           </Link>
-          
+
           <h1 className="text-4xl md:text-5xl font-bold text-neutral-800 mb-4">
             Share Your Experience
           </h1>
