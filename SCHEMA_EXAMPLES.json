@@ -4,6 +4,7 @@
     "@type": "Product",
     "name": "AC Spare Parts Thiruvalla",
     "description": "Genuine AC spare parts for all brands in Thiruvalla Kerala. We stock original manufacturer parts for all major brands including compressors, cooling coils, PCB boards, capacitors, thermostats, remote controls, filters, fan motors, and more. Every part comes with genuine parts guarantee and 6 month warranty. Same-day delivery in Thiruvalla, bulk order discounts available.",
+    "image": [],
     "brand": {
       "@type": "Brand",
       "name": "Cool Wind Services"
@@ -93,6 +94,7 @@
     "@type": "Product",
     "name": "Refrigerator Spare Parts Kerala",
     "description": "Original refrigerator spare parts with warranty in Kerala. We stock genuine manufacturer parts for all major brands including compressors, thermostats, door seals, gaskets, defrost timers, PCB boards, fan motors, ice maker components, and more. Every part comes with genuine parts guarantee and 6 month warranty. Same-day delivery in Thiruvalla and across Kerala.",
+    "image": [],
     "brand": {
       "@type": "Brand",
       "name": "Cool Wind Services"

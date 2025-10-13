@@ -23,6 +23,7 @@
 
 ### Schema (JSON-LD)
 - ✅ Product type
+- ✅ Image field (empty array - temporary)
 - ✅ Offers with price & availability
 - ✅ AggregateRating
 - ✅ 4 customer reviews
@@ -55,7 +56,7 @@ https://search.google.com/test/rich-results
 ✅ "Eligible for rich results"
 ✅ Star ratings visible
 ✅ Price shown
-✅ NO errors
+✅ NO errors (including no "Missing field 'image'" error)
 
 ## 🚀 Deployment Steps
 

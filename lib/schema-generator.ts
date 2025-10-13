@@ -59,15 +59,11 @@ export function generateProductSchema(props: ProductSchemaProps) {
     '@type': 'Product',
     name: props.name,
     description: props.description,
+    image: props.image || [], // Temporary empty array until client provides photos
     brand: {
       '@type': 'Brand',
       name: props.brand || 'Cool Wind Services'
     }
-  }
-
-  // Add image if provided
-  if (props.image) {
-    schema.image = props.image
   }
 
   // Add category if provided

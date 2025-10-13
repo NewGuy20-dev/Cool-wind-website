@@ -11,6 +11,7 @@
 ### Schema Requirements Met
 - [x] Product @type specified
 - [x] Product name and description included
+- [x] **Image** field included (empty array - temporary) ✅
 - [x] Brand information added
 - [x] **Offers** object with price, currency, availability ✅
 - [x] **AggregateRating** with ratingValue and reviewCount ✅
@@ -46,6 +47,7 @@ Test at: https://search.google.com/test/rich-results
 - ✅ Star rating visible (4.8 ⭐)
 - ✅ Price shown (₹2,500)
 - ✅ NO error: "Either 'offers', 'review', or 'aggregateRating' should be specified"
+- ✅ NO error: "Missing field 'image'"
 
 **Refrigerator Spare Parts:**
 ```
@@ -59,6 +61,7 @@ Test at: https://search.google.com/test/rich-results
 - ✅ Star rating visible (4.7 ⭐)
 - ✅ Price shown (₹1,500)
 - ✅ NO error: "Either 'offers', 'review', or 'aggregateRating' should be specified"
+- ✅ NO error: "Missing field 'image'"
 
 ### 2. Manual Page Testing
 
