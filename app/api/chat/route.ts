@@ -5,6 +5,12 @@ import { ConversationContext } from '@/lib/chat/conversation-context';
 import { ChatMessage, ChatSession } from '@/lib/types/chat';
 import { FailedCallDetector } from '@/lib/chat/failed-call-detector';
 import { ChatStateManager } from '@/lib/chat/chat-state';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // In-memory session storage (in production, use Redis or database)
 const sessions = new Map<string, { context: ConversationContext; session: ChatSession }>();
@@ -68,7 +74,16 @@ function getSession(sessionId: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, sessionId, userId } = await request.json();
+    const { message, sessionId: clientSessionId, userId } = await request.json();
+    
+    // Get sessionId from cookie (most reliable) or client
+    let sessionId = request.cookies.get('chat_session_id')?.value || clientSessionId;
+    
+    console.log('🔐 Session management:', {
+      fromCookie: request.cookies.get('chat_session_id')?.value,
+      fromClient: clientSessionId,
+      using: sessionId
+    });
 
     // Validate input
     if (!message || typeof message !== 'string') {
@@ -84,8 +99,37 @@ export async function POST(request: NextRequest) {
 
     // Get or create session
     let sessionData = sessionId ? getSession(sessionId) : null;
+    
+    // If not in memory but we have a sessionId, check if it exists in database
+    if (!sessionData && sessionId) {
+      // Check if session has state in database (means it's valid)
+      const hasDbState = await ChatStateManager.getChatState(sessionId, 'bulk_order') || 
+                         await ChatStateManager.getCallbackInfoState(sessionId);
+      
+      if (hasDbState) {
+        // Session exists in DB, recreate in memory
+        console.log('♻️ Restoring session from database:', sessionId);
+        sessionData = {
+          context: new ConversationContext(),
+          session: {
+            sessionId,
+            userId: userId || uuidv4(),
+            startTime: new Date(),
+            messages: [],
+            context: {
+              resolved: false,
+              escalated: false
+            }
+          }
+        };
+        sessions.set(sessionId, sessionData);
+      }
+    }
+    
+    // If still no session, create new one
     if (!sessionData) {
       sessionData = createSession(userId || uuidv4());
+      sessionId = sessionData.session.sessionId; // Update sessionId to the new one
     }
 
     const { context, session } = sessionData;
@@ -121,16 +165,29 @@ export async function POST(request: NextRequest) {
     // Recognize intent
     const intent = context.recognizeIntent(sanitizedMessage);
     
+    // ===== PRIORITY CHECK: BULK ORDERS FIRST =====
+    // Check for bulk orders BEFORE failed calls to avoid misclassification
+    const existingBulkOrderState = await ChatStateManager.getChatState(session.sessionId, 'bulk_order');
+    const isBulkOrderActive = !!existingBulkOrderState;
+    let isBulkOrderDetected = isBulkOrderActive; // Declare at top level
+    
+    console.log('🔍 Bulk order state check:', {
+      sessionId: session.sessionId,
+      hasExistingState: !!existingBulkOrderState,
+      stateStep: existingBulkOrderState?.step,
+      isBulkOrderActive
+    });
+    
     // ===== FAILED CALL DETECTION & TASK CREATION =====
     console.log('🔍 Checking for failed call triggers in message:', sanitizedMessage);
     
-    // Check if we're currently collecting callback information
-    const collectingCallbackInfo = ChatStateManager.getCallbackInfoState(session.sessionId);
+    // Check if we're currently collecting callback information (but NOT if bulk order is active)
+    const collectingCallbackInfo = !isBulkOrderActive ? await ChatStateManager.getCallbackInfoState(session.sessionId) : null;
     
     let response: any;
     let isFailedCallResponse = false;
     
-    if (collectingCallbackInfo) {
+    if (collectingCallbackInfo && !isBulkOrderActive) {
       console.log('📋 Currently collecting callback info, processing user response...');
       
       // Extract customer info from this message
@@ -217,10 +274,30 @@ export async function POST(request: NextRequest) {
         isFailedCallResponse = true;
       }
     } else {
-      // Check for failed call triggers in new messages
-      const failedCallData = await FailedCallDetector.detectFailedCall(sanitizedMessage, context.getContext());
+      // ===== BULK ORDER DETECTION =====
+      // We already checked for existing bulk order state at the top
+      // isBulkOrderDetected is already set to isBulkOrderActive
       
-      if (failedCallData.detected) {
+      if (!isBulkOrderDetected) {
+        // Check if message contains bulk order keywords
+        const bulkOrderCheck = await fetch(`${request.nextUrl.origin}/api/chat/bulk-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'detect_intent',
+            message: sanitizedMessage
+          })
+        });
+        const { isBulkOrder } = await bulkOrderCheck.json();
+        isBulkOrderDetected = isBulkOrder;
+      }
+      
+      // Only check for failed calls if NOT a bulk order
+      if (!isBulkOrderDetected) {
+        // Check for failed call triggers in new messages
+        const failedCallData = await FailedCallDetector.detectFailedCall(sanitizedMessage, context.getContext());
+        
+        if (failedCallData.detected) {
         console.log('🚨 Failed call detected!', failedCallData.triggerPhrase);
         
         if (failedCallData.missingFields.length === 0) {
@@ -277,7 +354,7 @@ export async function POST(request: NextRequest) {
           console.log('📋 Missing information, starting collection process:', failedCallData.missingFields);
           
           // Set up collection state
-          ChatStateManager.setChatState(session.sessionId, 'collecting_callback_info', {
+          await ChatStateManager.setChatState(session.sessionId, 'collecting_callback_info', {
             missingFields: failedCallData.missingFields,
             originalMessage: failedCallData.problemDescription || 'Customer needs service assistance',
             triggerPhrase: failedCallData.triggerPhrase!,
@@ -295,18 +372,94 @@ export async function POST(request: NextRequest) {
           };
           isFailedCallResponse = true;
         }
+        }
       }
     }
     
-    // If not a failed call response, generate normal Gemini response
-    if (!isFailedCallResponse) {
+    // ===== BULK ORDER HANDLING =====
+    let isBulkOrderResponse = false;
+    
+    if (!isFailedCallResponse && isBulkOrderDetected) {
+      console.log('🛒 Bulk order flow active or detected!');
+      console.log('🔍 Bulk order state check:', {
+        sessionId: session.sessionId,
+        hasExistingState: !!existingBulkOrderState,
+        stateStep: existingBulkOrderState?.step,
+        message: sanitizedMessage.substring(0, 50)
+      });
+      
+      // Get or create bulk order state
+      const bulkOrderState = existingBulkOrderState || {
+        step: 'initial',
+        parts: [],
+      };
+      
+      console.log('📊 Current bulk order state:', bulkOrderState);
+      
+      // Generate bulk order response
+      const bulkOrderResponse = await fetch(`${request.nextUrl.origin}/api/chat/bulk-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate_response',
+          message: sanitizedMessage,
+          state: bulkOrderState
+        })
+      });
+      
+      const bulkOrderData = await bulkOrderResponse.json();
+      
+      console.log('📦 Bulk order response:', bulkOrderData);
+      
+      // Update state with all changes (including extracted contact info)
+      await ChatStateManager.setChatState(session.sessionId, 'bulk_order', {
+        ...bulkOrderState,
+        step: bulkOrderData.nextStep,
+        // Merge any updated state from the response
+        ...(bulkOrderData.updatedState || {}),
+      });
+      
+      response = {
+        text: bulkOrderData.message,
+        quickReplies: bulkOrderData.quickReplies?.map((text: string) => ({ text, value: text })) || []
+      };
+      
+      isBulkOrderResponse = true;
+      console.log('🎯 Using bulk order response, next step:', bulkOrderData.nextStep);
+    }
+    
+    // If not a failed call or bulk order response, generate normal Gemini response
+    if (!isFailedCallResponse && !isBulkOrderResponse) {
       console.log('💬 Generating normal Gemini response...');
+      
+      // Fetch spare parts catalog for AI context
+      let sparePartsCatalog = null;
+      try {
+        const { data: parts } = await supabase
+          .from('spare_parts')
+          .select('id, name, part_code, category, price, bulk_price, is_genuine, warranty_months, stock_quantity, is_available')
+          .eq('is_available', true)
+          .order('category', { ascending: true })
+          .order('name', { ascending: true })
+          .limit(50); // Limit to avoid token overflow
+        
+        sparePartsCatalog = parts;
+        console.log(`📦 Loaded ${parts?.length || 0} spare parts for AI context`);
+      } catch (error) {
+        console.error('Error fetching spare parts catalog:', error);
+      }
+      
+      // Check if we're in bulk order mode
+      const inBulkOrderMode = !!ChatStateManager.getChatState(session.sessionId, 'bulk_order');
+      
       response = await geminiClient.generateResponse(
         sanitizedMessage,
         session.messages,
-        context.getContext()
+        context.getContext(),
+        sparePartsCatalog || undefined,
+        inBulkOrderMode
       );
-    } else {
+    } else if (isFailedCallResponse) {
       console.log('🎯 Using failed call response instead of Gemini');
     }
 
@@ -346,6 +499,7 @@ export async function POST(request: NextRequest) {
         escalated: shouldEscalate,
         hasPII: piiCheck.hasPhone || piiCheck.hasEmail,
         isFailedCallResponse,
+        isBulkOrderResponse,
         hasActiveCallbackState: !!collectingCallbackInfo
       });
     }
@@ -376,7 +530,19 @@ export async function POST(request: NextRequest) {
       conversationStage: context.getContext().conversationStage
     };
 
-    return NextResponse.json(responseData);
+    // Set session cookie to persist across requests
+    const nextResponse = NextResponse.json(responseData);
+    nextResponse.cookies.set('chat_session_id', session.sessionId, {
+      httpOnly: false, // Allow client to read
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 30, // 30 minutes
+      path: '/',
+    });
+    
+    console.log('🍪 Set session cookie:', session.sessionId);
+
+    return nextResponse;
 
   } catch (error) {
     console.error('Chat API Error:', error);

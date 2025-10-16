@@ -3,8 +3,37 @@ import { ChatMessage, ChatResponse, ConversationContextData } from '@/lib/types/
 import { BusinessLogicProcessor } from '@/lib/chat/business-logic';
 import { ChatErrorHandler } from '@/lib/chat/error-handler';
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+// API Key Rotation Configuration
+const API_KEYS = [
+  process.env.GOOGLE_AI_API_KEY || '',
+  process.env.GOOGLE_AI_API_KEY_2 || '',
+].filter(key => key.length > 0); // Remove empty keys
+
+let currentKeyIndex = 0;
+let requestCount = 0;
+const REQUESTS_PER_KEY = 50; // Rotate after 50 requests per key
+
+// Get current API key with rotation
+function getCurrentApiKey(): string {
+  if (API_KEYS.length === 0) {
+    throw new Error('No Google AI API keys configured');
+  }
+  
+  // Rotate key after REQUESTS_PER_KEY requests
+  if (requestCount >= REQUESTS_PER_KEY && API_KEYS.length > 1) {
+    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+    requestCount = 0;
+    console.log(`🔄 Rotated to API key ${currentKeyIndex + 1}/${API_KEYS.length}`);
+  }
+  
+  requestCount++;
+  return API_KEYS[currentKeyIndex];
+}
+
+// Initialize Gemini AI with current key
+function getGeminiClient(): GoogleGenerativeAI {
+  return new GoogleGenerativeAI(getCurrentApiKey());
+}
 
 // Model configuration
 const modelConfig = {
@@ -36,14 +65,52 @@ const modelConfig = {
 };
 
 // System prompt for Cool Wind Services
-const SYSTEM_PROMPT = `You are Cool Wind Services' technical support expert. When customers describe AC or refrigerator problems, guide them through safe, step-by-step troubleshooting using the knowledge base provided.
+const SYSTEM_PROMPT = `You are Cool Wind Services' AI assistant - a friendly, knowledgeable expert in AC and refrigerator repair, spare parts, and appliance sales.
 
-ALWAYS:
+YOUR CAPABILITIES:
+1. **Technical Support** - Guide customers through troubleshooting
+2. **Spare Parts Sales** - Help browse catalog and place bulk orders
+3. **Service Booking** - Collect info for technician visits
+4. **General Inquiries** - Answer questions about services, pricing, warranty
+
+CONVERSATION STYLE:
+- Friendly and conversational (use emojis occasionally 🔧 ❄️ 🛠️)
+- Ask clarifying questions to understand needs
+- Provide specific, actionable information
+- Be patient with non-technical customers
+- Use simple language, avoid jargon
+
+SPARE PARTS & BULK ORDERS:
+When customer asks about parts or wants to order:
+1. **Show relevant parts** from the catalog provided in context
+2. **Explain pricing** - mention bulk discounts (5+ units get lower price)
+3. **Check availability** - mention if in stock
+4. **Highlight features** - genuine vs compatible, warranty period
+5. **Collect order details** if they want to proceed:
+   - Which parts and quantities
+   - Contact info (name, phone, email)
+   - Delivery location
+6. **Confirm before submitting** - summarize order with total price
+
+**IMPORTANT FOR BULK ORDERS:**
+- When customer provides contact info (name, phone, email), ALWAYS ask for delivery location next
+- Don't switch topics - complete the order collection process
+- Keep track of what info you've collected and what's still needed
+- Example: If they give name/phone/email, respond: "Great! Last thing - what's your delivery location?"
+
+BULK ORDER KEYWORDS TO DETECT:
+- "bulk order", "wholesale", "dealer price"
+- "need parts", "order parts", "buy parts"
+- "multiple units", "5 units", "10 pieces"
+- "spare part", "compressor", "filter", "thermostat"
+- "I want to order", "I need", "can I buy"
+
+TROUBLESHOOTING GUIDELINES:
 - Ask clarifying questions about the specific problem
 - Provide only safe DIY steps
 - Warn about electrical safety (turn off power first)
 - Know when to escalate to professional repair
-- Be encouraging and patient with non-technical customers
+- Be encouraging and patient
 
 ESCALATE TO TECHNICIAN when:
 - Safety concerns (electrical, gas, sparks)
@@ -155,15 +222,25 @@ When escalation is needed, trigger the failed call management system by:
 
 export class GeminiClient {
   private model: any;
+  private genAI: GoogleGenerativeAI;
 
   constructor() {
-    this.model = genAI.getGenerativeModel(modelConfig);
+    this.genAI = getGeminiClient();
+    this.model = this.genAI.getGenerativeModel(modelConfig);
+  }
+  
+  // Refresh model with new API key (used after rotation or rate limit)
+  private refreshModel() {
+    this.genAI = getGeminiClient();
+    this.model = this.genAI.getGenerativeModel(modelConfig);
   }
 
   async generateResponse(
     userMessage: string,
     conversationHistory: ChatMessage[],
-    context: ConversationContextData
+    context: ConversationContextData,
+    sparePartsCatalog?: any[],
+    inBulkOrderMode?: boolean
   ): Promise<ChatResponse> {
     const startTime = Date.now();
 
@@ -174,8 +251,8 @@ export class GeminiClient {
         parts: [{ text: msg.text }]
       }));
 
-      // Add system context
-      const systemContext = this.buildSystemContext(context);
+      // Add system context with spare parts catalog
+      const systemContext = await this.buildSystemContext(context, sparePartsCatalog, inBulkOrderMode);
       const enhancedPrompt = `${SYSTEM_PROMPT}\n\n${systemContext}\n\nUser: ${userMessage}`;
 
       const chat = this.model.startChat({
@@ -199,10 +276,48 @@ export class GeminiClient {
     }
   }
 
-  private buildSystemContext(context: ConversationContextData): string {
+  private async buildSystemContext(context: ConversationContextData, sparePartsCatalog?: any[], inBulkOrderMode?: boolean): Promise<string> {
     const currentTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     
-    return `
+    // If in bulk order mode, add special instructions
+    let bulkOrderNote = '';
+    if (inBulkOrderMode) {
+      bulkOrderNote = `\n\n⚠️ **BULK ORDER MODE ACTIVE** ⚠️\nThe system is currently collecting bulk order information from the customer.
+DO NOT ask generic questions or change topics.
+The bulk order handler will manage the conversation flow.
+Your role is to provide supportive, contextual responses only if needed.\n\n`;
+    }
+    
+    let catalogInfo = '';
+    if (sparePartsCatalog && sparePartsCatalog.length > 0) {
+      catalogInfo = `\n\n### AVAILABLE SPARE PARTS CATALOG:\n`;
+      catalogInfo += `You can help customers browse and order from our spare parts inventory.\n\n`;
+      
+      // Group by category
+      const categories = [...new Set(sparePartsCatalog.map(p => p.category))];
+      
+      for (const category of categories) {
+        const parts = sparePartsCatalog.filter(p => p.category === category);
+        catalogInfo += `\n**${category}:**\n`;
+        parts.forEach(part => {
+          catalogInfo += `- ${part.name} (${part.part_code})\n`;
+          catalogInfo += `  Price: ₹${part.price}${part.bulk_price ? ` | Bulk (5+): ₹${part.bulk_price}` : ''}\n`;
+          catalogInfo += `  ${part.is_genuine ? '✓ Genuine' : 'Compatible'} | ${part.warranty_months} months warranty\n`;
+          catalogInfo += `  Stock: ${part.stock_quantity > 0 ? 'Available' : 'Out of stock'}\n`;
+        });
+      }
+      
+      catalogInfo += `\n**BULK ORDER PROCESS:**\n`;
+      catalogInfo += `When customer wants to order parts (especially bulk/multiple items):\n`;
+      catalogInfo += `1. Detect bulk order intent (keywords: bulk, wholesale, multiple, order parts, need parts)\n`;
+      catalogInfo += `2. Help them select parts from catalog above\n`;
+      catalogInfo += `3. Collect: quantities, contact info (name, phone, email), delivery location\n`;
+      catalogInfo += `4. Confirm order details before submission\n`;
+      catalogInfo += `5. System will automatically send email confirmation with pickup details\n\n`;
+      catalogInfo += `**IMPORTANT:** If customer asks about parts or wants to order, show them relevant items from the catalog above!\n`;
+    }
+    
+    return `${bulkOrderNote}
 Current conversation context:
 - Customer inquiry type: ${context.currentIntent || 'Not determined'}
 - Location: ${context.customerInfo?.location || 'Not specified'}
@@ -211,10 +326,13 @@ Current conversation context:
 
 Business information:
 - Current time: ${currentTime} IST
-- Service areas: Thiruvalla, Pathanamthitta
+- Service areas: Thiruvalla, Pathanamthitta, Kozhencherry, Mallappally, Adoor, Pandalam, Ranni
 - Emergency service available 24/7
 - Same-day parts delivery in Thiruvalla
 - Phone/WhatsApp: +91 85472 29991
+- Email: info@coolwind.co.in
+- Shop: Pushpagiri Hospitals Rd, Thiruvalla, Kerala 689101
+${catalogInfo}
     `;
   }
 
@@ -269,6 +387,15 @@ Business information:
 
   private handleError(error: any): ChatResponse {
     if (error.status === 429) {
+      // Rate limit hit - try rotating to next key if available
+      if (API_KEYS.length > 1) {
+        console.log('⚠️ Rate limit hit, rotating to next API key...');
+        currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+        requestCount = 0;
+        this.refreshModel();
+        console.log(`🔄 Switched to API key ${currentKeyIndex + 1}/${API_KEYS.length}`);
+      }
+      
       return {
         text: "I'm experiencing high demand right now. Please call us directly at +91 85472 29991 for immediate assistance.",
         quickReplies: [

@@ -164,34 +164,29 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Map Section (Placeholder) */}
+      {/* Map Section */}
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-6xl px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-neutral-800 mb-4">
-              Our Service Area
+              Our Location
             </h2>
             <p className="text-lg text-neutral-600">
-              We proudly serve customers across Thiruvalla and Pathanamthitta districts
+              Visit Cool Wind spare parts & Service in Thiruvalla
             </p>
           </div>
 
-          <div className="card overflow-hidden">
-            {/* Map Placeholder */}
-            <div className="aspect-video bg-gradient-to-br from-primary-100 to-secondary-100 flex items-center justify-center">
-              <div className="text-center p-8">
-                <MapPin className="h-16 w-16 text-primary-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-neutral-800 mb-2">
-                  Serving Multiple Locations
-                </h3>
-                <p className="text-neutral-600 mb-4">
-                  Thiruvalla • Pathanamthitta • Kozhencherry • Mallappally • Chengannur • Adoor
-                </p>
-                <p className="text-sm text-neutral-500">
-                  Not sure if we cover your area? Give us a call!
-                </p>
-              </div>
-            </div>
+          <div className="card overflow-hidden flex justify-center">
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3936.425264518484!2d76.57281767755813!3d9.384021066692515!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3b062342d038d007%3A0x7645dbf1aaa1a977!2sCool%20Wind%20spare%20parts%20%26%20Service%20%F0%9F%8D%80!5e0!3m2!1sen!2sin!4v1760628878791!5m2!1sen!2sin" 
+              width="600" 
+              height="450" 
+              style={{border: 0}} 
+              allowFullScreen={true} 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              className="rounded-lg"
+            />
           </div>
         </div>
       </section>

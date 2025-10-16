@@ -353,11 +353,18 @@ export default function AdminPage() {
               { key: 'dashboard', label: 'Dashboard', icon: ChartPieIcon, count: null },
               { key: 'failed-calls', label: 'Failed Calls', icon: ExclamationTriangleIcon, count: state.failedCalls.length },
               { key: 'tickets', label: 'Service Tickets', icon: TicketIcon, count: state.tickets.length },
-              { key: 'create-task', label: 'Create Task', icon: PlusIcon, count: null }
-            ].map(({ key, label, icon: Icon, count }) => (
+              { key: 'create-task', label: 'Create Task', icon: PlusIcon, count: null },
+              { key: 'orders', label: 'Bulk Orders', icon: ChartBarIcon, count: null, isLink: true }
+            ].map(({ key, label, icon: Icon, count, isLink }) => (
               <button
                 key={key}
-                onClick={() => setState(prev => ({ ...prev, activeTab: key as any }))}
+                onClick={() => {
+                  if (isLink) {
+                    router.push(`/dashboard-wind-ops/${key}`);
+                  } else {
+                    setState(prev => ({ ...prev, activeTab: key as any }));
+                  }
+                }}
                 className={`flex items-center px-4 py-3 mx-1 text-sm font-medium rounded-t-lg transition-all duration-200 ${
                   state.activeTab === key
                     ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md transform -translate-y-0.5'

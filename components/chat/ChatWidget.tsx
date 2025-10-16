@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Phone, MessageSquare } from 'lucide-react';
+import { MessageCircle, X, Send, Phone, MessageSquare, RefreshCw } from 'lucide-react';
 import { ChatMessage, QuickReply } from '@/lib/types/chat';
 import { ChatMessage as ChatMessageComponent } from './ChatMessage';
 import { QuickReplies } from './QuickReplies';
@@ -17,12 +17,98 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(() => {
+    // Try to restore sessionId from cookie first, then sessionStorage
+    if (typeof window !== 'undefined') {
+      // Check cookie first (most reliable)
+      const cookieMatch = document.cookie.match(/chat_session_id=([^;]+)/);
+      if (cookieMatch) {
+        console.log('🍪 Restored sessionId from cookie:', cookieMatch[1]);
+        return cookieMatch[1];
+      }
+      // Fallback to sessionStorage
+      const stored = sessionStorage.getItem('chat_session_id');
+      if (stored) {
+        console.log('💾 Restored sessionId from sessionStorage:', stored);
+        return stored;
+      }
+    }
+    return null;
+  });
+  const [userId] = useState<string>(() => {
+    // Try to restore userId from sessionStorage, or generate new one
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('chat_user_id');
+      if (stored) return stored;
+      const newId = 'user-' + Date.now();
+      sessionStorage.setItem('chat_user_id', newId);
+      return newId;
+    }
+    return 'user-' + Date.now();
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sessionIdRef = useRef<string | null>(sessionId);
+
+  // Clear chat and start new conversation
+  const clearChat = async () => {
+    const currentSessionId = sessionIdRef.current || sessionId;
+    
+    // Call API to clear server-side state
+    if (currentSessionId) {
+      try {
+        await fetch('/api/chat/clear', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: currentSessionId })
+        });
+        console.log('🗑️ Server-side state cleared');
+      } catch (error) {
+        console.error('Failed to clear server state:', error);
+      }
+    }
+    
+    // Clear messages
+    setMessages([]);
+    setQuickReplies([]);
+    
+    // Clear session
+    setSessionId(null);
+    sessionIdRef.current = null;
+    
+    // Clear storage
+    if (typeof window !== 'undefined') {
+      // Clear cookie
+      document.cookie = 'chat_session_id=; path=/; max-age=0';
+      console.log('🗑️ Cleared session cookie');
+      
+      // Clear sessionStorage
+      sessionStorage.removeItem('chat_session_id');
+      sessionStorage.removeItem('chat_user_id');
+      console.log('🗑️ Cleared sessionStorage');
+    }
+    
+    // Show welcome message
+    const welcomeMessage: ChatMessage = {
+      id: 'welcome-' + Date.now(),
+      text: "Hello! I'm here to help you with Cool Wind Services. How can I assist you today?",
+      sender: 'bot',
+      timestamp: new Date(),
+      type: 'text'
+    };
+    setMessages([welcomeMessage]);
+    setQuickReplies([
+      { text: "🔧 Need Repair Service", value: "repair_service" },
+      { text: "📦 Order Spare Parts", value: "spare_parts" },
+      { text: "🛒 Buy Appliances", value: "sales" },
+      { text: "❓ General Question", value: "general" }
+    ]);
+    
+    console.log('✨ Chat cleared, new conversation started');
+  };
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -79,6 +165,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
     setQuickReplies([]);
 
     try {
+      // Use ref to get the most current sessionId
+      const currentSessionId = sessionIdRef.current || sessionId;
+      
+      console.log('📤 Sending message:', {
+        message: message.substring(0, 50),
+        sessionId: currentSessionId,
+        userId
+      });
+      
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -86,8 +181,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
         },
         body: JSON.stringify({
           message,
-          sessionId,
-          userId: 'user-' + Date.now() // Simple user ID generation
+          sessionId: currentSessionId,
+          userId // Use the persistent userId
         }),
       });
 
@@ -97,9 +192,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
 
       const data = await response.json();
       
-      // Update session ID
-      if (data.sessionId && !sessionId) {
+      // Update session ID (always update to ensure we have the latest)
+      if (data.sessionId) {
+        console.log('📥 Received sessionId:', data.sessionId);
         setSessionId(data.sessionId);
+        sessionIdRef.current = data.sessionId; // Update ref immediately
+        
+        // Persist to both cookie and sessionStorage for redundancy
+        if (typeof window !== 'undefined') {
+          // Set cookie (primary method)
+          document.cookie = `chat_session_id=${data.sessionId}; path=/; max-age=${60 * 30}; SameSite=Lax`;
+          console.log('🍪 Saved to cookie:', data.sessionId);
+          
+          // Also save to sessionStorage (backup)
+          sessionStorage.setItem('chat_session_id', data.sessionId);
+          console.log('💾 Saved to sessionStorage:', data.sessionId);
+        }
       }
 
       // Add bot response
@@ -234,13 +342,23 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ className = '' }) => {
                   <p className="text-xs text-blue-100">Expert AC & Refrigerator Support</p>
                 </div>
               </div>
-              <button
-                onClick={toggleChat}
-                className="text-white/80 hover:text-white transition-colors"
-                aria-label="Close chat"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={clearChat}
+                  className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+                  aria-label="New conversation"
+                  title="Start new conversation"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={toggleChat}
+                  className="text-white/80 hover:text-white transition-colors"
+                  aria-label="Close chat"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}

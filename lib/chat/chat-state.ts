@@ -18,78 +18,191 @@ export interface ChatState {
 }
 
 export class ChatStateManager {
-  private static states = new Map<string, ChatState>();
+  // Keep in-memory cache for performance, but use database as source of truth
+  private static cache = new Map<string, { state: ChatState; timestamp: number }>();
+  private static CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   /**
-   * Set chat state for a session
+   * Get Supabase client
    */
-  static setChatState(sessionId: string, stateKey: string, stateData: any): void {
-    const currentState = this.states.get(sessionId) || {};
-    currentState[stateKey] = stateData;
-    this.states.set(sessionId, currentState);
-    
-    console.log(`Chat state set for session ${sessionId}:`, stateKey, stateData);
+  private static async getSupabase() {
+    const { createClient } = await import('@supabase/supabase-js');
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
   }
 
   /**
-   * Get chat state for a session
+   * Set chat state for a session (async with database persistence)
    */
-  static getChatState(sessionId: string, stateKey?: string): any {
-    const state = this.states.get(sessionId);
-    if (!state) return null;
-    
-    if (stateKey) {
-      return state[stateKey] || null;
+  static async setChatState(sessionId: string, stateKey: string, stateData: any): Promise<void> {
+    try {
+      const supabase = await this.getSupabase();
+      
+      // Get current state from database
+      const { data: existing } = await supabase
+        .from('chat_states')
+        .select('state')
+        .eq('session_id', sessionId)
+        .single();
+      
+      const currentState = existing?.state || {};
+      currentState[stateKey] = stateData;
+      
+      // Upsert to database
+      const { error } = await supabase
+        .from('chat_states')
+        .upsert({
+          session_id: sessionId,
+          state: currentState,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'session_id'
+        });
+      
+      if (error) {
+        console.error('Error saving chat state to database:', error);
+        // Fall back to in-memory if database fails
+        const memState = this.cache.get(sessionId)?.state || {};
+        memState[stateKey] = stateData;
+        this.cache.set(sessionId, { state: memState, timestamp: Date.now() });
+      } else {
+        // Update cache
+        this.cache.set(sessionId, { state: currentState, timestamp: Date.now() });
+        console.log(`Chat state set for session ${sessionId}:`, stateKey, stateData);
+      }
+    } catch (error) {
+      console.error('Error in setChatState:', error);
+      // Fall back to in-memory
+      const memState = this.cache.get(sessionId)?.state || {};
+      memState[stateKey] = stateData;
+      this.cache.set(sessionId, { state: memState, timestamp: Date.now() });
     }
-    
-    return state;
+  }
+
+  /**
+   * Get chat state for a session (async with database fallback)
+   */
+  static async getChatState(sessionId: string, stateKey?: string): Promise<any> {
+    try {
+      // Check cache first
+      const cached = this.cache.get(sessionId);
+      if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+        const state = cached.state;
+        if (stateKey) {
+          return state[stateKey] || null;
+        }
+        return state;
+      }
+      
+      // Fetch from database
+      const supabase = await this.getSupabase();
+      const { data, error } = await supabase
+        .from('chat_states')
+        .select('state')
+        .eq('session_id', sessionId)
+        .single();
+      
+      if (error || !data) {
+        console.log(`⚠️ No state found in database for session ${sessionId}`);
+        return null;
+      }
+      
+      // Update cache
+      this.cache.set(sessionId, { state: data.state, timestamp: Date.now() });
+      
+      if (stateKey) {
+        return data.state[stateKey] || null;
+      }
+      
+      return data.state;
+    } catch (error) {
+      console.error('Error in getChatState:', error);
+      // Fall back to cache
+      const cached = this.cache.get(sessionId);
+      if (cached) {
+        const state = cached.state;
+        if (stateKey) {
+          return state[stateKey] || null;
+        }
+        return state;
+      }
+      return null;
+    }
   }
 
   /**
    * Clear specific chat state
    */
-  static clearChatState(sessionId: string, stateKey: string): void {
-    const state = this.states.get(sessionId);
-    if (state && state[stateKey]) {
-      delete state[stateKey];
-      this.states.set(sessionId, state);
-      console.log(`Chat state cleared for session ${sessionId}:`, stateKey);
+  static async clearChatState(sessionId: string, stateKey: string): Promise<void> {
+    try {
+      const supabase = await this.getSupabase();
+      const { data: existing } = await supabase
+        .from('chat_states')
+        .select('state')
+        .eq('session_id', sessionId)
+        .single();
+      
+      if (existing?.state && existing.state[stateKey]) {
+        delete existing.state[stateKey];
+        await supabase
+          .from('chat_states')
+          .update({ state: existing.state })
+          .eq('session_id', sessionId);
+        
+        // Update cache
+        this.cache.set(sessionId, { state: existing.state, timestamp: Date.now() });
+        console.log(`Chat state cleared for session ${sessionId}:`, stateKey);
+      }
+    } catch (error) {
+      console.error('Error clearing chat state:', error);
     }
   }
 
   /**
    * Clear all chat state for a session
    */
-  static clearAllChatState(sessionId: string): void {
-    this.states.delete(sessionId);
-    console.log(`All chat state cleared for session ${sessionId}`);
+  static async clearAllChatState(sessionId: string): Promise<void> {
+    try {
+      const supabase = await this.getSupabase();
+      await supabase
+        .from('chat_states')
+        .delete()
+        .eq('session_id', sessionId);
+      
+      this.cache.delete(sessionId);
+      console.log(`All chat state cleared for session ${sessionId}`);
+    } catch (error) {
+      console.error('Error clearing all chat state:', error);
+    }
   }
 
   /**
    * Check if session has any active state
    */
-  static hasActiveState(sessionId: string): boolean {
-    const state = this.states.get(sessionId);
+  static async hasActiveState(sessionId: string): Promise<boolean> {
+    const state = await this.getChatState(sessionId);
     return state ? Object.keys(state).length > 0 : false;
   }
 
   /**
    * Update callback info collection state
    */
-  static updateCallbackInfoState(
+  static async updateCallbackInfoState(
     sessionId: string, 
     updates: Partial<ChatState['collecting_callback_info']>
-  ): void {
-    const currentState = this.getChatState(sessionId, 'collecting_callback_info') || {};
+  ): Promise<void> {
+    const currentState = await this.getChatState(sessionId, 'collecting_callback_info') || {};
     const updatedState = { ...currentState, ...updates };
-    this.setChatState(sessionId, 'collecting_callback_info', updatedState);
+    await this.setChatState(sessionId, 'collecting_callback_info', updatedState);
   }
 
   /**
    * Get callback info collection state
    */
-  static getCallbackInfoState(sessionId: string): ChatState['collecting_callback_info'] | null {
-    return this.getChatState(sessionId, 'collecting_callback_info');
+  static async getCallbackInfoState(sessionId: string): Promise<ChatState['collecting_callback_info'] | null> {
+    return await this.getChatState(sessionId, 'collecting_callback_info');
   }
 
   /**
@@ -401,23 +514,31 @@ export class ChatStateManager {
   /**
    * Clean up expired states (run periodically)
    */
-  static cleanupExpiredStates(): void {
-    const now = Date.now();
-    const maxAge = 30 * 60 * 1000; // 30 minutes
-
-    for (const [sessionId, state] of this.states.entries()) {
-      if (state.collecting_callback_info) {
-        const startedAt = new Date(state.collecting_callback_info.startedAt).getTime();
-        if (now - startedAt > maxAge) {
-          this.clearChatState(sessionId, 'collecting_callback_info');
-          console.log(`Expired callback info state cleared for session: ${sessionId}`);
+  static async cleanupExpiredStates(): Promise<void> {
+    try {
+      const supabase = await this.getSupabase();
+      const { data, error } = await supabase.rpc('cleanup_old_chat_states');
+      
+      if (!error && data) {
+        console.log(`🧹 Cleaned up ${data} expired chat states`);
+      }
+      
+      // Also clean up cache
+      const now = Date.now();
+      for (const [sessionId, cached] of this.cache.entries()) {
+        if (now - cached.timestamp > this.CACHE_TTL) {
+          this.cache.delete(sessionId);
         }
       }
+    } catch (error) {
+      console.error('Error cleaning up expired states:', error);
     }
   }
 }
 
 // Clean up expired states every 10 minutes
-setInterval(() => {
-  ChatStateManager.cleanupExpiredStates();
-}, 10 * 60 * 1000);
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    ChatStateManager.cleanupExpiredStates();
+  }, 10 * 60 * 1000);
+}

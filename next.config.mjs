@@ -7,7 +7,7 @@ const csp = [
     "img-src 'self' data: https://www.google-analytics.com https://translate.googleapis.com https://translate.google.com https://fonts.gstatic.com https://www.google.com",
     "font-src 'self' https://fonts.gstatic.com",
     `connect-src 'self' ${isDev ? 'ws://localhost:* http://localhost:* ' : ''}https://www.google-analytics.com https://translate.googleapis.com https://translate.google.com https://va.vercel-scripts.com https://vitals.vercel-analytics.com`,
-    "frame-src 'self' https://translate.google.com",
+    "frame-src 'self' https://translate.google.com https://www.google.com",
 ].join('; ')
 
 const nextConfig = {

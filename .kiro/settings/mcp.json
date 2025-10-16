@@ -51,7 +51,14 @@
         "@playwright/mcp@latest"
       ],
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": [
+        "browser_snapshot",
+        "browser_wait_for",
+        "browser_take_screenshot",
+        "browser_type",
+        "browser_click",
+        "browser_navigate"
+      ]
     },
     "fetch": {
       "command": "uvx",
