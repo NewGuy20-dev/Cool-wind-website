@@ -2,8 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 import type { SparePart } from '@/lib/spare-parts/types';
 import { formatPrice, calculatePrice, getStockInfo } from '@/lib/spare-parts/utils';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function PartDetailPage() {
   const params = useParams();
@@ -15,6 +22,28 @@ export default function PartDetailPage() {
 
   useEffect(() => {
     fetchPart();
+    
+    // Set up real-time subscription for stock updates
+    const channel = supabase
+      .channel('spare-parts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'spare_parts',
+          filter: `slug=eq.${slug}`,
+        },
+        (payload) => {
+          console.log('Stock updated:', payload);
+          setPart(payload.new as SparePart);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [slug]);
 
   async function fetchPart() {
@@ -47,9 +76,9 @@ export default function PartDetailPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Part Not Found</h1>
-          <a href="/spare-parts" className="text-blue-600 hover:underline">
+          <Link href="/spare-parts" className="text-blue-600 hover:underline">
             ← Back to Catalog
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -64,7 +93,7 @@ export default function PartDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <div className="mb-6 text-sm text-gray-600">
-          <a href="/spare-parts" className="hover:text-blue-600">Spare Parts</a>
+          <Link href="/spare-parts" className="hover:text-blue-600">Spare Parts</Link>
           <span className="mx-2">›</span>
           <span>{part.name}</span>
         </div>

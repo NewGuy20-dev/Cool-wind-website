@@ -74,6 +74,18 @@ export const metadata: Metadata = {
 		apple: [{ url: '/logo.png' }],
 		shortcut: ['/logo.png'],
 	},
+  other: {
+    'geo.region': 'IN-KL',
+    'geo.placename': 'Thiruvalla, Kerala',
+    'geo.position': '9.3833;76.5667',
+    'ICBM': '9.3833, 76.5667',
+    'business:contact_data:street_address': 'Main Road, Thiruvalla',
+    'business:contact_data:locality': 'Thiruvalla',
+    'business:contact_data:region': 'Kerala',
+    'business:contact_data:postal_code': '689101',
+    'business:contact_data:country_name': 'India',
+    'business:contact_data:phone_number': '+91-8547229991',
+  }
 }
 
 const inter = Inter({
@@ -292,71 +304,56 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 	}
 
 	return (
-		<html lang="en" suppressHydrationWarning>
-			<head>
-				{/* Enhanced Google Analytics */}
-				{process.env.NEXT_PUBLIC_GA_ID ? (
-					<>
-						<Script
-							src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-							strategy="afterInteractive"
-						/>
-						<Script id="gtag-init" strategy="afterInteractive">
-							{`
-								window.dataLayer = window.dataLayer || [];
-								function gtag(){dataLayer.push(arguments);} 
-								gtag('js', new Date());
-								gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
-									page_title: 'Cool Wind Services - AC Repair Thiruvalla',
-									custom_map: {
-										'custom_dimension_1': 'business_type',
-										'custom_dimension_2': 'service_area'
-									}
-								});
-								gtag('event', 'page_view', {
-									business_type: 'appliance_repair',
-									service_area: 'thiruvalla_kerala'
-								});
-							`}
-						</Script>
-					</>
-				) : null}
-				
-				{/* Enhanced Schema Markup */}
-				<script 
-					type="application/ld+json" 
-					dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} 
-				/>
-				<script 
-					type="application/ld+json" 
-					dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} 
-				/>
-				
-				{/* Geo Meta Tags */}
-				<meta name="geo.region" content="IN-KL" />
-				<meta name="geo.placename" content="Thiruvalla, Kerala" />
-				<meta name="geo.position" content="9.3833;76.5667" />
-				<meta name="ICBM" content="9.3833, 76.5667" />
-				
-				{/* Local Business Meta Tags */}
-				<meta name="business:contact_data:street_address" content="Main Road, Thiruvalla" />
-				<meta name="business:contact_data:locality" content="Thiruvalla" />
-				<meta name="business:contact_data:region" content="Kerala" />
-				<meta name="business:contact_data:postal_code" content="689101" />
-				<meta name="business:contact_data:country_name" content="India" />
-				<meta name="business:contact_data:phone_number" content="+91-8547229991" />
-			</head>
-			<body className={`${inter.className} min-h-screen antialiased`}>
-				<Providers>
-					<ConditionalLayout>
-						<PageTransition>
-							{children}
-						</PageTransition>
-					</ConditionalLayout>
-				</Providers>
-				<Analytics />
-				<SpeedInsights />
-			</body>
-		</html>
+	<html lang="en">
+		<body className={`${inter.className} min-h-screen antialiased`}>
+			{/* Enhanced Google Analytics */}
+			{process.env.NEXT_PUBLIC_GA_ID ? (
+				<>
+					<Script
+						src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+						strategy="afterInteractive"
+					/>
+					<Script id="gtag-init" strategy="afterInteractive">
+						{`
+							window.dataLayer = window.dataLayer || [];
+							function gtag(){dataLayer.push(arguments);} 
+							gtag('js', new Date());
+							gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
+								page_title: 'Cool Wind Services - AC Repair Thiruvalla',
+								custom_map: {
+									'custom_dimension_1': 'business_type',
+									'custom_dimension_2': 'service_area'
+								}
+							});
+							gtag('event', 'page_view', {
+								business_type: 'appliance_repair',
+								service_area: 'thiruvalla_kerala'
+							});
+						`}
+					</Script>
+				</>
+			) : null}
+			
+			{/* Enhanced Schema Markup */}
+			<script 
+				type="application/ld+json" 
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} 
+			/>
+			<script 
+				type="application/ld+json" 
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} 
+			/>
+			
+			<Providers>
+				<ConditionalLayout>
+					<PageTransition>
+						{children}
+					</PageTransition>
+				</ConditionalLayout>
+			</Providers>
+			<Analytics />
+			<SpeedInsights />
+		</body>
+	</html>
 	)
 }

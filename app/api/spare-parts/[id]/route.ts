@@ -11,10 +11,10 @@ const supabase = createClient(
 // GET /api/spare-parts/[id] - Get single part with related parts
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  context: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     // Get the part
     const { data: part, error } = await supabase
@@ -58,7 +58,7 @@ export async function GET(
 // PUT /api/spare-parts/[id] - Update part (Admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin authentication
@@ -70,7 +70,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json();
     const validated = updatePartSchema.parse({ ...body, id });
 
@@ -110,7 +110,7 @@ export async function PUT(
 // DELETE /api/spare-parts/[id] - Delete part (Admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin authentication
@@ -122,7 +122,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    const { id } = await context.params;
 
     // Delete from database
     const { error } = await supabase

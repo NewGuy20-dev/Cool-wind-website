@@ -268,51 +268,52 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20">
       {/* Header */}
-      <header className="bg-white shadow-lg border-b border-gray-200 backdrop-blur-sm bg-white/95">
+      <header className="bg-white shadow-xl border-b border-gray-200 backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <motion.div
                   animate={logoControls}
                   onMouseEnter={triggerLogoSpin}
                   onClick={triggerLogoSpin}
                   onTouchStart={triggerLogoSpin}
-                  className="w-8 h-8 rounded-lg overflow-hidden cursor-pointer"
-                  style={{ display: 'inline-block' }}
+                  className="cursor-pointer"
                 >
-                  <img 
-                    src="/logo.png" 
-                    alt="Cool Wind Services" 
-                    className="w-full h-full object-contain"
-                  />
+                  <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all">
+                    <img 
+                      src="/logo.png" 
+                      alt="Cool Wind Services" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </motion.div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">Cool Wind Services</h1>
-                  <span className="text-xs text-gray-500">Administrative Dashboard</span>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Cool Wind Services</h1>
+                  <span className="text-xs text-gray-600 font-medium">Administrative Dashboard</span>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-medium rounded-full shadow-sm">
+              <span className="px-4 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg">
                 Admin Panel
               </span>
             </div>
             
             <div className="flex items-center space-x-3">
-              <div className="hidden md:flex items-center space-x-2 px-3 py-1 bg-gray-50 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-gray-600">Live Updates</span>
+              <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse shadow-md"></div>
+                <span className="text-xs text-green-700 font-semibold">Live Updates</span>
               </div>
               
               <button 
                 onClick={handleNotificationClick}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-colors relative"
+                className="p-2.5 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all relative"
                 title={`${state.notifications.count} unread notifications`}
               >
                 <BellIcon className="h-5 w-5" />
                 {state.notifications.hasUnread && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded-full text-xs animate-pulse shadow-lg">
                     {state.notifications.count > 0 && state.notifications.count < 10 && (
                       <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">
                         {state.notifications.count}
@@ -324,19 +325,19 @@ export default function AdminPage() {
               
               <button
                 onClick={refreshData}
-                className="p-2 text-gray-400 hover:text-gray-600 transition-all hover:rotate-180 duration-300"
+                className="p-2.5 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all hover:rotate-180 duration-300"
                 title="Refresh Data"
               >
                 <ArrowPathIcon className="h-5 w-5" />
               </button>
               
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <button className="p-2.5 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all">
                 <Cog6ToothIcon className="h-5 w-5" />
               </button>
               
               <button
                 onClick={handleLogout}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 shadow-md"
+                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 Logout
               </button>
@@ -346,14 +347,15 @@ export default function AdminPage() {
       </header>
 
       {/* Navigation Tabs */}
-      <nav className="bg-white shadow-sm border-b border-gray-100">
+      <nav className="bg-white shadow-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 overflow-x-auto">
+          <div className="flex space-x-2 overflow-x-auto py-2">
             {[
               { key: 'dashboard', label: 'Dashboard', icon: ChartPieIcon, count: null },
               { key: 'failed-calls', label: 'Failed Calls', icon: ExclamationTriangleIcon, count: state.failedCalls.length },
               { key: 'tickets', label: 'Service Tickets', icon: TicketIcon, count: state.tickets.length },
               { key: 'create-task', label: 'Create Task', icon: PlusIcon, count: null },
+              { key: 'spare-parts', label: 'Spare Parts', icon: Cog6ToothIcon, count: null, isLink: true },
               { key: 'orders', label: 'Bulk Orders', icon: ChartBarIcon, count: null, isLink: true }
             ].map(({ key, label, icon: Icon, count, isLink }) => (
               <button
@@ -365,19 +367,19 @@ export default function AdminPage() {
                     setState(prev => ({ ...prev, activeTab: key as any }));
                   }
                 }}
-                className={`flex items-center px-4 py-3 mx-1 text-sm font-medium rounded-t-lg transition-all duration-200 ${
+                className={`flex items-center px-5 py-3 text-sm font-semibold rounded-xl transition-all duration-200 ${
                   state.activeTab === key
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md transform -translate-y-0.5'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg transform scale-105'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:shadow-sm'
                 } whitespace-nowrap`}
               >
-                <Icon className="h-4 w-4 mr-2" />
+                <Icon className="h-5 w-5 mr-2" />
                 {label}
                 {count !== null && count > 0 && (
-                  <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
+                  <span className={`ml-2 px-2.5 py-0.5 text-xs font-bold rounded-full ${
                     state.activeTab === key 
-                      ? 'bg-white/20 text-white' 
-                      : 'bg-red-100 text-red-600'
+                      ? 'bg-white/30 text-white' 
+                      : 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-sm'
                   }`}>
                     {count}
                   </span>
@@ -407,9 +409,9 @@ export default function AdminPage() {
             
             {state.activeTab === 'failed-calls' && (
               <div>
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Failed Call Management</h2>
-                  <p className="text-gray-600 mt-1">Manage customer callback requests and failed communications</p>
+                <div className="mb-8">
+                  <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">Failed Call Management</h2>
+                  <p className="text-gray-600 mt-2 text-lg">Manage customer callback requests and failed communications</p>
                 </div>
                 <FailedCallsKanban data={state.failedCalls} onUpdate={refreshData} />
               </div>
@@ -417,9 +419,9 @@ export default function AdminPage() {
             
             {state.activeTab === 'tickets' && (
               <div>
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Service Ticket Management</h2>
-                  <p className="text-gray-600 mt-1">Comprehensive service request tracking and management</p>
+                <div className="mb-8">
+                  <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Service Ticket Management</h2>
+                  <p className="text-gray-600 mt-2 text-lg">Comprehensive service request tracking and management</p>
                 </div>
                 <TicketManagement tickets={state.tickets} onUpdate={refreshData} />
               </div>
@@ -427,9 +429,9 @@ export default function AdminPage() {
             
             {state.activeTab === 'create-task' && (
               <div>
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Create New Service Request</h2>
-                  <p className="text-gray-600 mt-1">Create new service tickets and failed call entries</p>
+                <div className="mb-8">
+                  <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Create New Service Request</h2>
+                  <p className="text-gray-600 mt-2 text-lg">Create new service tickets and failed call entries</p>
                 </div>
                 <TaskForm onTaskCreated={refreshData} />
               </div>
@@ -457,38 +459,44 @@ function DashboardView({ stats, tickets, failedCalls, onTabChange }: {
       <DashboardStats stats={stats} />
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6">Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <button
             onClick={() => onTabChange('tickets')}
-            className="flex items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left"
+            className="flex items-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-2xl transition-all text-left border-2 border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-lg transform hover:-translate-y-1 duration-200 group"
           >
-            <TicketIcon className="h-8 w-8 text-blue-600 mr-3" />
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md group-hover:scale-110 transition-transform mr-4">
+              <TicketIcon className="h-8 w-8 text-white" />
+            </div>
             <div>
-              <div className="font-medium text-gray-900">Manage Tickets</div>
-              <div className="text-sm text-gray-600">View and update service requests</div>
+              <div className="font-bold text-gray-900 text-lg mb-1">Manage Tickets</div>
+              <div className="text-sm text-gray-600 font-medium">View and update service requests</div>
             </div>
           </button>
           
           <button
             onClick={() => onTabChange('failed-calls')}
-            className="flex items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-left"
+            className="flex items-center p-6 bg-gradient-to-br from-orange-50 to-red-50 hover:from-orange-100 hover:to-red-100 rounded-2xl transition-all text-left border-2 border-orange-200 hover:border-orange-300 shadow-sm hover:shadow-lg transform hover:-translate-y-1 duration-200 group"
           >
-            <ExclamationTriangleIcon className="h-8 w-8 text-orange-600 mr-3" />
+            <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-md group-hover:scale-110 transition-transform mr-4">
+              <ExclamationTriangleIcon className="h-8 w-8 text-white" />
+            </div>
             <div>
-              <div className="font-medium text-gray-900">Failed Calls</div>
-              <div className="text-sm text-gray-600">Handle callback requests</div>
+              <div className="font-bold text-gray-900 text-lg mb-1">Failed Calls</div>
+              <div className="text-sm text-gray-600 font-medium">Handle callback requests</div>
             </div>
           </button>
           
           <button
-            className="flex items-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left"
+            className="flex items-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 rounded-2xl transition-all text-left border-2 border-green-200 hover:border-green-300 shadow-sm hover:shadow-lg transform hover:-translate-y-1 duration-200 group"
           >
-            <ChartBarIcon className="h-8 w-8 text-green-600 mr-3" />
+            <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md group-hover:scale-110 transition-transform mr-4">
+              <ChartBarIcon className="h-8 w-8 text-white" />
+            </div>
             <div>
-              <div className="font-medium text-gray-900">Analytics</div>
-              <div className="text-sm text-gray-600">View performance metrics</div>
+              <div className="font-bold text-gray-900 text-lg mb-1">Analytics</div>
+              <div className="text-sm text-gray-600 font-medium">View performance metrics</div>
             </div>
           </button>
         </div>
@@ -497,33 +505,33 @@ function DashboardView({ stats, tickets, failedCalls, onTabChange }: {
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Tickets */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
+          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Service Tickets</h3>
+              <h3 className="text-xl font-bold text-gray-900">Recent Service Tickets</h3>
               <button
                 onClick={() => onTabChange('tickets')}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="text-blue-600 hover:text-blue-700 text-sm font-bold bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all"
               >
-                View All
+                View All →
               </button>
             </div>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-100">
             {recentTickets.length > 0 ? recentTickets.map((ticket) => (
-              <div key={ticket.id} className="p-4">
+              <div key={ticket.id} className="p-5 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/30 transition-all">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-bold text-gray-900 bg-gray-100 px-3 py-1 rounded-lg">
                         {ticket.task_number}
                       </span>
                       <StatusBadge status={ticket.status} />
                     </div>
-                    <p className="text-sm text-gray-600 mt-1 truncate">
+                    <p className="text-sm text-gray-700 mt-2 truncate font-medium">
                       {ticket.problem_description}
                     </p>
-                    <div className="flex items-center text-xs text-gray-500 mt-2">
+                    <div className="flex items-center text-xs text-gray-600 mt-2 font-medium">
                       <span>{ticket.customer_name}</span>
                       <span className="mx-2">•</span>
                       <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
@@ -533,42 +541,45 @@ function DashboardView({ stats, tickets, failedCalls, onTabChange }: {
                 </div>
               </div>
             )) : (
-              <div className="p-8 text-center text-gray-500">
-                <TicketIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No service tickets yet</p>
+              <div className="p-12 text-center text-gray-500">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                  <TicketIcon className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="font-semibold text-gray-900 text-lg">No service tickets yet</p>
+                <p className="text-sm text-gray-500 mt-1">Tickets will appear here once created</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Recent Failed Calls */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
+          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Failed Calls</h3>
+              <h3 className="text-xl font-bold text-gray-900">Recent Failed Calls</h3>
               <button
                 onClick={() => onTabChange('failed-calls')}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="text-orange-600 hover:text-orange-700 text-sm font-bold bg-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all"
               >
-                View All
+                View All →
               </button>
             </div>
           </div>
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-100">
             {recentFailedCalls.length > 0 ? recentFailedCalls.map((call) => (
-              <div key={call.id} className="p-4">
+              <div key={call.id} className="p-5 hover:bg-gradient-to-r hover:from-orange-50/50 hover:to-red-50/30 transition-all">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-bold text-gray-900 bg-gray-100 px-3 py-1 rounded-lg">
                         {call.customer_name}
                       </span>
                       <StatusBadge status={call.status} />
                     </div>
-                    <p className="text-sm text-gray-600 mt-1 truncate">
+                    <p className="text-sm text-gray-700 mt-2 truncate font-medium">
                       {call.problem_description}
                     </p>
-                    <div className="flex items-center text-xs text-gray-500 mt-2">
+                    <div className="flex items-center text-xs text-gray-600 mt-2 font-medium">
                       <span>{call.phone_number}</span>
                       <span className="mx-2">•</span>
                       <span>{new Date(call.created_at).toLocaleDateString()}</span>
@@ -578,9 +589,12 @@ function DashboardView({ stats, tickets, failedCalls, onTabChange }: {
                 </div>
               </div>
             )) : (
-              <div className="p-8 text-center text-gray-500">
-                <ExclamationTriangleIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>No failed calls</p>
+              <div className="p-12 text-center text-gray-500">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                  <ExclamationTriangleIcon className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="font-semibold text-gray-900 text-lg">No failed calls</p>
+                <p className="text-sm text-gray-500 mt-1">Failed calls will appear here</p>
               </div>
             )}
           </div>
@@ -593,21 +607,21 @@ function DashboardView({ stats, tickets, failedCalls, onTabChange }: {
 // Status Badge Component
 function StatusBadge({ status }: { status: string }) {
   const statusConfig = {
-    new: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'New' },
-    acknowledged: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Acknowledged' },
-    scheduled: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Scheduled' },
-    in_progress: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'In Progress' },
-    progress: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'In Progress' },
-    completed: { bg: 'bg-green-100', text: 'text-green-800', label: 'Completed' },
-    cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Cancelled' },
-    unavailable: { bg: 'bg-red-100', text: 'text-red-800', label: 'Unavailable' },
-    on_hold: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'On Hold' }
+    new: { bg: 'bg-gradient-to-r from-blue-500 to-blue-600', text: 'text-white', label: 'New' },
+    acknowledged: { bg: 'bg-gradient-to-r from-yellow-500 to-yellow-600', text: 'text-white', label: 'Acknowledged' },
+    scheduled: { bg: 'bg-gradient-to-r from-purple-500 to-purple-600', text: 'text-white', label: 'Scheduled' },
+    in_progress: { bg: 'bg-gradient-to-r from-orange-500 to-orange-600', text: 'text-white', label: 'In Progress' },
+    progress: { bg: 'bg-gradient-to-r from-orange-500 to-orange-600', text: 'text-white', label: 'In Progress' },
+    completed: { bg: 'bg-gradient-to-r from-green-500 to-green-600', text: 'text-white', label: 'Completed' },
+    cancelled: { bg: 'bg-gradient-to-r from-gray-500 to-gray-600', text: 'text-white', label: 'Cancelled' },
+    unavailable: { bg: 'bg-gradient-to-r from-red-500 to-red-600', text: 'text-white', label: 'Unavailable' },
+    on_hold: { bg: 'bg-gradient-to-r from-gray-500 to-gray-600', text: 'text-white', label: 'On Hold' }
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold ${config.bg} ${config.text} shadow-sm`}>
       {config.label}
     </span>
   );
@@ -616,16 +630,17 @@ function StatusBadge({ status }: { status: string }) {
 // Priority Badge Component
 function PriorityBadge({ priority }: { priority: string }) {
   const priorityConfig = {
-    low: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Low' },
-    medium: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Medium' },
-    high: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'High' },
-    critical: { bg: 'bg-red-100', text: 'text-red-800', label: 'Critical' }
+    low: { bg: 'bg-gradient-to-r from-gray-400 to-gray-500', text: 'text-white', label: 'Low', icon: '●' },
+    medium: { bg: 'bg-gradient-to-r from-blue-500 to-blue-600', text: 'text-white', label: 'Medium', icon: '●●' },
+    high: { bg: 'bg-gradient-to-r from-orange-500 to-orange-600', text: 'text-white', label: 'High', icon: '●●●' },
+    critical: { bg: 'bg-gradient-to-r from-red-500 to-red-600', text: 'text-white', label: 'Critical', icon: '⚠️' }
   };
 
   const config = priorityConfig[priority as keyof typeof priorityConfig] || priorityConfig.medium;
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+    <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold ${config.bg} ${config.text} shadow-md`}>
+      <span className="mr-1">{config.icon}</span>
       {config.label}
     </span>
   );
