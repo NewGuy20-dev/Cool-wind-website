@@ -66,7 +66,33 @@
 - `components/chat/ChatWidget.tsx` - Clear button & logic
 - `scripts/test-clear-chat.js` - Testing script
 
-### 5. ✅ API Key Rotation
+### 5. ✅ Archive Feature
+**Status**: Fully Implemented
+
+- **Archive Functionality**: Archive completed/cancelled tasks
+- **Tab-Based UI**: Active and Archived task views
+- **Business Rules**: Only completed or cancelled tasks can be archived
+- **Audit Logging**: All archive/unarchive operations logged
+- **Database Views**: Separate views for active and archived tasks
+- **Real-time Counts**: Tab headers show task counts
+
+**Database Changes**:
+- Added `archived` boolean column to tasks table (default: false)
+- Created indexes: idx_tasks_archived, idx_tasks_archived_status, idx_tasks_archived_created
+- Added constraint to prevent archiving active tasks
+- Created `archive_task()` and `unarchive_task()` database functions
+- Created `active_tasks` and `archived_tasks` views
+
+**Key Status Values**:
+- Database uses: 'pending', 'open', 'in_progress', 'completed', 'cancelled'
+- Only 'completed' or 'cancelled' tasks can be archived
+- Active tasks (pending, open, in_progress) cannot be archived
+
+**Files**:
+- `app/dashboard-wind-ops/tasks/` - Task management UI with archive feature
+- `sql/011_add_archive_feature.sql` - Migration applied via Supabase MCP
+
+### 6. ✅ API Key Rotation
 **Status**: Configured
 
 - **Multiple Keys**: Google Gemini AI keys with automatic failover
@@ -78,7 +104,7 @@
 - `lib/gemini/client.ts` - Gemini client with rotation
 - `.env.local` - API keys configuration
 
-### 6. ✅ Chat System
+### 7. ✅ Chat System
 **Status**: Production Ready
 
 - **AI-Powered**: Google Gemini 2.0 Flash
@@ -99,18 +125,53 @@
 ## 📊 Database Schema
 
 ### Tables Created
-1. **chat_states** - Session persistence
-2. **spare_parts** - Product catalog
-3. **spare_parts_orders** - Order tracking
-4. **failed_calls** - Missed call log
-5. **testimonials** - Customer reviews
-6. **tasks** - Service tickets
+1. **chat_states** - Session persistence  
+2. **spare_parts** - Product catalog  
+3. **spare_parts_orders** - Order tracking  
+4. **failed_calls** - Missed call log  
+5. **testimonials** - Customer reviews  
+6. **tasks** - Service tickets with archive support
+   - Added `archived` boolean column (default: false)
+   - Indexes for archived status and timestamps
+   - Views: `active_tasks` and `archived_tasks`
 
-### Functions & Triggers
-- Stock validation functions
-- Automatic stock deduction
-- Order status updates
-- RLS policies for security
+### Triggers & Functions
+- **Stock Management**:
+  - `update_stock_quantity()` - Updates inventory on order changes
+  - `validate_stock_levels()` - Prevents overselling
+  - `log_stock_movements()` - Tracks inventory changes
+
+- **Task Management**:
+  - `archive_task()` - Archives completed/cancelled tasks
+  - `unarchive_task()` - Restores archived tasks
+  - `validate_task_archive()` - Prevents archiving active tasks
+  - `log_task_changes()` - Tracks task status updates
+
+- **System**:
+  - `update_updated_at_column()` - Auto-updates timestamps
+  - `notify_webhook()` - Sends real-time updates
+
+### Views
+- **active_tasks**: Filters non-archived tasks
+- **archived_tasks**: Filters archived tasks
+- **task_metrics**: Aggregates task statistics
+- **inventory_low_stock**: Identifies items needing restock
+
+### Indexes
+- `idx_tasks_archived` - Optimizes archive queries
+- `idx_tasks_archived_status` - Speeds up status-based filtering
+- `idx_tasks_archived_created` - Sorts archived tasks by date
+
+### Security
+- Row-Level Security (RLS) policies for all tables
+- Role-based access control (admin/employee)
+- Audit logging for sensitive operations
+
+### Performance
+- Optimized for common queries
+- Appropriate indexes for filtering
+- Connection pooling enabled
+- Query performance monitoring
 
 ---
 

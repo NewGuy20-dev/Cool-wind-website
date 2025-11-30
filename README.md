@@ -23,6 +23,8 @@ A complete responsive portfolio website for **Cool Wind Services**, an appliance
 - **Customer testimonials** with ratings and service categories
 - **Contact forms** with validation and success/error states
 - **Emergency service** indicators and quick contact options
+- **Task management** with archive functionality for completed/cancelled tasks
+- **Admin dashboard** with real-time analytics and task tracking
 
 ### 🚀 Technical Features
 - **Next.js 14** with App Router

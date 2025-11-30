@@ -112,6 +112,8 @@
 ✅ Failed call tracking  
 ✅ Service ticket management  
 ✅ Task creation  
+✅ Task archiving (completed/cancelled only)  
+✅ Tab-based UI (Active/Archived tasks)  
 ✅ Dashboard analytics  
 ✅ Real-time notifications  
 
@@ -141,8 +143,11 @@
 8. And more...
 
 ### Recent Additions
-- `spare_parts_orders.archived` - Archive flag
-- Index on archived column
+- `spare_parts_orders.archived` - Archive flag for orders
+- `tasks.archived` - Archive flag for tasks (default: false)
+- Indexes on archived columns for performance
+- `archive_task()` and `unarchive_task()` database functions
+- `active_tasks` and `archived_tasks` views
 - Admin notes field usage
 
 ---

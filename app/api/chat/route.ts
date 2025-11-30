@@ -280,16 +280,57 @@ export async function POST(request: NextRequest) {
       
       if (!isBulkOrderDetected) {
         // Check if message contains bulk order keywords
-        const bulkOrderCheck = await fetch(`${request.nextUrl.origin}/api/chat/bulk-order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'detect_intent',
-            message: sanitizedMessage
-          })
-        });
-        const { isBulkOrder } = await bulkOrderCheck.json();
-        isBulkOrderDetected = isBulkOrder;
+        try {
+          console.log('🔍 Calling bulk order detection API:', `${request.nextUrl.origin}/api/chat/bulk-order`);
+          
+          const bulkOrderCheck = await fetch(`${request.nextUrl.origin}/api/chat/bulk-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'detect_intent',
+              message: sanitizedMessage
+            })
+          });
+          
+          console.log('📊 Bulk order detection response status:', bulkOrderCheck.status);
+          console.log('📊 Bulk order detection response headers:', Object.fromEntries(bulkOrderCheck.headers.entries()));
+          
+          // Validate response before parsing JSON
+          if (!bulkOrderCheck.ok) {
+            console.error('❌ Bulk order detection API error:', {
+              status: bulkOrderCheck.status,
+              statusText: bulkOrderCheck.statusText,
+              url: bulkOrderCheck.url
+            });
+            const errorText = await bulkOrderCheck.text();
+            console.error('❌ Error response body:', errorText.substring(0, 500));
+            isBulkOrderDetected = false;
+          } else {
+            // Check if response is JSON
+            const contentType = bulkOrderCheck.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              console.error('❌ Bulk order detection returned non-JSON response:', {
+                contentType,
+                status: bulkOrderCheck.status
+              });
+              const responseText = await bulkOrderCheck.text();
+              console.error('❌ Response text (first 500 chars):', responseText.substring(0, 500));
+              isBulkOrderDetected = false;
+            } else {
+              const data = await bulkOrderCheck.json();
+              console.log('✅ Bulk order detection result:', data);
+              isBulkOrderDetected = data.isBulkOrder || false;
+            }
+          }
+        } catch (bulkOrderError: any) {
+          console.error('❌ Exception in bulk order detection:', {
+            message: bulkOrderError.message,
+            stack: bulkOrderError.stack,
+            name: bulkOrderError.name
+          });
+          // Gracefully fail - assume not a bulk order and continue
+          isBulkOrderDetected = false;
+        }
       }
       
       // Only check for failed calls if NOT a bulk order
@@ -396,36 +437,105 @@ export async function POST(request: NextRequest) {
       
       console.log('📊 Current bulk order state:', bulkOrderState);
       
-      // Generate bulk order response
-      const bulkOrderResponse = await fetch(`${request.nextUrl.origin}/api/chat/bulk-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // Generate bulk order response with proper error handling
+      try {
+        console.log('🔍 Calling bulk order response API:', `${request.nextUrl.origin}/api/chat/bulk-order`);
+        console.log('📤 Request payload:', {
           action: 'generate_response',
-          message: sanitizedMessage,
-          state: bulkOrderState
-        })
-      });
-      
-      const bulkOrderData = await bulkOrderResponse.json();
-      
-      console.log('📦 Bulk order response:', bulkOrderData);
-      
-      // Update state with all changes (including extracted contact info)
-      await ChatStateManager.setChatState(session.sessionId, 'bulk_order', {
-        ...bulkOrderState,
-        step: bulkOrderData.nextStep,
-        // Merge any updated state from the response
-        ...(bulkOrderData.updatedState || {}),
-      });
-      
-      response = {
-        text: bulkOrderData.message,
-        quickReplies: bulkOrderData.quickReplies?.map((text: string) => ({ text, value: text })) || []
-      };
-      
-      isBulkOrderResponse = true;
-      console.log('🎯 Using bulk order response, next step:', bulkOrderData.nextStep);
+          messageLength: sanitizedMessage.length,
+          stateStep: bulkOrderState.step
+        });
+        
+        const bulkOrderResponse = await fetch(`${request.nextUrl.origin}/api/chat/bulk-order`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate_response',
+            message: sanitizedMessage,
+            state: bulkOrderState
+          })
+        });
+        
+        console.log('📊 Bulk order response status:', bulkOrderResponse.status);
+        console.log('📊 Bulk order response headers:', Object.fromEntries(bulkOrderResponse.headers.entries()));
+        
+        // Validate response before parsing JSON
+        if (!bulkOrderResponse.ok) {
+          console.error('❌ Bulk order response API error:', {
+            status: bulkOrderResponse.status,
+            statusText: bulkOrderResponse.statusText,
+            url: bulkOrderResponse.url
+          });
+          const errorText = await bulkOrderResponse.text();
+          console.error('❌ Error response body:', errorText.substring(0, 500));
+          
+          // Fallback response
+          response = {
+            text: "I'm having trouble processing your bulk order right now. Please contact us directly at +91 85472 29991 for assistance.",
+            quickReplies: [
+              { text: "📞 Call Now", action: "tel:+918547229991" },
+              { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+            ]
+          };
+          isBulkOrderResponse = false;
+        } else {
+          // Check if response is JSON
+          const contentType = bulkOrderResponse.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('❌ Bulk order response returned non-JSON:', {
+              contentType,
+              status: bulkOrderResponse.status
+            });
+            const responseText = await bulkOrderResponse.text();
+            console.error('❌ Response text (first 500 chars):', responseText.substring(0, 500));
+            
+            // Fallback response
+            response = {
+              text: "I'm experiencing technical difficulties with bulk orders. Please call us at +91 85472 29991.",
+              quickReplies: [
+                { text: "📞 Call Now", action: "tel:+918547229991" },
+                { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+              ]
+            };
+            isBulkOrderResponse = false;
+          } else {
+            const bulkOrderData = await bulkOrderResponse.json();
+            console.log('📦 Bulk order response:', bulkOrderData);
+            
+            // Update state with all changes (including extracted contact info)
+            await ChatStateManager.setChatState(session.sessionId, 'bulk_order', {
+              ...bulkOrderState,
+              step: bulkOrderData.nextStep,
+              // Merge any updated state from the response
+              ...(bulkOrderData.updatedState || {}),
+            });
+            
+            response = {
+              text: bulkOrderData.message,
+              quickReplies: bulkOrderData.quickReplies?.map((text: string) => ({ text, value: text })) || []
+            };
+            
+            isBulkOrderResponse = true;
+            console.log('🎯 Using bulk order response, next step:', bulkOrderData.nextStep);
+          }
+        }
+      } catch (bulkOrderError: any) {
+        console.error('❌ Exception in bulk order response generation:', {
+          message: bulkOrderError.message,
+          stack: bulkOrderError.stack,
+          name: bulkOrderError.name
+        });
+        
+        // Fallback response
+        response = {
+          text: "I apologize, there was an error processing your bulk order. Please contact us at +91 85472 29991 for immediate assistance.",
+          quickReplies: [
+            { text: "📞 Call Now", action: "tel:+918547229991" },
+            { text: "💬 WhatsApp", action: "https://wa.me/918547229991" }
+          ]
+        };
+        isBulkOrderResponse = false;
+      }
     }
     
     // If not a failed call or bulk order response, generate normal Gemini response

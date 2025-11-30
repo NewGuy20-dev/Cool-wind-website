@@ -19,6 +19,12 @@ We have successfully implemented a comprehensive ticket service system that runs
 - 📊 **Comprehensive tracking** (status, priority, communication history)
 - 🏷️ **Smart tagging** and categorization
 - 📱 **Multi-channel support** (chat, phone, WhatsApp, email, etc.)
+- 📦 **Archive functionality** for completed/cancelled tasks
+
+#### Task Status Values:
+- **Active Statuses**: 'pending', 'open', 'in_progress'
+- **Archivable Statuses**: 'completed', 'cancelled'
+- Only completed or cancelled tasks can be archived
 
 ### 2. **Integrated Failed Call Management**
 - **Seamless integration** between ticket service and failed call system

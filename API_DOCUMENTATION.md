@@ -258,6 +258,55 @@ Soft delete a task (sets deleted_at timestamp).
 - `taskId`: Required - ID of task to delete
 - `reason`: Optional - Reason for deletion
 
+#### Archive Task
+Archive a completed or cancelled task.
+
+**Endpoint**: `POST /api/admin/tasks/archive`
+**Authentication**: Required
+
+**Request Body**:
+```typescript
+{
+  taskId: string;               // Required: Task ID to archive
+}
+```
+
+**Response**:
+```typescript
+{
+  success: true;
+  message: "Task archived successfully";
+  task: Task;                   // Updated task with archived = true
+}
+```
+
+**Business Rules**:
+- Only tasks with status 'completed' or 'cancelled' can be archived
+- Active tasks (pending, open, in_progress) cannot be archived
+- Archive operation is logged in audit trail
+
+#### Unarchive Task
+Restore an archived task.
+
+**Endpoint**: `POST /api/admin/tasks/unarchive`
+**Authentication**: Required
+
+**Request Body**:
+```typescript
+{
+  taskId: string;               // Required: Task ID to unarchive
+}
+```
+
+**Response**:
+```typescript
+{
+  success: true;
+  message: "Task unarchived successfully";
+  task: Task;                   // Updated task with archived = false
+}
+```
+
 ---
 
 ### Tickets API (Backward Compatibility)
